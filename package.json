@@ -3,9 +3,8 @@
   "private": true,
   "description": "เว็บไซต์ระบบบริหารโครงการ กองช่าง เทศบาลตำบลสีแก้ว",
   "scripts": {
-    "build:html": "python3 design/build.py",
-    "build:css": "tailwindcss -i assets/tailwind.css -o assets/styles.css --minify",
-    "build": "npm run build:html && npm run build:css",
+    "build": "tailwindcss -i assets/tailwind.css -o assets/styles.css --minify",
+    "watch": "tailwindcss -i assets/tailwind.css -o assets/styles.css --watch",
     "start": "npx --yes serve ."
   },
   "devDependencies": {
