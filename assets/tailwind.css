@@ -8,3 +8,13 @@
   main > :first-child { margin-top: 0 !important; }
   main > :last-child { margin-bottom: 0 !important; }
 }
+
+/* พิมพ์หน้าเว็บ: ซ่อนเมนู ส่วนหัว และปุ่ม */
+@media print {
+  #sidebar, #sidebar-backdrop, header, .sk-modal, .sk-dropdown, .no-print, button, .leaflet-control-container { display: none !important; }
+  .lg\:pl-72 { padding-left: 0 !important; }
+  main { padding-top: 0 !important; }
+  body { background: #fff !important; }
+  .shadow-sm, .shadow-md { box-shadow: none !important; }
+}
+.leaflet-container { font-family: 'Sarabun', sans-serif; }
