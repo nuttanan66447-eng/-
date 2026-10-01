@@ -1,0 +1,14 @@
+{
+  "name": "si-kaeo-engineering-division",
+  "private": true,
+  "description": "เว็บไซต์ระบบบริหารโครงการ กองช่าง เทศบาลตำบลสีแก้ว",
+  "scripts": {
+    "build:html": "python3 design/build.py",
+    "build:css": "tailwindcss -i assets/tailwind.css -o assets/styles.css --minify",
+    "build": "npm run build:html && npm run build:css",
+    "start": "npx --yes serve ."
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

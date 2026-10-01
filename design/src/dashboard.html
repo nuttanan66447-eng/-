@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+
+<html lang="th"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;family=Source+Sans+3:wght@400;600&amp;family=Sarabun:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;font-family:'Sarabun','Public Sans',sans-serif;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-tertiary-fixed-variant":"#314863","surface-bright":"#f8f9ff","on-surface-variant":"#444651","inverse-primary":"#b6c4ff","background":"#f8f9ff","surface-tint":"#4059aa","inverse-surface":"#213145","on-error":"#ffffff","secondary-fixed-dim":"#ffb599","tertiary-fixed-dim":"#b0c9e8","tertiary-container":"#2a425c","on-primary":"#ffffff","secondary":"#a73a00","secondary-fixed":"#ffdbce","primary-container":"#1e3a8a","on-background":"#0b1c30","surface-container-high":"#dce9ff","on-surface":"#0b1c30","on-error-container":"#93000a","on-tertiary-container":"#96aecd","surface-dim":"#cbdbf5","primary-fixed":"#dce1ff","error-container":"#ffdad6","surface-variant":"#d3e4fe","surface-container-highest":"#d3e4fe","surface-container-low":"#eff4ff","inverse-on-surface":"#eaf1ff","error":"#ba1a1a","on-secondary":"#ffffff","primary-fixed-dim":"#b6c4ff","surface":"#f8f9ff","on-secondary-container":"#571a00","surface-container":"#e5eeff","tertiary-fixed":"#d1e4ff","on-tertiary":"#ffffff","secondary-container":"#fd651e","outline":"#757682","primary":"#00236f","on-primary-fixed":"#00164e","outline-variant":"#c5c5d3","on-secondary-fixed":"#370e00","on-tertiary-fixed":"#011d35","surface-container-lowest":"#ffffff","on-primary-container":"#90a8ff","on-secondary-fixed-variant":"#7f2b00","on-primary-fixed-variant":"#264191","tertiary":"#122c45"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xs":"0.25rem","space-md":"0.75rem","space-xl":"1.5rem","margin-mobile":"1rem","space-sm":"0.5rem","space-2xs":"0.125rem","gutter-desktop":"1rem","space-2xl":"2rem","space-3xl":"3rem","gutter-mobile":"0.75rem","space-lg":"1.25rem","space-base":"1rem","margin-desktop":"1.5rem"},"fontFamily":{"display-lg":["publicSans"],"body-sm":["sourceSans3"],"code-sm":["publicSans"],"headline-md":["publicSans"],"body-lg":["sourceSans3"],"headline-sm":["publicSans"],"display-lg-mobile":["publicSans"],"body-md":["sourceSans3"],"label-sm":["publicSans"],"label-md":["publicSans"],"headline-lg":["publicSans"]},"fontSize":{"display-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"500"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.005em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"600"}],"display-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"600"}],"label-md":["13px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}}</script></head><body class="bg-surface text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-tertiary text-inverse-on-surface z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="p-space-lg flex items-center gap-space-md bg-tertiary-container/40"><div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-md font-bold"><span class="material-symbols-outlined">account_balance</span></div><div class="flex flex-col overflow-hidden"><span class="font-headline-sm text-headline-sm text-surface truncate">เทศบาลตำบลสีแก้ว</span><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">กองช่างวิศวกรรมโยธา</span></div></div><div class="px-space-md pt-space-lg pb-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-fixed-dim px-space-sm">ระบบงานหลัก</span></div><nav class="flex flex-col gap-space-2xs px-space-sm" data-active-classes="bg-primary-container text-surface-bright font-headline-sm"><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-all bg-primary-container text-surface-bright font-headline-sm" data-path="dashboard" href="#"><span class="material-symbols-outlined text-space-lg">dashboard</span><span class="font-body-md text-body-md">ภาพรวมโครงการ</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-tertiary-fixed-dim hover:bg-tertiary-container hover:text-surface-bright transition-all" data-path="projects" href="#"><span class="material-symbols-outlined text-space-lg">folder_open</span><span class="font-body-md text-body-md">ทะเบียนโครงการ</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-tertiary-fixed-dim hover:bg-tertiary-container hover:text-surface-bright transition-all" data-path="progress" href="#"><span class="material-symbols-outlined text-space-lg">construction</span><span class="font-body-md text-body-md">ติดตามความก้าวหน้า</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-tertiary-fixed-dim hover:bg-tertiary-container hover:text-surface-bright transition-all" data-path="documents" href="#"><span class="material-symbols-outlined text-space-lg">description</span><span class="font-body-md text-body-md">ศูนย์จัดทำเอกสารช่าง</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-tertiary-fixed-dim hover:bg-tertiary-container hover:text-surface-bright transition-all" data-path="disbursement" href="#"><span class="material-symbols-outlined text-space-lg">payments</span><span class="font-body-md text-body-md">เบิกจ่ายและรายงาน สถ.</span></a></nav></div><div class="p-space-md bg-tertiary-container/30 m-space-sm rounded-lg"><div class="flex flex-col gap-space-2xs"><span class="font-label-sm text-label-sm text-surface-container-high leading-tight">กองช่าง เทศบาลตำบลสีแก้ว</span><span class="font-label-sm text-label-sm text-tertiary-fixed-dim">อ.เมือง จ.ร้อยเอ็ด</span><div class="mt-space-xs pt-space-xs flex items-center justify-between text-tertiary-fixed-dim"><span class="font-code-sm text-code-sm">ระบบอิเล็กทรอนิกส์</span><span class="font-code-sm text-code-sm bg-tertiary-container px-space-xs py-space-2xs rounded text-primary-fixed">v2.4</span></div></div></div></aside><div class="pl-72 flex flex-col min-h-screen"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-space-xl flex items-center justify-between"><div class="flex items-center gap-space-md"><span class="font-headline-sm text-headline-sm text-primary tracking-tight">ระบบบริหารโครงการ กองช่าง เทศบาลตำบลสีแก้ว</span><span class="bg-surface-container-high text-primary font-label-sm text-label-sm px-space-sm py-space-2xs rounded-full flex items-center gap-space-xs"><span class="material-symbols-outlined text-space-md">calendar_today</span>ปีงบประมาณ 2567</span></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs bg-surface-container-low text-secondary px-space-sm py-space-2xs rounded-full"><span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span><span class="font-label-md text-label-md font-semibold">กำลังปฏิบัติราชการ</span></div><button class="relative p-space-xs text-on-surface-variant hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined">notifications</span><span class="absolute top-1 right-1 w-4 h-4 bg-secondary-container text-on-primary font-code-sm text-code-sm rounded-full flex items-center justify-center font-bold">3</span></button><div class="flex items-center gap-space-sm pl-space-md bg-surface-container-low/50 py-space-2xs px-space-sm rounded-full"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1UUXqEISkNylwIJI04P6jT_VGLGdf_BWv6AuLau2m54gWg52zZ5UjYH2ul8SQFuKaBZSTANhAgP1rz2_4bhuk0Nyn0Ldi86LnyIcgjSwzFZe1niwqCVrcAffhuChIolYlnFHg5sesa6W5xP0RL0wzxhyVUgsYfcxtjorD2AQc5lXIfE3bpksFYv6zlu1MssXcc1YfznNDfyn2h-RyFmcaLFchCQLxrpN2ZQW48h5qJRYl8RqCl8p_tDOAw"/><div class="flex flex-col text-left"><span class="font-label-md text-label-md font-semibold text-on-surface leading-tight">นายธีรภัทร ชาญวิทย์</span><span class="font-label-sm text-label-sm text-on-surface-variant">ผู้อำนวยการกองช่าง</span></div></div></div></header><main class="w-full pt-16 bg-surface flex-1 px-space-xl py-space-lg"><div class="flex flex-col w-full gap-space-xl">
+<!-- Top Command Toolbar -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-base bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col gap-space-2xs">
+<div class="flex items-center gap-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-primary-container text-surface-bright font-code-sm text-code-sm font-semibold tracking-wider">DOC-MUNI-SK67</span>
+<span class="font-label-sm text-label-sm text-outline font-medium">| เขตเทศบาลตำบลสีแก้ว อ.เมือง จ.ร้อยเอ็ด</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight">แดชบอร์ดภาพรวมโครงการและงบประมาณ</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">ศูนย์ติดตามสถานะวิศวกรรมโยธา บันทึกตรวจรับพัสดุ และความก้าวหน้าการเบิกจ่ายงบประมาณแผ่นดิน</p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="flex items-center bg-surface-container-low rounded-lg p-space-2xs">
+<div class="flex items-center px-space-sm py-1.5 gap-space-xs text-on-surface">
+<span class="material-symbols-outlined text-space-md text-primary">event_note</span>
+<span class="font-label-md text-label-md">ปีงบฯ 2567</span>
+</div>
+<span class="text-outline-variant">/</span>
+<div class="flex items-center px-space-sm py-1.5 gap-space-xs text-secondary font-semibold">
+<span class="font-label-md text-label-md">ไตรมาสที่ 3</span>
+</div>
+</div>
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container-high hover:bg-surface-variant text-primary font-label-md text-label-md transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-space-md">picture_as_pdf</span>
+<span>รายงานสรุปผู้บริหาร (PDF)</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-all shadow-md" type="button">
+<span class="material-symbols-outlined text-space-md">add_circle</span>
+<span>เพิ่มโครงการใหม่</span>
+</button>
+</div>
+</div>
+<!-- KPI Key Operational Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-base">
+<!-- KPI 1: Budget Total -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary"></div>
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">งบประมาณรวมทั้งสิ้น (พ.ร.บ. / เทศบัญญัติ)</span>
+<span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-space-md">payments</span>
+</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg text-primary">48,250,000</span>
+<span class="font-body-md text-body-md text-on-surface-variant">บาท</span>
+</div>
+</div>
+<div class="mt-space-base pt-space-sm bg-surface-container-low/40 rounded-lg p-space-sm">
+<div class="flex items-center justify-between text-on-surface">
+<span class="font-label-sm text-label-sm">เบิกจ่ายแล้ว (65.24%)</span>
+<span class="font-code-sm text-code-sm text-primary font-bold">31,480,000 บาท</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full mt-space-xs overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all duration-700" style="width: 65.24%;"></div>
+</div>
+<div class="mt-space-2xs flex justify-between font-body-sm text-body-sm text-outline">
+<span>คงเหลือ 16,770,000 บาท</span>
+<span class="text-secondary font-semibold">ตามเป้าเบิกจ่าย Q3</span>
+</div>
+</div>
+</div>
+<!-- KPI 2: Project Register Status -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-container"></div>
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">ทะเบียนโครงการทั้งหมด</span>
+<span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-space-md">fact_check</span>
+</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg text-on-surface">28</span>
+<span class="font-body-md text-body-md text-on-surface-variant">สัญญาโครงการ</span>
+</div>
+</div>
+<div class="mt-space-base grid grid-cols-2 gap-space-xs font-label-sm text-label-sm">
+<div class="flex items-center gap-space-xs bg-surface-container-low p-space-xs rounded">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span class="text-on-surface truncate">เสร็จสิ้น: <strong class="text-primary font-bold">12</strong></span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container-low p-space-xs rounded">
+<span class="w-2.5 h-2.5 rounded-full bg-surface-tint"></span>
+<span class="text-on-surface truncate">ตามแผน: <strong class="text-primary font-bold">11</strong></span>
+</div>
+<div class="flex items-center gap-space-xs bg-error-container/40 p-space-xs rounded">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="text-on-error-container truncate">ล่าช้า: <strong class="text-error font-bold">3</strong></span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container-low p-space-xs rounded">
+<span class="w-2.5 h-2.5 rounded-full bg-outline"></span>
+<span class="text-on-surface truncate">จัดซื้อจัดจ้าง: <strong class="text-on-surface font-bold">2</strong></span>
+</div>
+</div>
+</div>
+<!-- KPI 3: Field Operations & Safety -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary"></div>
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">กำกับหน้างานและความปลอดภัย (OHS)</span>
+<span class="w-8 h-8 rounded-lg bg-secondary-fixed flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-space-md">engineering</span>
+</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg text-secondary">142</span>
+<span class="font-body-md text-body-md text-on-surface-variant">ครั้ง สะสมปี 67</span>
+</div>
+</div>
+<div class="mt-space-base flex flex-col gap-space-2xs bg-surface-container-low/50 p-space-sm rounded-lg">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">การตรวจสอบมาตรฐานความปลอดภัย</span>
+<span class="font-code-sm text-code-sm text-secondary font-bold">100% ครบถ้วน</span>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-space-md text-secondary">verified</span>
+<span>ไม่พบอุบัติเหตุร้ายแรงในเขตก่อสร้าง</span>
+</div>
+</div>
+</div>
+<!-- KPI 4: Urgent Action Threshold -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-error"></div>
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-error uppercase tracking-wider font-semibold">รายการเร่งด่วน / รอสั่งการช่าง</span>
+<span class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-space-md">priority_high</span>
+</span>
+</div>
+<div class="mt-space-sm flex items-baseline gap-space-xs">
+<span class="font-display-lg text-display-lg text-error">3</span>
+<span class="font-body-md text-body-md text-on-surface-variant">สัญญาที่ต้องลงตรวจ</span>
+</div>
+</div>
+<div class="mt-space-base flex flex-col gap-space-xs font-label-sm text-label-sm">
+<div class="flex items-center justify-between px-space-sm py-1 bg-surface-container-high rounded text-primary">
+<span>งวดเงินรอคณะกรรมการตรวจรับ</span>
+<span class="font-bold">2 โครงการ</span>
+</div>
+<div class="flex items-center justify-between px-space-sm py-1 bg-error-container/50 text-on-error-container rounded font-medium">
+<span>สัญญาใกล้สิ้นสุด (เหลือ &lt; 15 วัน)</span>
+<span class="font-bold text-error">1 โครงการ</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Multi-Column Engineering Operations Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+<!-- Left Column: GIS Map & Analytical Breakdown (8 Cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-xl">
+<!-- Interactive GIS Map Panel -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Panel Header -->
+<div class="p-space-base flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm bg-surface-container-low/40">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-surface-bright flex items-center justify-center">
+<span class="material-symbols-outlined text-space-md">map</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary leading-tight">แผนที่พิกัด GIS ตำบลสีแก้ว (GIS Construction Spatial View)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">แสดงพิกัดสถานที่ก่อสร้างและจุดตรวจราชการ หมู่ 1 ถึง หมู่ 7</p>
+</div>
+</div>
+<!-- Filter tags -->
+<div class="flex items-center gap-space-xs text-body-sm">
+<span class="px-space-xs py-0.5 rounded bg-surface text-primary font-code-sm text-code-sm flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-surface-tint"></span>งานทาง (14)
+            </span>
+<span class="px-space-xs py-0.5 rounded bg-surface text-secondary font-code-sm text-code-sm flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>จัดการน้ำ (7)
+            </span>
+<span class="px-space-xs py-0.5 rounded bg-surface text-tertiary font-code-sm text-code-sm flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>ส่องสว่าง/อาคาร (7)
+            </span>
+</div>
+</div>
+<!-- Simulated Map Canvas Container -->
+<div class="relative w-full h-96 bg-surface-container overflow-hidden group">
+<!-- Real map layer triggered via data-location -->
+<div class="w-full h-full bg-cover bg-center" data-location="Si Kaeo, Mueang Roi Et District, Roi Et, Thailand" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD8a4Pcb35vlzVOFDQOGHpoUrGevm8FkRcTjzfAsJTKHG-0pNhJ4FFjJphBpjX0lsYIUy0eFPZPVMUwNtb6NyB1DUtyaYfHQPDSYKf-l8A2hN9OgOyP8m0aiijCHxKpqHOfluVqAf1_8zvSTC8RErt9_Zcl5e6MB4D-9rf2ZvQmRfPa15VgqZJVNNXdompa6RRRbIqxObW8m5skENtVRycqdRJ1r7XEjLd50dShvI23FCZTCgMsFBG1')"></div>
+<!-- Subtle Blueprint Graphic Overlay for Engineering Context -->
+<div class="absolute inset-0 pointer-events-none bg-gradient-to-t from-primary/30 via-transparent to-transparent"></div>
+<!-- Top-Right Layer Selector Controls -->
+<div class="absolute top-3 right-3 flex flex-col gap-1 bg-surface-container-lowest/90 backdrop-blur-md p-1 rounded-lg shadow-md text-on-surface">
+<button class="p-1.5 rounded hover:bg-surface-container text-primary" title="สลับเลเยอร์ภาพถ่ายดาวเทียม" type="button">
+<span class="material-symbols-outlined text-space-md">layers</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface" title="ขยายแผนที่" type="button">
+<span class="material-symbols-outlined text-space-md">zoom_in</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface" title="ย่อแผนที่" type="button">
+<span class="material-symbols-outlined text-space-md">zoom_out</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface" title="พิกัดศูนย์กลางตำบล" type="button">
+<span class="material-symbols-outlined text-space-md">my_location</span>
+</button>
+</div>
+<!-- Spatial Pins & Micro Badges (Pinned to Municipal Coordinates) -->
+<!-- Pin 1: Road Project (Completed / Green) -->
+<div class="absolute top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110">
+<div class="relative group/pin">
+<div class="w-9 h-9 rounded-full bg-primary-container text-surface-bright flex items-center justify-center shadow-lg ring-4 ring-surface-container-lowest">
+<span class="material-symbols-outlined text-space-md">road</span>
+</div>
+<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover/pin:flex flex-col bg-surface-container-lowest p-space-sm rounded-lg shadow-xl w-60 z-20 pointer-events-none">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm font-bold text-primary">ม.2 บ้านสีแก้วใต้</span>
+<span class="bg-surface-container-high text-primary px-1.5 py-0.5 rounded font-label-sm text-label-sm">เสร็จสมบูรณ์</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface font-semibold mt-1 leading-snug">งานก่อสร้างถนน คสล. ซอยเทศบาล 4</p>
+<div class="mt-1 flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>งบ 1,280,000 บ.</span>
+<span>ตรวจรับ 100%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Pin 2: Canal Dredging (In progress / Safety Orange) -->
+<div class="absolute top-1/2 left-3/5 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110">
+<div class="relative group/pin">
+<div class="w-9 h-9 rounded-full bg-secondary-container text-on-primary flex items-center justify-center shadow-lg ring-4 ring-surface-container-lowest">
+<span class="material-symbols-outlined text-space-md">water_damage</span>
+</div>
+<span class="absolute -top-1 -right-1 flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+</span>
+<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover/pin:flex flex-col bg-surface-container-lowest p-space-sm rounded-lg shadow-xl w-64 z-20 pointer-events-none">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm font-bold text-secondary">ม.5 บ้านหนองหว้า</span>
+<span class="bg-secondary-fixed text-secondary px-1.5 py-0.5 rounded font-label-sm text-label-sm">งวดที่ 2 (75%)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface font-semibold mt-1 leading-snug">ขุดลอกคลองระบายน้ำและกำแพงกันดินหนองหว้า</p>
+<div class="mt-1 flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>สัญญา 114/2567</span>
+<span class="text-secondary font-bold">นัดตรวจรับบ่ายนี้</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Pin 3: Solar Street Lighting (Attention / Red Delay) -->
+<div class="absolute bottom-1/4 right-1/4 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110">
+<div class="relative group/pin">
+<div class="w-9 h-9 rounded-full bg-error text-on-error flex items-center justify-center shadow-lg ring-4 ring-surface-container-lowest">
+<span class="material-symbols-outlined text-space-md">solar_power</span>
+</div>
+<div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover/pin:flex flex-col bg-surface-container-lowest p-space-sm rounded-lg shadow-xl w-60 z-20 pointer-events-none">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm font-bold text-error">ม.7 ถนนรอบบึง</span>
+<span class="bg-error-container text-on-error-container px-1.5 py-0.5 rounded font-label-sm text-label-sm">ล่าช้า 8 วัน</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface font-semibold mt-1 leading-snug">ติดตั้งไฟถนนโซล่าเซลล์อัจฉริยะ 42 จุด</p>
+<div class="mt-1 flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>ผู้รับเหมาขอขยายเวลา</span>
+<span class="text-error font-bold">รออนุมัติ</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Map Legend Box (Bottom Left) -->
+<div class="absolute bottom-3 left-3 bg-surface-container-lowest/95 backdrop-blur-md p-space-sm rounded-lg shadow-md flex flex-col gap-1 text-on-surface text-label-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase">หมุดสถานะโครงการ</span>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span>ส่งมอบงานเรียบร้อย (12)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span>
+<span>กำลังดำเนินการ/ตรวจงวด (13)</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span>เลยกำหนด/แจ้งเตือนเร่งรัด (3)</span>
+</div>
+</div>
+</div>
+<!-- Municipal Sector Bottom Status Strip -->
+<div class="px-space-base py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm font-body-sm text-body-sm">
+<div class="flex items-center gap-space-base">
+<span class="text-on-surface-variant">พิกัดศูนย์กลาง: <strong class="font-code-sm text-code-sm text-on-surface font-semibold">16.0824° N, 103.5932° E</strong></span>
+<span class="text-outline-variant">|</span>
+<span class="text-on-surface-variant">อัปเดตดาวเทียม: <span class="font-code-sm text-code-sm text-primary">วันนี้ 09:30 น.</span></span>
+</div>
+<a class="text-primary hover:text-primary-container font-label-md text-label-md font-semibold inline-flex items-center gap-1" href="#">
+<span>เปิดระบบภูมิสารสนเทศแผนที่เต็มจอ</span>
+<span class="material-symbols-outlined text-space-md">open_in_new</span>
+</a>
+</div>
+</div>
+<!-- Budget Classification & Sector Performance (Data Vis + BOQ breakdown) -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-base">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary">สัดส่วนงบประมาณจำแนกตามประเภทงานวิศวกรรมโยธา</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">การจัดสรรงบลงทุน 48.25 ล้านบาท ประจำปีงบประมาณ 2567</p>
+</div>
+<span class="px-space-sm py-1 bg-surface-container text-on-surface rounded font-code-sm text-code-sm self-start sm:self-auto">
+            4 กลุ่มงานหลัก
+          </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-lg items-center">
+<!-- Inline Custom SVG Donut & Metrics Chart -->
+<div class="md:col-span-5 flex flex-col items-center justify-center p-space-sm">
+<div class="relative w-48 h-48">
+<svg class="w-full h-full -rotate-90 transform" viewbox="0 0 100 100">
+<!-- Track base -->
+<circle class="text-surface-container-highest" cx="50" cy="50" fill="transparent" r="38" stroke="currentColor" stroke-width="12"></circle>
+<!-- Segment 1: Road (45%) -> circumference = 238.76. 45% = 107.44 -->
+<circle class="text-primary transition-all duration-1000" cx="50" cy="50" fill="transparent" r="38" stroke="currentColor" stroke-dasharray="238.76" stroke-dashoffset="59.69" stroke-width="12"></circle>
+<!-- Segment 2: Water (28%) -> 66.85 -->
+<circle class="text-secondary transition-all duration-1000" cx="50" cy="50" fill="transparent" r="38" stroke="currentColor" stroke-dasharray="238.76" stroke-dashoffset="131" stroke-width="12"></circle>
+<!-- Segment 3: Building (18%) -> 42.97 -->
+<circle class="text-tertiary transition-all duration-1000" cx="50" cy="50" fill="transparent" r="38" stroke="currentColor" stroke-dasharray="238.76" stroke-dashoffset="174" stroke-width="12"></circle>
+<!-- Segment 4: Light (9%) -> 21.48 -->
+<circle class="text-surface-tint transition-all duration-1000" cx="50" cy="50" fill="transparent" r="38" stroke="currentColor" stroke-dasharray="238.76" stroke-dashoffset="195.8" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-headline-md text-headline-md text-primary font-bold">48.25M</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">งบประมาณรวม</span>
+</div>
+</div>
+<div class="mt-space-xs text-center font-body-sm text-body-sm text-outline">
+              อัตราการจัดสรรเฉลี่ยตามเป้าหมายแผนพัฒนาท้องถิ่น 5 ปี
+            </div>
+</div>
+<!-- Breakdown List with Micro Progress Bars -->
+<div class="md:col-span-7 flex flex-col gap-space-sm">
+<!-- 1. Road & Bridge -->
+<div class="p-space-sm bg-surface-container-low rounded-lg flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-primary"></span>
+<span class="text-on-surface font-semibold">งานทาง สะพาน และผิวจราจร คสล. (45%)</span>
+</div>
+<span class="font-code-sm text-code-sm text-primary font-bold">21,712,500 บ.</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 72%;"></div>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>14 โครงการ (เสร็จแล้ว 8 โครงการ)</span>
+<span class="text-primary font-medium">เบิกจ่ายแล้ว 72%</span>
+</div>
+</div>
+<!-- 2. Water Drainage & Irrigation -->
+<div class="p-space-sm bg-surface-container-low rounded-lg flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-secondary"></span>
+<span class="text-on-surface font-semibold">งานระบายน้ำและจัดการน้ำท่วมขัง (28%)</span>
+</div>
+<span class="font-code-sm text-code-sm text-secondary font-bold">13,510,000 บ.</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 58%;"></div>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>7 โครงการ (ตามแผนงานป้องกันฤดูฝน)</span>
+<span class="text-secondary font-medium">เบิกจ่ายแล้ว 58%</span>
+</div>
+</div>
+<!-- 3. Buildings & Civic Facilities -->
+<div class="p-space-sm bg-surface-container-low rounded-lg flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-tertiary"></span>
+<span class="text-on-surface font-semibold">งานอาคารและสิ่งก่อสร้างสาธารณะ (18%)</span>
+</div>
+<span class="font-code-sm text-code-sm text-tertiary font-bold">8,685,000 บ.</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full rounded-full" style="width: 65%;"></div>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>4 โครงการ (อาคารศูนย์พัฒนาเด็กเล็ก ฯลฯ)</span>
+<span class="text-tertiary font-medium">เบิกจ่ายแล้ว 65%</span>
+</div>
+</div>
+<!-- 4. Electrical & Solar Lighting -->
+<div class="p-space-sm bg-surface-container-low rounded-lg flex flex-col gap-space-2xs">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-3 h-3 rounded bg-surface-tint"></span>
+<span class="text-on-surface font-semibold">งานไฟฟ้า สาธารณูปโภค และพลังงานแสงอาทิตย์ (9%)</span>
+</div>
+<span class="font-code-sm text-code-sm text-surface-tint font-bold">4,342,500 บ.</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-surface-tint h-full rounded-full" style="width: 50%;"></div>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>3 โครงการ (ขยายเขตและโคมไฟ LED ประหยัดพลังงาน)</span>
+<span class="text-surface-tint font-medium">เบิกจ่ายแล้ว 50%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Urgent Action Triggers & Live Engineering Feed (4 Cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-xl">
+<!-- Urgent Action Items Widget -->
+<div class="bg-surface-container-lowest p-space-base rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-space-lg text-secondary">notifications_active</span>
+<h3 class="font-headline-sm text-headline-sm text-primary">รายการแจ้งเตือนงานเร่งด่วน</h3>
+</div>
+<span class="px-space-xs py-0.5 rounded-full bg-error text-on-error font-code-sm text-code-sm font-bold">3 รายการ</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Item 1: Inspection appointment today -->
+<div class="p-space-sm bg-surface-container-low rounded-lg relative overflow-hidden flex flex-col gap-space-xs hover:bg-surface-container transition-colors">
+<div class="absolute top-0 left-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex items-center justify-between pl-space-xs">
+<span class="font-label-sm text-label-sm text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-space-md">schedule</span> บ่ายนี้ 13:30 น.
+              </span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-code-sm text-code-sm">ม.3 สีแก้ว</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface leading-tight pl-space-xs">
+              ตรวจรับงานงวดที่ 2 โครงการก่อสร้างท่อลอดเหลี่ยม คสล.
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-space-xs">
+              คณะกรรมการตรวจรับพัสดุนัดหมายลงพื้นที่พร้อมนายช่างผู้ควบคุมงาน ประธานกรรมการ: นายวิรัช วงศ์สว่าง
+            </p>
+<div class="mt-space-xs pl-space-xs flex items-center gap-space-xs">
+<button class="px-space-sm py-1 bg-secondary text-on-primary rounded font-label-sm text-label-sm hover:bg-secondary-container transition-colors font-semibold" type="button">
+                บันทึกผลตรวจรับ
+              </button>
+<button class="px-space-sm py-1 bg-surface-container text-on-surface rounded font-label-sm text-label-sm hover:bg-surface-container-highest transition-colors" type="button">
+                ดูแบบรูปรายการ
+              </button>
+</div>
+</div>
+<!-- Item 2: Milestone due in 5 days -->
+<div class="p-space-sm bg-surface-container-low rounded-lg relative overflow-hidden flex flex-col gap-space-xs hover:bg-surface-container transition-colors">
+<div class="absolute top-0 left-0 bottom-0 w-1 bg-primary-container"></div>
+<div class="flex items-center justify-between pl-space-xs">
+<span class="font-label-sm text-label-sm text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-space-md">hourglass_top</span> ครบกำหนดใน 5 วัน
+              </span>
+<span class="font-code-sm text-code-sm text-outline">สัญญา 88/2567</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface leading-tight pl-space-xs">
+              กำหนดส่งมอบงาน งวดสุดท้าย (งานเทพื้นแอสฟัลติก)
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-space-xs">
+              หจก. ร้อยเอ็ดวิศวกรรมโยธา ส่งหนังสือแจ้งผลทดสอบความหนาแน่นแอสฟัลต์คอนกรีตรอช่างลงนาม
+            </p>
+<div class="mt-space-xs pl-space-xs flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-semibold">วงเงินงวด 845,000 บ.</span>
+<button class="text-primary hover:underline font-label-sm text-label-sm font-semibold inline-flex items-center" type="button">
+                ตรวจเอกสาร สถ. <span class="material-symbols-outlined text-space-md">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Item 3: Project delay notification -->
+<div class="p-space-sm bg-error-container/30 rounded-lg relative overflow-hidden flex flex-col gap-space-xs hover:bg-error-container/40 transition-colors">
+<div class="absolute top-0 left-0 bottom-0 w-1 bg-error"></div>
+<div class="flex items-center justify-between pl-space-xs">
+<span class="font-label-sm text-label-sm text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-space-md">warning</span> สัญญาใกล้สิ้นสุด
+              </span>
+<span class="font-code-sm text-code-sm text-error font-semibold">ล่าช้ากว่าแผน 12%</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface leading-tight pl-space-xs">
+              งานปรับปรุงซ่อมแซมฝายชะลอน้ำ ม.6
+            </h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant pl-space-xs">
+              เหลือเวลาสัญญา 12 วัน แจ้งเตือนผู้รับจ้างเร่งรัดระดมเครื่องจักรกลก่อนคิดค่าปรับรายวัน
+            </p>
+<div class="mt-space-xs pl-space-xs">
+<button class="w-full py-1 bg-error text-on-error rounded font-label-sm text-label-sm font-semibold hover:opacity-95 transition-opacity text-center" type="button">
+                ออกหนังสือเร่งรัดสัญญา (ว.119)
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Engineering Activity Feed (Field Inspections) -->
+<div class="bg-surface-container-lowest p-space-base rounded-xl shadow-sm flex flex-col gap-space-md flex-1">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-space-lg text-primary">camera_alt</span>
+<h3 class="font-headline-sm text-headline-sm text-primary">บันทึกตรวจงานช่างประจำวัน</h3>
+</div>
+<span class="font-code-sm text-code-sm text-outline">Real-time Feed</span>
+</div>
+<div class="flex flex-col gap-space-base">
+<!-- Feed Item 1 -->
+<div class="flex gap-space-sm">
+<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Civil engineer taking core drill specimen sample on newly laid concrete road in Si Kaeo municipality, daytime natural sunlight, safety vest, engineering quality control inspection" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdyG4YQ0FC0zebuUrMLAk3Tan69OKWDmr5VTJjkImAEFo2J-ogK9jccDOrjnThCGm_H-CnrjS4i5DAo9X87QTL1teL2lRBHKY2tDzri4CqmHw6Oalr03TX1zrxmrGGKIKrqMQHIojNHmHXffQqug5-KdGRy_hKP63WLO0nHqK388fB5OxqHyhJXTAV9cLiuNRnIbsR1_tcVAeKqOQTjPHGnzMjhsWJUdD_e9Sn67zK8HJ5J5gj9JMj"/>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex items-start justify-between gap-1">
+<span class="font-label-sm text-label-sm text-primary font-bold truncate">ม.1 ซอยอนามัยพัฒนา</span>
+<span class="font-code-sm text-code-sm text-outline shrink-0">11:15 น.</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-snug line-clamp-2">
+                เจาะเก็บตัวอย่างความหนาลูกปูน คสล. (Core Drill) ผ่านเกณฑ์มาตรฐาน 0.15 ม. บันทึกผลผ่านเกณฑ์
+              </p>
+<div class="flex items-center gap-space-xs text-outline font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-space-md text-primary">person</span>
+<span>นายสมคิด สว่างแดน (นายช่างโยธาปฏิบัติงาน)</span>
+</div>
+</div>
+</div>
+<!-- Feed Item 2 -->
+<div class="flex gap-space-sm">
+<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Excavator clearing muddy irrigation channel bank alongside green rice fields in Roi Et countryside, blue sky, high-angle engineering site documentation" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3RLLCNiDJu_KvqYOGFa79pJZmHfD9yH7NaxnXZFkjUNk0oDOQLYlkzOKdj5QUY1TQqV_bCWziRh5fD02wHTgvQCM0Wb2KV_jbZHs-Dpdtqfeh7QRn4ny0T0ibqGiBY2OaUXzCGeBxxPhorCZy6ZjNGkdhwuax7jnXM7iWeOmh5Qs3l5tquQ00yTRAP-PswbmkVigPCSEJEES7qglmE64heTeWOwFlYPWmcpWisbXqX3Y7zDR6MtIQ"/>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex items-start justify-between gap-1">
+<span class="font-label-sm text-label-sm text-secondary font-bold truncate">ม.4 คลองส่งน้ำวังยาง</span>
+<span class="font-code-sm text-code-sm text-outline shrink-0">09:40 น.</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-snug line-clamp-2">
+                ผู้รับจ้างลงเครื่องจักร Backhoe ขุดลอกสันดอนตะกอนดินแล้วเสร็จตามแนวหมุด กม. 0+450 ถึง 0+800
+              </p>
+<div class="flex items-center gap-space-xs text-outline font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-space-md text-secondary">person</span>
+<span>นายอนุชา เจริญผล (ผู้ควบคุมงาน)</span>
+</div>
+</div>
+</div>
+<!-- Feed Item 3 -->
+<div class="flex gap-space-sm">
+<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Municipal municipal workers installing bright LED solar light post on rural asphalt road at dusk, clean modern street lighting civil work" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuECWWu1D38rZkqkxc8OzsvrMqL9tRxbmRNDkZ41LOQMQW47KHreI8ugPkrqje1WaU12i3CJeFJLdjufzAhlUlT7Gnurvwei7z2B--xuIB7eYD6S-ejw_bvW1-l1yY3RvBH5CJL0LdHP_SK_ACT64faresc7cf8qt3Pjv579Oj68cOKhe_BaS5o87eoolpn0zIseY1_zAZYrcTbPonPof4iDq2pUrswO3YkZUHBXFY16X52Iz4XYkS"/>
+</div>
+<div class="flex flex-col justify-between flex-1 min-w-0">
+<div class="flex items-start justify-between gap-1">
+<span class="font-label-sm text-label-sm text-surface-tint font-bold truncate">ม.7 ซอยร่วมใจ</span>
+<span class="font-code-sm text-code-sm text-outline shrink-0">เมื่อวาน</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-snug line-clamp-2">
+                ทดสอบระบบเปิด-ปิดไฟอัตโนมัติ Solar High-mast จำนวน 14 เสา ใช้งานได้ปกติทุกจุด
+              </p>
+<div class="flex items-center gap-space-xs text-outline font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-space-md text-surface-tint">person</span>
+<span>นายธวัชชัย มีชัย (นายช่างไฟฟ้า)</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-space-xs py-space-sm bg-surface-container-low hover:bg-surface-container text-primary rounded-lg font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-space-md">history</span>
+<span>ดูสมุดบันทึกช่างย้อนหลังทั้งหมด</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bottom Fast Registry Ledger Preview (e-GP Local Compliance) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-space-base bg-surface-container-low/40 flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary text-surface-bright flex items-center justify-center">
+<span class="material-symbols-outlined text-space-md">inventory_2</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary">รายการสัญญาโครงการล่าสุดในระบบทะเบียนคุม (e-GP Sync)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">ข้อมูลเชื่อมโยงระบบจัดซื้อจัดจ้างภาครัฐ กรมบัญชีกลาง และ สถ.จังหวัดร้อยเอ็ด</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-space-md text-outline">search</span>
+<input class="pl-8 pr-3 py-1 text-sm bg-surface rounded-lg border-0 focus:ring-2 focus:ring-primary text-on-surface w-64" placeholder="ค้นหาเลขที่สัญญา, ชื่อโครงการ หรือผู้รับจ้าง..." type="text"/>
+</div>
+<button class="p-1.5 bg-surface-container rounded-lg hover:bg-surface-container-highest text-primary" type="button">
+<span class="material-symbols-outlined text-space-md">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Table Responsive Scroller -->
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low text-outline uppercase font-label-sm text-label-sm">
+<tr>
+<th class="py-space-sm px-space-base">เลขที่สัญญา / โครงการ</th>
+<th class="py-space-sm px-space-base">ชื่อโครงการวิศวกรรม</th>
+<th class="py-space-sm px-space-base">พื้นที่ดำเนินงาน</th>
+<th class="py-space-sm px-space-base text-right">วงเงินสัญญา (บาท)</th>
+<th class="py-space-sm px-space-base text-center">ความก้าวหน้า</th>
+<th class="py-space-sm px-space-base text-center">สถานะตรวจรับ</th>
+<th class="py-space-sm px-space-base text-center">การจัดการ</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors bg-surface-container-lowest">
+<td class="py-space-sm px-space-base font-code-sm text-code-sm text-primary font-bold">CN-SK67-0042</td>
+<td class="py-space-sm px-space-base">
+<span class="font-semibold text-on-surface block">โครงการก่อสร้างถนน คสล. พร้อมรางระบายน้ำรูปตัววี</span>
+<span class="text-outline text-label-sm">ผู้รับจ้าง: หจก. ร้อยเอ็ดวิศวกรรมโยธา</span>
+</td>
+<td class="py-space-sm px-space-base">หมู่ที่ 2 บ้านสีแก้วใต้</td>
+<td class="py-space-sm px-space-base text-right font-code-sm text-code-sm font-semibold">1,280,000.00</td>
+<td class="py-space-sm px-space-base text-center">
+<div class="flex items-center justify-center gap-2">
+<div class="w-16 bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 100%;"></div>
+</div>
+<span class="font-code-sm text-code-sm font-bold text-primary">100%</span>
+</div>
+</td>
+<td class="py-space-sm px-space-base text-center">
+<span class="px-space-xs py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold">
+                ตรวจรับครบถ้วน
+              </span>
+</td>
+<td class="py-space-sm px-space-base text-center">
+<button class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-space-md">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors bg-surface-container-low/20">
+<td class="py-space-sm px-space-base font-code-sm text-code-sm text-primary font-bold">CN-SK67-0055</td>
+<td class="py-space-sm px-space-base">
+<span class="font-semibold text-on-surface block">โครงการขุดลอกคลองระบายน้ำและกำแพงกันดินคันคลอง</span>
+<span class="text-outline text-label-sm">ผู้รับจ้าง: หจก. เกียรติชัยศิริก่อสร้าง</span>
+</td>
+<td class="py-space-sm px-space-base">หมู่ที่ 5 บ้านหนองหว้า</td>
+<td class="py-space-sm px-space-base text-right font-code-sm text-code-sm font-semibold">2,450,000.00</td>
+<td class="py-space-sm px-space-base text-center">
+<div class="flex items-center justify-center gap-2">
+<div class="w-16 bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 75%;"></div>
+</div>
+<span class="font-code-sm text-code-sm font-bold text-secondary">75%</span>
+</div>
+</td>
+<td class="py-space-sm px-space-base text-center">
+<span class="px-space-xs py-0.5 rounded-full bg-secondary-fixed text-secondary font-label-sm text-label-sm font-semibold">
+                รอนัดตรวจงวด 2
+              </span>
+</td>
+<td class="py-space-sm px-space-base text-center">
+<button class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-space-md">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors bg-surface-container-lowest">
+<td class="py-space-sm px-space-base font-code-sm text-code-sm text-primary font-bold">CN-SK67-0061</td>
+<td class="py-space-sm px-space-base">
+<span class="font-semibold text-on-surface block">ติดตั้งระบบโคมไฟสาธารณะพลังงานแสงอาทิตย์ (Smart Solar)</span>
+<span class="text-outline text-label-sm">ผู้รับจ้าง: บจก. พลังงานไทยร้อยเอ็ด</span>
+</td>
+<td class="py-space-sm px-space-base">หมู่ที่ 7 ถนนสายรอบบึง</td>
+<td class="py-space-sm px-space-base text-right font-code-sm text-code-sm font-semibold">890,000.00</td>
+<td class="py-space-sm px-space-base text-center">
+<div class="flex items-center justify-center gap-2">
+<div class="w-16 bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 40%;"></div>
+</div>
+<span class="font-code-sm text-code-sm font-bold text-error">40%</span>
+</div>
+</td>
+<td class="py-space-sm px-space-base text-center">
+<span class="px-space-xs py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+                ล่าช้ากว่าแผน 8 วัน
+              </span>
+</td>
+<td class="py-space-sm px-space-base text-center">
+<button class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container" type="button">
+<span class="material-symbols-outlined text-space-md">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Bottom summary row -->
+<div class="px-space-base py-space-sm bg-surface-container-low flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>แสดง 3 จากทั้งหมด 28 รายการสัญญาในรอบปี 2567</span>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-sm py-1 rounded bg-surface-container-lowest text-outline hover:text-primary" type="button">ก่อนหน้า</button>
+<span class="px-space-xs font-semibold text-primary">1 / 10</span>
+<button class="px-space-sm py-1 rounded bg-surface-container-lowest text-outline hover:text-primary" type="button">ถัดไป</button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>
