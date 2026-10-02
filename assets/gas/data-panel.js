@@ -94,7 +94,7 @@
       '<div class="skd-row"><button type="button" class="skd-btn" data-skd="export">ส่งออกข้อมูลเป็น Excel</button>' +
       '<a class="skd-btn" href="' + OPEN_URL + '" target="_blank" rel="noopener">เปิด Google Sheet</a></div>' +
       '<p class="skd-note">ข้อมูลที่บันทึก/แก้ไขในหน้านี้เก็บไว้ในเบราว์เซอร์เครื่องนี้ หากต้องการอัปเดต Google Sheet ให้ส่งออกเป็น Excel แล้วใน Google Sheet เลือก ไฟล์ › นำเข้า › แทนที่สเปรดชีต</p>' +
-      '<div class="skd-row"><a class="skd-btn" href="index.html">กลับหน้าเว็บหลัก</a><button type="button" class="skd-btn skd-danger" data-skd="reset">ล้างข้อมูลในเครื่องนี้</button></div>';
+      '<div class="skd-row">' + (OPTS.fab === false ? '' : '<a class="skd-btn" href="index.html">กลับหน้าเว็บหลัก</a>') + '<button type="button" class="skd-btn skd-danger" data-skd="reset">ล้างข้อมูลในเครื่องนี้</button></div>';
   }
 
   function refresh(message, tone) {
@@ -110,7 +110,7 @@
     var btn = el('<button type="button" class="skd-fab" aria-label="จัดการข้อมูล" title="นำเข้า/ส่งออกข้อมูลจาก Google Sheet">' +
       '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 2v3H5V5h14zM5 19v-9h4v9H5zm6 0v-9h8v9h-8z"/></svg><span>ข้อมูล</span></button>');
     panel = el('<div class="skd-panel" role="dialog" aria-label="จัดการข้อมูลระบบ"><div class="skd-head"><strong>ข้อมูลระบบกองช่าง</strong><button type="button" class="skd-x" aria-label="ปิด">×</button></div><div class="skd-body">กำลังโหลด...</div></div>');
-    document.body.appendChild(btn);
+    if (OPTS.fab !== false) document.body.appendChild(btn); else panel.classList.add('skd-nofab');
     document.body.appendChild(panel);
     btn.addEventListener('click', function () { if (panel.classList.contains('open')) close(); else open(); });
     panel.querySelector('.skd-x').addEventListener('click', close);
@@ -136,12 +136,16 @@
     });
     window.addEventListener('skgas:storage-error', function (e) { open('บันทึกข้อมูลลงเบราว์เซอร์ไม่สำเร็จ: ' + e.detail + ' — ควรส่งออกข้อมูลเป็น Excel เก็บไว้', 'err'); });
     // ครั้งแรกที่ยังไม่มีข้อมูลโครงการ: เปิดแผงพร้อมคำแนะนำ
-    SKGas.summary().then(function (info) {
+    if (OPTS.fab !== false) SKGas.summary().then(function (info) {
       var proj = info.sheets.filter(function (s) { return s.name === 'ฐานข้อมูลโครงการ'; })[0];
       if (!proj || !proj.rows) open('ยังไม่มีข้อมูลโครงการในเบราว์เซอร์นี้ — ดาวน์โหลดไฟล์จาก Google Sheet แล้วนำเข้า (2 ขั้นตอน)', 'info');
     }, function () { open(); });
   }
 
-  window.SKData = { importFile: importFile, exportFile: exportFile, open: function (m, t) { return open(m, t); }, downloadUrl: DOWNLOAD_URL };
+  window.SKData = { importFile: importFile, exportFile: exportFile, open: function (m, t) { if (!panel) build(); return open(m, t); }, downloadUrl: DOWNLOAD_URL };
+  // ตัวสร้างเอกสารที่ทำงานเบื้องหลัง (system.html?engine=1) ไม่ต้องมีแผงข้อมูล
+  var OPTS = window.SK_DATA_PANEL || {};
+  if (/[?&]engine=1/.test(location.search)) return;
+  if (OPTS.fab === false) return; // หน้าเว็บหลักเปิดแผงจากแถบแจ้งเตือนเอง
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
 })();

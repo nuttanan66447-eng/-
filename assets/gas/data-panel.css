@@ -37,4 +37,6 @@
 .skd-info { background: #fffbeb; color: #92400e; }
 .skd-ok { background: #ecfdf5; color: #047857; }
 .skd-err { background: #fef2f2; color: #b91c1c; }
+/* หน้าเว็บหลักไม่มีปุ่มลอย: แผงแสดงมุมซ้ายล่าง */
+.skd-panel.skd-nofab { bottom: 16px; }
 @media print { .skd-fab, .skd-panel { display: none !important; } }

@@ -138,23 +138,20 @@
     el.innerHTML = ext
       ? '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">cloud_done</span>ข้อมูลจริงจาก Google Sheet • ' + ext.count + ' โครงการ' +
         (ext.savedAt ? ' • อัปเดตในเครื่องนี้ ' + new Date(ext.savedAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</span>' +
-        '<a href="system.html" class="font-bold underline">จัดการข้อมูล / พิมพ์เอกสาร →</a>'
-      : '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">info</span>กำลังแสดงข้อมูลตัวอย่าง — นำเข้าข้อมูลจริงจาก Google Sheet ได้ที่ระบบงานเอกสาร</span>' +
-        '<a href="system.html" class="font-bold underline">นำเข้าข้อมูลจริง →</a>';
+        '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้า / ส่งออกข้อมูล</button>'
+      : '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">info</span>กำลังแสดงข้อมูลตัวอย่าง — นำเข้าข้อมูลจริงจาก Google Sheet เพื่อพิมพ์เอกสารโครงการ</span>' +
+        '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้าข้อมูลจริง →</button>';
     var first = main.firstElementChild;
     (first && first.classList.contains('flex') && first.firstElementChild ? first : main).insertAdjacentElement('afterbegin', el);
   }
 
-  // ข้อมูลจริงแก้ไขที่ระบบงานเอกสาร เพื่อให้เป็นชุดข้อมูลเดียวกับที่ใช้พิมพ์เอกสาร
+  // ข้อมูลจริงเพิ่ม/แก้ไขด้วยแบบฟอร์มโครงการชุดเดิม เพื่อให้เป็นข้อมูลเดียวกับที่ใช้พิมพ์เอกสาร
   function redirectEdits() {
-    if (!SK.db.external) return;
-    var go = function (msg) {
-      SK.ui.confirm(msg + ' ต้องทำในระบบงานเอกสาร (บันทึกลงข้อมูลชุดเดียวกับที่ใช้พิมพ์เอกสาร) ไปที่ระบบงานเอกสารเลยหรือไม่?', 'ไประบบงานเอกสาร').then(function (ok) {
-        if (ok) location.href = 'system.html';
-      });
-    };
-    SK.ui.openProjectForm = function (existing) { go(existing ? 'การแก้ไขโครงการ' : 'การเพิ่มโครงการใหม่'); };
+    if (!SK.db.external || !SK.docEngine) return;
+    SK.ui.openProjectForm = function (existing) { SK.docEngine.openEntry(existing || null); };
   }
+
+  SK.actions['data-panel'] = function () { if (window.SKData) SKData.open(); };
 
   // ปีงบประมาณบนหัวหน้าเว็บ: ใช้ปีล่าสุดในข้อมูลจริง
   function budgetYear() {

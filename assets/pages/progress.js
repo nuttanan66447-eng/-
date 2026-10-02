@@ -185,13 +185,40 @@
     document.title = p.id + ' ติดตามความก้าวหน้า | กองช่าง เทศบาลตำบลสีแก้ว';
   }
 
+  // เอกสารโครงการ: ปุ่มเอกสารทุกแบบจัดเป็นกลุ่ม ใช้ตัวสร้างเอกสารชุดเดิม (v184)
+  function renderProjectDocs(p) {
+    var box = $('project-docs');
+    if (!box) return;
+    if (!p.real || !SK.docEngine) {
+      box.innerHTML = '<div class="p-space-md rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant flex flex-wrap items-center justify-between gap-2">' +
+        '<span>การพิมพ์เอกสารโครงการต้องใช้ข้อมูลจริงจาก Google Sheet (โครงการตัวอย่างพิมพ์ไม่ได้)</span>' +
+        '<button type="button" data-action="data-panel" class="' + ui.btnClass('primary') + '">นำเข้าข้อมูลจริง</button></div>';
+      return;
+    }
+    var groups = [];
+    SK.docEngine.DOCS.filter(function (d) { return !d.general; }).forEach(function (d) {
+      var g = groups.filter(function (x) { return x.name === d.group; })[0];
+      if (!g) groups.push(g = { name: d.group, docs: [] });
+      g.docs.push(d);
+    });
+    box.innerHTML = groups.map(function (g) {
+      return '<div class="mb-space-md last:mb-0"><h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-space-xs">' + esc(g.name) + '</h3>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">' + g.docs.map(function (d) {
+          return '<button type="button" data-action="project-doc" data-doc="' + d.key + '" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors flex items-start gap-space-sm">' +
+            '<span class="w-9 h-9 shrink-0 rounded-lg bg-surface-container-lowest text-primary flex items-center justify-center"><span class="material-symbols-outlined">' + d.icon + '</span></span>' +
+            '<span class="min-w-0"><span class="block font-headline-sm text-headline-sm text-on-surface font-semibold">' + esc(d.title) + '</span>' +
+            '<span class="block font-body-sm text-body-sm text-on-surface-variant">' + esc(d.desc) + '</span></span></button>';
+        }).join('') + '</div></div>';
+    }).join('');
+  }
+
   function refresh() {
     var p = project();
     if (!p) {
       $('hero').innerHTML = '<div class="py-8 text-center"><p class="font-headline-md text-headline-md text-primary">ไม่พบโครงการ ' + esc(projectId) + '</p><a class="text-primary underline" href="projects.html">กลับไปทะเบียนโครงการ</a></div>';
       return;
     }
-    renderSwitcher(p); renderHero(p); renderMilestones(p); renderDiary(); renderAttachments(); renderMap(p);
+    renderSwitcher(p); renderHero(p); renderMilestones(p); renderDiary(); renderAttachments(); renderMap(p); renderProjectDocs(p);
   }
 
   function newDiary() {
@@ -314,6 +341,10 @@
         }
       });
     },
+    'project-doc': function (el) {
+      var d = SK.docEngine.DOCS.filter(function (x) { return x.key === el.dataset.doc; })[0];
+      SK.docEngine.openDocument(d, project());
+    },
     'open-doc': function (el) { SK.flows.openDocument(projectDocs()[Number(el.dataset.index)], renderAttachments); },
     'attach-file': function () { SK.flows.uploadNew({ projectId: projectId, type: 'order' }, renderAttachments); }
   });
@@ -323,5 +354,8 @@
     $('project-switch').addEventListener('change', function () { location.href = 'progress.html?id=' + encodeURIComponent(this.value); });
     refresh();
     if (params.get('new') === 'diary' && project()) newDiary();
+    if (location.hash === '#docs') setTimeout(function () { var d = $('docs'); if (d) d.scrollIntoView({ behavior: 'smooth' }); }, 200);
+    // เตรียมตัวสร้างเอกสารไว้ล่วงหน้าเมื่อมีข้อมูลจริง เพื่อให้เปิดฟอร์มได้เร็ว
+    if (project() && project().real && SK.docEngine) setTimeout(function () { SK.docEngine.load().catch(function () {}); }, 800);
   });
 })();
