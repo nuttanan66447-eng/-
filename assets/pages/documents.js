@@ -298,11 +298,48 @@
     }
   });
 
-  SK.page = { refresh: function () { renderEstimate(); renderDocs(); } };
+  // ---------- พิมพ์เอกสารราชการ (แม่แบบชุดเดิม v184) ----------
+  function docButton(d) {
+    return '<button type="button" data-action="print-doc" data-doc="' + d.key + '" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors flex items-start gap-space-sm">' +
+      '<span class="w-9 h-9 shrink-0 rounded-lg bg-surface-container-lowest text-primary flex items-center justify-center"><span class="material-symbols-outlined">' + d.icon + '</span></span>' +
+      '<span class="min-w-0"><span class="block font-headline-sm text-headline-sm text-on-surface font-semibold">' + esc(d.title) + '</span>' +
+      '<span class="block font-body-sm text-body-sm text-on-surface-variant">' + esc(d.desc) + '</span></span></button>';
+  }
+  function renderPrintDocs() {
+    var box = $('print-docs-body'), sel = $('docs-project');
+    if (!box) return;
+    var real = SK.db.data.projects.filter(function (p) { return p.real; });
+    if (!real.length || !SK.docEngine) {
+      sel.closest('label').classList.add('hidden');
+      box.innerHTML = '<div class="p-space-md rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant flex flex-wrap items-center justify-between gap-2">' +
+        '<span>นำเข้าข้อมูลจริงจาก Google Sheet ก่อน แล้วจึงพิมพ์เอกสารได้ทุกแบบ</span>' +
+        '<button type="button" data-action="data-panel" class="' + ui.btnClass('primary') + '">นำเข้าข้อมูลจริง</button></div>';
+      return;
+    }
+    sel.innerHTML = real.map(function (p) { return '<option value="' + p.id + '">' + esc(p.id + ' • ' + p.name) + '</option>'; }).join('');
+    var groups = [];
+    SK.docEngine.DOCS.forEach(function (d) {
+      var name = d.general ? 'เอกสารทั่วไป: ' + d.group : 'เอกสารโครงการ: ' + d.group;
+      var g = groups.filter(function (x) { return x.name === name; })[0];
+      if (!g) groups.push(g = { name: name, docs: [] });
+      g.docs.push(d);
+    });
+    box.innerHTML = groups.map(function (g) {
+      return '<div class="mb-space-md last:mb-0"><h3 class="font-label-md text-label-md text-on-surface-variant mb-space-xs">' + esc(g.name) + '</h3>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">' + g.docs.map(docButton).join('') + '</div></div>';
+    }).join('');
+  }
+  SK.actions['print-doc'] = function (el) {
+    var d = SK.docEngine.DOCS.filter(function (x) { return x.key === el.dataset.doc; })[0];
+    SK.docEngine.openDocument(d, d.general ? null : SK.db.project($('docs-project').value));
+  };
+
+  SK.page = { refresh: function () { renderEstimate(); renderDocs(); renderPrintDocs(); } };
   ui.onReady(function () {
     if (params.get('q')) $('doc-search').value = params.get('q');
     $('doc-search').addEventListener('input', renderDocs);
     renderEstimate();
+    renderPrintDocs();
     setTab(tab);
   });
 })();
