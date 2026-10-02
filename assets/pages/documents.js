@@ -308,7 +308,7 @@
   function renderPrintDocs() {
     var box = $('print-docs-body'), sel = $('docs-project');
     if (!box) return;
-    var real = SK.db.data.projects.filter(function (p) { return p.real; });
+    var real = SK.db.data.projects.filter(function (p) { return p.rowNumber; });
     if (!real.length || !SK.docEngine) {
       sel.closest('label').classList.add('hidden');
       box.innerHTML = '<div class="p-space-md rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant flex flex-wrap items-center justify-between gap-2">' +

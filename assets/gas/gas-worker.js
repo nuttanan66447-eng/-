@@ -53,9 +53,29 @@ function runSetup() {
   });
 }
 
+// ยังไม่ได้นำเข้าข้อมูลจริง: ใช้โครงการตัวอย่างของเว็บไซต์เป็นฐานข้อมูลโครงการ เพื่อให้พิมพ์เอกสารได้ทุกโครงการ
+// (นำเข้าไฟล์ Excel จริงเมื่อไร ข้อมูลตัวอย่างจะถูกแทนที่ทั้งหมด)
+var SAMPLE_PROP = 'SK_SITE_SAMPLE';
+function isSample() { return PropertiesService.getScriptProperties().getProperty(SAMPLE_PROP) === '1'; }
+function syncSample(projects) {
+  var sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.DATA_SHEET_NAME);
+  var last = sheet.getLastRow();
+  if (!isSample() && last > 1) return { sample: false };
+  var width = sheet.getLastColumn();
+  var headers = sheet.getRange(1, 1, 1, width).getValues()[0].map(String);
+  var rows = (projects || []).map(function (p) { return headers.map(function (h) { return p[h] == null ? '' : p[h]; }); });
+  var old = last > 1 ? sheet.getRange(2, 1, last - 1, width).getValues() : [];
+  if (JSON.stringify(old) === JSON.stringify(rows)) return { sample: true, changed: false };
+  if (last > 1) sheet.deleteRows(2, last - 1);
+  if (rows.length) sheet.getRange(2, 1, rows.length, width).setValues(rows);
+  PropertiesService.getScriptProperties().setProperty(SAMPLE_PROP, '1');
+  return { sample: true, changed: true };
+}
+
 function summary() {
   var wb = GasEmu.getWorkbook();
   return {
+    sample: isSample(),
     savedAt: wb.savedAt || null,
     title: wb.title || '',
     sheets: wb.sheets.map(function (s) {
@@ -92,6 +112,10 @@ self.onmessage = function (e) {
         GasEmu.setWorkbook(msg.workbook);
         runSetup();
         return saveNow().then(function () { self.postMessage({ id: msg.id, ok: true, result: summary() }); });
+      } else if (msg.type === 'sample') {
+        var res = syncSample(msg.projects);
+        if (!res.changed) { reply.result = res; reply.ok = true; }
+        else return saveNow().then(function () { self.postMessage({ id: msg.id, ok: true, result: res }); });
       } else if (msg.type === 'export') {
         reply.result = GasEmu.getWorkbook(); reply.ok = true;
       } else if (msg.type === 'summary') {

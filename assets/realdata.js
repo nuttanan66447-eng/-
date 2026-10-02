@@ -113,7 +113,70 @@
     return projects;
   }
 
-  SK.dataReady = SKGas.call('getDashboardDataFast').then(function (data) {
+  // โครงการตัวอย่างของเว็บไซต์ -> แถวในชีท "ฐานข้อมูลโครงการ" ของระบบเดิม (ใช้พิมพ์เอกสาร)
+  var CATEGORY_TYPES = { road: 'งานถนน', drainage: 'งานระบายน้ำ', building: 'งานอาคาร', electrical: 'งานไฟฟ้า' };
+  function thaiDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+    return m ? +m[3] + ' ' + MONTHS[+m[2] - 1] + ' ' + (+m[1] + 543) : '';
+  }
+  function person(text) {
+    var m = /^(.*?)\s*\((.*)\)\s*$/.exec(text || '');
+    return m ? [m[1], m[2]] : [text || '', ''];
+  }
+  function sampleRow(p) {
+    var v = SK.ref.VILLAGES[p.village] || { name: '' };
+    var vm = /^ม\.(\d+)\s*(.*)$/.exec(v.name) || [null, '', v.name];
+    var sup = person(p.supervisor), cm = SK.ref.COMMITTEE || [];
+    var start = /^(\d{4})-(\d{2})/.exec(p.start || '');
+    var row = {
+      'ชื่อโครงการ': p.name,
+      'ชื่อหน่วยงานท้องถิ่น': 'เทศบาลตำบลสีแก้ว',
+      'ปริมาณงาน': p.location || '',
+      'งบประมาณ': SK.ref.SOURCES[p.source] || '',
+      'งบประมาณประจำปี': p.year || (start ? String(+start[1] + 543 + (+start[2] >= 10 ? 1 : 0)) : ''),
+      'เลขที่สัญญา': p.contractNo || '',
+      'ลงวันที่สัญญา': thaiDate(p.start),
+      'วันเริ่มสัญญา': thaiDate(p.start),
+      'สิ้นสุดสัญญา': thaiDate(p.end),
+      'พิกัดโครงการ': p.lat && p.lng ? p.lat + ', ' + p.lng : '',
+      'ค่างาน': Number(p.budget || 0).toLocaleString('en-US'),
+      'ค่าปรับวันละ': Math.round(Number(p.budget || 0) / 1000).toLocaleString('en-US'),
+      'สถานที่ก่อสร้าง': vm[1] ? 'หมู่ที่ ' + vm[1] + ' ' + vm[2] : v.name,
+      'หมู่ที่': vm[1],
+      'หมู่บ้าน': vm[2],
+      'ประเภทงาน': CATEGORY_TYPES[p.category] || '',
+      'ความก้าวหน้า': p.actual != null ? String(p.actual) : '',
+      'จำนวนผู้ควบคุมงาน': sup[0] ? '1' : '',
+      'ผู้ควบคุมงาน คนที่ 1': sup[0],
+      'ตำแหน่งผู้ควบคุมงาน คนที่ 1': sup[1],
+      'ผู้รับจ้าง': p.contractor && p.contractor !== '-' ? p.contractor : '',
+      'หมายเหตุ': 'โครงการตัวอย่างของเว็บไซต์ (' + p.id + ')'
+    };
+    if (cm.length) {
+      row['จำนวนคณะกรรมการตรวจรับงานจ้าง'] = cm.length + ' คน';
+      row['ประธานกรรมการตรวจรับงานจ้าง'] = cm[0].name; row['ตำแหน่งประธาน'] = cm[0].position;
+      cm.slice(1, 5).forEach(function (c, i) {
+        row['กรรมการตรวจรับงานจ้าง ' + (i + 1)] = c.name; row['ตำแหน่งกรรมการ ' + (i + 1)] = c.position;
+      });
+    }
+    return row;
+  }
+  // ยังไม่ได้นำเข้าข้อมูลจริง: ส่งโครงการตัวอย่างให้ตัวสร้างเอกสาร ทุกโครงการจึงพิมพ์เอกสารได้ทันที
+  function useSampleProjects() {
+    var list = SK.db.data.projects;
+    return SKGas.syncSample(list.map(sampleRow)).then(function (res) {
+      if (!res || !res.sample) return false;
+      list.forEach(function (p, i) { p.rowNumber = i + 2; });
+      return true;
+    });
+  }
+
+  SK.dataReady = useSampleProjects().then(function (sample) {
+    if (sample) return;
+    return SKGas.call('getDashboardDataFast').then(loadReal);
+  }).catch(function (err) { console.warn('โหลดข้อมูลจริงไม่สำเร็จ', err); });
+
+  function loadReal(data) {
     if (!data || !data.ok || !data.rows || !data.rows.length) return;
     var list = mapRows(data);
     return SKGas.summary().then(function (sum) {
@@ -126,7 +189,7 @@
       d.inspections = d.inspections.filter(function (x) { return has(x.projectId); });
       d.notifications = d.notifications.filter(function (n) { var m = /id=([^&]+)/.exec(n.href || ''); return !m || has(decodeURIComponent(m[1])); });
     });
-  }).catch(function (err) { console.warn('โหลดข้อมูลจริงไม่สำเร็จ', err); });
+  }
 
   // แถบแจ้งแหล่งข้อมูลบนทุกหน้า
   function banner() {
@@ -139,7 +202,7 @@
       ? '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">cloud_done</span>ข้อมูลจริงจาก Google Sheet • ' + ext.count + ' โครงการ' +
         (ext.savedAt ? ' • อัปเดตในเครื่องนี้ ' + new Date(ext.savedAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</span>' +
         '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้า / ส่งออกข้อมูล</button>'
-      : '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">info</span>กำลังแสดงข้อมูลตัวอย่าง — นำเข้าข้อมูลจริงจาก Google Sheet เพื่อพิมพ์เอกสารโครงการ</span>' +
+      : '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">info</span>กำลังแสดงข้อมูลตัวอย่าง (พิมพ์เอกสารได้ทุกโครงการ) — นำเข้าข้อมูลจริงจาก Google Sheet เพื่อใช้โครงการจริง</span>' +
         '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้าข้อมูลจริง →</button>';
     var first = main.firstElementChild;
     (first && first.classList.contains('flex') && first.firstElementChild ? first : main).insertAdjacentElement('afterbegin', el);

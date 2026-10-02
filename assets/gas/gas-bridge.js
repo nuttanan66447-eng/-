@@ -81,6 +81,7 @@
     importWorkbook: function (wb) { return send({ type: 'import', workbook: wb }); },
     exportWorkbook: function () { return send({ type: 'export' }); },
     summary: function () { return send({ type: 'summary' }); },
+    syncSample: function (projects) { return send({ type: 'sample', projects: projects }); },
     reset: function () { return send({ type: 'reset' }); }
   };
 })();

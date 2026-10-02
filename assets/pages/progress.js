@@ -189,7 +189,7 @@
   function renderProjectDocs(p) {
     var box = $('project-docs');
     if (!box) return;
-    if (!p.real || !SK.docEngine) {
+    if (!p.rowNumber || !SK.docEngine) {
       box.innerHTML = '<div class="p-space-md rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant flex flex-wrap items-center justify-between gap-2">' +
         '<span>การพิมพ์เอกสารโครงการต้องใช้ข้อมูลจริงจาก Google Sheet (โครงการตัวอย่างพิมพ์ไม่ได้)</span>' +
         '<button type="button" data-action="data-panel" class="' + ui.btnClass('primary') + '">นำเข้าข้อมูลจริง</button></div>';
@@ -356,6 +356,6 @@
     if (params.get('new') === 'diary' && project()) newDiary();
     if (location.hash === '#docs') setTimeout(function () { var d = $('docs'); if (d) d.scrollIntoView({ behavior: 'smooth' }); }, 200);
     // เตรียมตัวสร้างเอกสารไว้ล่วงหน้าเมื่อมีข้อมูลจริง เพื่อให้เปิดฟอร์มได้เร็ว
-    if (project() && project().real && SK.docEngine) setTimeout(function () { SK.docEngine.load().catch(function () {}); }, 800);
+    if (project() && project().rowNumber && SK.docEngine) setTimeout(function () { SK.docEngine.load().catch(function () {}); }, 800);
   });
 })();

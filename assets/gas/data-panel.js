@@ -86,7 +86,7 @@
       (message ? '<div class="skd-msg skd-' + (tone || 'info') + '">' + esc(message) + '</div>' : '') +
       '<div class="skd-status"><strong>' + projects + '</strong> โครงการ • ' + used.length + ' ชีทมีข้อมูล' +
       (info.savedAt ? '<br><span>บันทึกในเครื่องนี้ล่าสุด ' + esc(new Date(info.savedAt).toLocaleString('th-TH')) + '</span>' : '') +
-      (info.title ? '<br><span>ที่มา: ' + esc(info.title) + '</span>' : '') + '</div>' +
+      (info.sample ? '<br><span>ที่มา: โครงการตัวอย่างของเว็บไซต์ (ยังไม่ได้นำเข้าข้อมูลจริง)</span>' : info.title ? '<br><span>ที่มา: ' + esc(info.title) + '</span>' : '') + '</div>' +
       '<ol class="skd-steps">' +
         '<li><a href="' + DOWNLOAD_URL + '" target="_blank" rel="noopener">ดาวน์โหลดไฟล์ Excel จาก Google Sheet</a><small>ต้องเข้าสู่ระบบ Google ด้วยบัญชีที่มีสิทธิ์เปิดชีทของกองช่าง</small></li>' +
         '<li><label class="skd-btn skd-primary">นำเข้าไฟล์ Excel (.xlsx)<input type="file" accept=".xlsx,.xlsm,.xls,.ods" hidden></label><small>ข้อมูลทุกชีทจะถูกโหลดเข้าระบบในเบราว์เซอร์นี้</small></li>' +
