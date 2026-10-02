@@ -320,11 +320,12 @@
       'delayed': 'bg-error-container text-on-error-container',
       'pending-inspection': 'bg-secondary-fixed text-on-secondary-fixed-variant',
       'completed': 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
-      'signing': 'bg-surface-container text-on-surface-variant'
+      'signing': 'bg-surface-container text-on-surface-variant',
+      'unknown': 'bg-surface-container text-on-surface-variant'
     }[s];
-    var icon = { 'on-schedule': 'radio_button_checked', delayed: 'warning', 'pending-inspection': 'fact_check', completed: 'check_circle', signing: 'draw' }[s];
+    var icon = { 'on-schedule': 'radio_button_checked', delayed: 'warning', 'pending-inspection': 'fact_check', completed: 'check_circle', signing: 'draw', unknown: 'help' }[s];
     var label = ref.STATUSES[s].label;
-    if (s === 'delayed') label = 'ล่าช้า ' + Math.max(0, Math.round(p.plan - p.actual)) + '%';
+    if (s === 'delayed' && p.plan > p.actual) label = 'ล่าช้า ' + Math.round(p.plan - p.actual) + '%';
     return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-label-sm text-label-sm font-bold whitespace-nowrap ' + cls + '">' +
       '<span class="material-symbols-outlined text-[14px]">' + icon + '</span>' + esc(label) + '</span>';
   }
@@ -436,7 +437,7 @@
     modal({
       title: p.name, subtitle: 'รหัสโครงการ ' + p.id, icon: ref.CATEGORIES[p.category].icon, size: 'lg', body: body,
       actions: [
-        { label: 'แก้ไขข้อมูล', icon: 'edit', onClick: function (m) { m.close(); openProjectForm(p, onChanged); } },
+        { label: 'แก้ไขข้อมูล', icon: 'edit', onClick: function (m) { m.close(); SK.ui.openProjectForm(p, onChanged); } },
         { label: 'เปิดใน Google Maps', icon: 'map', onClick: function () { window.open('https://www.google.com/maps?q=' + p.lat + ',' + p.lng, '_blank', 'noopener'); } },
         { label: 'ติดตามความก้าวหน้า', kind: 'primary', icon: 'construction', onClick: function () { location.href = 'progress.html?id=' + encodeURIComponent(p.id); } }
       ]
@@ -575,9 +576,11 @@
     fn(el, e);
   });
 
+  // รอให้ข้อมูลจริง (ถ้ามี) โหลดเสร็จก่อนวาดหน้า เพื่อไม่ให้หน้าเว็บกระพริบจากข้อมูลตัวอย่าง
   function onReady(fn) {
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-    else fn();
+    var run = function () { Promise.resolve(SK.dataReady).then(fn, fn); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
   }
 
   SK.ui = {

@@ -41,7 +41,8 @@
     'delayed': { label: 'ล่าช้ากว่าแผน', long: 'มีความล่าช้า (มีหนังสือเร่งรัด)' },
     'pending-inspection': { label: 'รอตรวจรับพัสดุ', long: 'รอตรวจรับพัสดุ / คณะกรรมการตรวจรับ' },
     'completed': { label: 'เสร็จสิ้น / ส่งมอบ', long: 'ส่งมอบงานแล้วเสร็จ 100%' },
-    'signing': { label: 'ระหว่างลงนามสัญญา', long: 'ระหว่างลงนามสัญญาจ้าง' }
+    'signing': { label: 'ระหว่างลงนามสัญญา', long: 'ระหว่างลงนามสัญญาจ้าง' },
+    'unknown': { label: 'ไม่ระบุสถานะ', long: 'ยังไม่ระบุสถานะ / ยังไม่เริ่มงาน' }
   };
 
   var SOURCES = {
@@ -259,9 +260,14 @@
     return memory;
   }
 
+  // โครงการจริงจาก Google Sheet (ผ่านระบบงานเอกสาร) แสดงแทนข้อมูลตัวอย่างโดยไม่เขียนทับข้อมูลตัวอย่างในเครื่อง
+  var external = null;
+
   function save() {
     try {
-      localStorage.setItem(KEY, JSON.stringify(memory));
+      var out = memory;
+      if (external) { out = Object.assign({}, memory, { projects: external.sampleProjects }); }
+      localStorage.setItem(KEY, JSON.stringify(out));
       return true;
     } catch (e) {
       return false;
@@ -305,6 +311,12 @@
       memory = obj; memory.version = 1; save();
     },
     project: function (id) { return load().projects.filter(function (p) { return p.id === id; })[0]; },
+    useExternalProjects: function (list, info) {
+      var d = load();
+      external = { sampleProjects: external ? external.sampleProjects : d.projects, info: info || {} };
+      d.projects = list;
+    },
+    get external() { return external ? external.info : null; },
     files: {
       put: function (file) {
         var id = 'F' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

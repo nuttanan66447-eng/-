@@ -5,6 +5,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var CENTER = [16.0824, 103.5932];
+  function center() { var e = SK.db.external; return e && e.center ? e.center : CENTER; }
   var GROUP = function (p) {
     if (p.status === 'completed') return 'done';
     if (p.status === 'delayed') return 'late';
@@ -34,12 +35,24 @@
     $('kpi-done').textContent = count(function (p) { return p.status === 'completed'; });
     $('kpi-plan').textContent = count(function (p) { return p.status === 'on-schedule' || p.status === 'pending-inspection'; });
     $('kpi-late').textContent = count(function (p) { return p.status === 'delayed'; });
-    $('kpi-sign').textContent = count(function (p) { return p.status === 'signing'; });
+    $('kpi-sign').textContent = count(function (p) { return p.status === 'signing' || p.status === 'unknown'; });
     var awaiting = count(function (p) { return p.status === 'pending-inspection'; });
     var delayed = count(function (p) { return p.status === 'delayed'; });
     $('kpi-urgent').textContent = delayed;
     $('kpi-await').textContent = awaiting + ' โครงการ';
     $('kpi-delayed').textContent = delayed + ' โครงการ';
+    if (SK.db.external) {
+      // การ์ดที่ 3 ในดีไซน์เป็นข้อมูลความปลอดภัยตัวอย่าง ซึ่งไม่มีในชีท: แสดงสัญญาที่จะสิ้นสุดใน 30 วันแทน
+      var today = ui.today(), soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+      var ending = P.filter(function (p) { return p.status !== 'completed' && p.end && p.end >= today && p.end <= soon; });
+      var withGps = P.filter(function (p) { return !p.approxLocation; }).length;
+      $('kpi3-title').textContent = 'สัญญาใกล้สิ้นสุด (30 วัน)';
+      $('kpi3-value').textContent = ending.length;
+      $('kpi3-unit').textContent = 'โครงการ';
+      $('kpi3-sub').textContent = 'โครงการที่มีพิกัด GPS';
+      $('kpi3-subval').textContent = withGps + ' / ' + P.length;
+      $('kpi3-note').textContent = 'คำนวณจากวันสิ้นสุดสัญญาในฐานข้อมูลโครงการ';
+    }
   }
 
   // ---------- งบประมาณตามประเภทงาน ----------
@@ -79,7 +92,7 @@
       $('gis-map').innerHTML = '<div class="h-full flex items-center justify-center text-on-surface-variant">โหลดแผนที่ไม่สำเร็จ</div>';
       return;
     }
-    map = L.map('gis-map', { zoomControl: false, attributionControl: true }).setView(CENTER, 13);
+    map = L.map('gis-map', { zoomControl: false, attributionControl: true }).setView(center(), 13);
     layers = [
       { name: 'แผนที่ถนน (OSM)', layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }) },
       { name: 'ภาพถ่ายดาวเทียม (Esri)', layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagery &copy; Esri' }) }
@@ -168,7 +181,33 @@
     $('recent-filter').classList.toggle('ring-2', !!statusFilter);
   }
 
-  function refresh() { renderKpis(); renderBudget(); renderMarkers(); renderFeed(); renderRecent(); }
+  // งานเร่งด่วนจากข้อมูลจริง: โครงการล่าช้า และโครงการที่สัญญาจะสิ้นสุดภายใน 30 วัน
+  function renderAlerts() {
+    if (!SK.db.external) return; // ข้อมูลตัวอย่างใช้การ์ดตัวอย่างใน HTML
+    var today = ui.today();
+    var soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    var P = SK.db.data.projects;
+    var items = P.filter(function (p) { return p.status === 'delayed'; }).map(function (p) { return { p: p, kind: 'late' }; })
+      .concat(P.filter(function (p) { return p.status === 'on-schedule' && p.end && p.end >= today && p.end <= soon; }).map(function (p) { return { p: p, kind: 'soon' }; }));
+    $('alerts-count').textContent = items.length + ' รายการ';
+    $('alerts-list').innerHTML = items.slice(0, 5).map(function (it) {
+      var p = it.p, late = it.kind === 'late';
+      var days = p.end ? Math.round((Date.parse(p.end) - Date.parse(today)) / 86400000) : null;
+      return '<div class="p-space-sm ' + (late ? 'bg-error-container/30' : 'bg-surface-container-low') + ' rounded-lg relative overflow-hidden flex flex-col gap-space-xs">' +
+        '<div class="absolute top-0 left-0 bottom-0 w-1 ' + (late ? 'bg-error' : 'bg-secondary') + '"></div>' +
+        '<div class="flex items-center justify-between gap-2 pl-space-xs"><span class="font-label-sm text-label-sm ' + (late ? 'text-error' : 'text-secondary') + ' font-bold flex items-center gap-1">' +
+        '<span class="material-symbols-outlined text-space-md">' + (late ? 'warning' : 'schedule') + '</span>' + (late ? 'ล่าช้ากว่าแผน' : 'สัญญาสิ้นสุดใน ' + days + ' วัน') + '</span>' +
+        '<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-code-sm text-code-sm">' + esc(ui.villageName(p.village)) + '</span></div>' +
+        '<h4 class="font-headline-sm text-headline-sm text-on-surface leading-tight pl-space-xs">' + esc(p.name) + '</h4>' +
+        '<p class="font-body-sm text-body-sm text-on-surface-variant pl-space-xs">' + esc(p.contractor) + (p.end ? ' • สิ้นสุดสัญญา ' + ui.dateShort(p.end) : '') + ' • ผลงาน ' + p.actual + '%</p>' +
+        '<div class="mt-space-xs pl-space-xs flex flex-wrap gap-space-xs">' +
+        (late ? '<button type="button" data-action="urge" data-project="' + p.id + '" class="px-space-sm py-1 bg-error text-on-error rounded font-label-sm text-label-sm font-semibold">ออกหนังสือเร่งรัดสัญญา (ว.119)</button>' : '') +
+        '<button type="button" data-action="view-project" data-id="' + p.id + '" class="px-space-sm py-1 bg-surface-container text-on-surface rounded font-label-sm text-label-sm">ดูรายละเอียด</button>' +
+        '<a href="system.html" class="px-space-sm py-1 bg-surface-container text-primary rounded font-label-sm text-label-sm">พิมพ์เอกสาร</a></div></div>';
+    }).join('') || '<p class="text-on-surface-variant font-body-sm text-body-sm">ไม่มีโครงการล่าช้าหรือใกล้สิ้นสุดสัญญาใน 30 วัน</p>';
+  }
+
+  function refresh() { renderKpis(); renderBudget(); renderMarkers(); renderFeed(); renderRecent(); renderAlerts(); }
 
   Object.assign(SK.actions, {
     'exec-report': function () {
@@ -185,12 +224,12 @@
     },
     'map-zoom-in': function () { if (map) map.zoomIn(); },
     'map-zoom-out': function () { if (map) map.zoomOut(); },
-    'map-locate': function () { if (map) map.flyTo(CENTER, 13); ui.toast('กลับสู่พิกัดศูนย์กลางตำบลสีแก้ว'); },
+    'map-locate': function () { if (map) map.flyTo(center(), 13); ui.toast('กลับสู่พิกัดศูนย์กลางตำบลสีแก้ว'); },
     'map-fullscreen': function () {
       var card = $('map-card');
       if (document.fullscreenElement) document.exitFullscreen();
       else if (card.requestFullscreen) card.requestFullscreen();
-      else window.open('https://www.google.com/maps/@' + CENTER[0] + ',' + CENTER[1] + ',14z', '_blank', 'noopener');
+      else window.open('https://www.google.com/maps/@' + center()[0] + ',' + center()[1] + ',14z', '_blank', 'noopener');
     },
     'map-filter': function (el) {
       hiddenCats[el.dataset.cat] = !hiddenCats[el.dataset.cat];
