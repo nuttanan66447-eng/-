@@ -39,6 +39,11 @@ head_extra = ('<link rel="icon" type="image/png" href="assets/favicon.png"/>'
               '<link rel="stylesheet" href="assets/gas/data-panel.css"/>')
 html = html.replace('</head>', head_extra + '\n</head>', 1)
 
+# หน้านี้เป็นตัวสร้างเอกสารเบื้องหลังเท่านั้น (system.html?engine=1) — เปิดตรง ๆ ให้กลับหน้าเว็บหลัก
+redirect = ("<script>if(!/[?&]engine=1(&|$)/.test(location.search))"
+            "location.replace('index.html');</script>")
+html = html.replace('<head>', '<head>\n' + redirect, 1)
+
 bridge = ('<script src="assets/gas/gas-bridge.js"></script>\n'
           '<script src="assets/vendor/xlsx/xlsx.full.min.js"></script>\n'
           '<script src="assets/gas/data-panel.js"></script>\n')
