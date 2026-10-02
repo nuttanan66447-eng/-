@@ -189,6 +189,14 @@
 
   SK.page = { refresh: refresh };
   ui.onReady(function () {
+    if (SK.db.external) {
+      var vSel = $('f-village');
+      vSel.innerHTML = '<option value="all">ทุกหมู่บ้าน</option>' + Object.keys(ref.VILLAGES).filter(function (k) {
+        return SK.db.data.projects.some(function (p) { return p.village === k; });
+      }).sort(function (a, b) { return (parseInt(a.slice(1), 10) || 0) - (parseInt(b.slice(1), 10) || 0); }).map(function (k) {
+        return '<option value="' + k + '">' + esc(ref.VILLAGES[k].name) + '</option>';
+      }).join('');
+    }
     var params = new URLSearchParams(location.search);
     if (params.get('category')) $('f-category').value = params.get('category');
     if (params.get('status')) $('f-status').value = params.get('status');

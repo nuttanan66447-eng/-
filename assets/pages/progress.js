@@ -4,10 +4,13 @@
   var SK = window.SK, ui = SK.ui, ref = SK.ref, esc = ui.esc, money = ui.money;
   var $ = function (id) { return document.getElementById(id); };
   var params = new URLSearchParams(location.search);
-  var projectId = params.get('id') || 'SK-67-002';
+  var projectId = params.get('id') || '';
   var dateFilter = null, miniMap, miniMarker;
 
-  function project() { return SK.db.project(projectId); }
+  function project() {
+    if (!projectId) projectId = SK.db.data.projects.some(function (p) { return p.id === 'SK-67-002'; }) ? 'SK-67-002' : ((SK.db.data.projects[0] || {}).id || '');
+    return SK.db.project(projectId);
+  }
 
   // งวดงาน: ใช้รายละเอียดที่บันทึกไว้ ถ้าไม่มีให้แบ่งงวดเท่า ๆ กันตามจำนวนงวด
   function milestones(p) {

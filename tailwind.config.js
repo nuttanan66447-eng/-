@@ -1,7 +1,7 @@
 // Theme exported from Google Stitch (design/DESIGN.md). Fonts mapped to the
 // loaded Google Fonts; Sarabun covers Thai glyphs.
 module.exports = Object.assign(
-  { content: ['./*.html', './assets/*.js', './assets/pages/*.js'] },
+  { content: ['./*.html', '!./system.html', './assets/*.js', './assets/pages/*.js'] },
   {
     "darkMode": "class",
     "theme": {
