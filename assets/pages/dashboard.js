@@ -5,7 +5,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var CENTER = SK.ref.CENTER;
-  function center() { var e = SK.db.external; return e && e.center ? e.center : CENTER; }
+  function center() { return SK.tambon ? SK.tambon.center() : CENTER; }
   var GROUP = function (p) {
     if (p.status === 'completed') return 'done';
     if (p.status === 'delayed') return 'late';
@@ -86,18 +86,21 @@
   }
 
   // ---------- แผนที่ GIS ----------
-  var map, layers, layerIdx = 0, markers = [], hiddenCats = {};
+  var map, layers, layerIdx = 0, markers = [], hiddenCats = {}, tambon = null;
   function initMap() {
     if (!window.L) {
       $('gis-map').innerHTML = '<div class="h-full flex items-center justify-center text-on-surface-variant">โหลดแผนที่ไม่สำเร็จ</div>';
       return;
     }
-    map = L.map('gis-map', { zoomControl: false, attributionControl: true }).setView(center(), 13);
+    map = L.map('gis-map', { zoomControl: false, attributionControl: true, scrollWheelZoom: false }).setView(center(), 14);
     layers = [
       { name: 'แผนที่ถนน (OSM)', layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }) },
       { name: 'ภาพถ่ายดาวเทียม (Esri)', layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagery &copy; Esri' }) }
     ];
     layers[0].layer.addTo(map);
+    // ขอบเขตตำบลสีแก้วและหมู่บ้าน (ซูมพอดีตำบล)
+    if (SK.tambon) tambon = SK.tambon.attach(map, { fit: true });
+    if (SK.cloud && SK.cloud.active) $('map-draw-btn').classList.remove('hidden');
     renderMarkers();
     document.addEventListener('fullscreenchange', function () { setTimeout(function () { map.invalidateSize(); }, 100); });
   }
@@ -224,7 +227,12 @@
     },
     'map-zoom-in': function () { if (map) map.zoomIn(); },
     'map-zoom-out': function () { if (map) map.zoomOut(); },
-    'map-locate': function () { if (map) map.flyTo(center(), 13); ui.toast('กลับสู่พิกัดศูนย์กลางตำบลสีแก้ว'); },
+    'map-locate': function () { if (!map) return; if (tambon) tambon.fit(); else map.flyTo(center(), 14); ui.toast('กลับสู่ตำบลสีแก้ว'); },
+    'map-draw': function () {
+      if (!map || !SK.tambon) return;
+      ui.toast('คลิกบนแผนที่ทีละจุดตามแนวเขตหมู่บ้าน แล้วกด "เสร็จสิ้น"');
+      SK.tambon.startDraw(map, function () { if (tambon) tambon.refresh(); });
+    },
     'map-fullscreen': function () {
       var card = $('map-card');
       if (document.fullscreenElement) document.exitFullscreen();

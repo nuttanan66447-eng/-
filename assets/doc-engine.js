@@ -561,8 +561,9 @@
         onClose: function () { resolve(null); }
       });
       loadLeaflet().then(function () {
-        var center = pos || (SK.db.external && SK.db.external.center) || SK.ref.CENTER;
-        var map = L.map(body.querySelector('[data-map]')).setView(center, pos ? 16 : 13);
+        var center = pos || (SK.tambon ? SK.tambon.center() : SK.ref.CENTER);
+        var map = L.map(body.querySelector('[data-map]'), { scrollWheelZoom: false }).setView(center, pos ? 16 : 14);
+        if (SK.tambon) SK.tambon.attach(map, { fit: !pos });
         var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
         var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '&copy; Esri' });
         sat.addTo(map);

@@ -82,7 +82,9 @@
     exportWorkbook: function () { return send({ type: 'export' }); },
     summary: function () { return send({ type: 'summary' }); },
     syncSample: function (projects) { return send({ type: 'sample', projects: projects }); },
-    reset: function () { return send({ type: 'reset' }); }
+    reset: function () { return send({ type: 'reset' }); },
+    saveBoundary: function (data, user) { return send({ type: 'boundary', op: 'save', data: data, user: user }); },
+    deleteBoundary: function (id, user) { return send({ type: 'boundary', op: 'delete', id: id, user: user }); }
   };
   // ชีทข้อมูลตัวอย่างจากรุ่นก่อน (โครงการสมมุติ): ล้างทิ้งครั้งเดียว ใช้ข้อมูลจริงเท่านั้น
   window.SKGas.ready = worker ? window.SKGas.summary().then(function (s) {

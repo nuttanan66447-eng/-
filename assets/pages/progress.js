@@ -169,6 +169,7 @@
     if (!window.L) return;
     if (!miniMap) {
       miniMap = L.map('mini-map', { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView([p.lat, p.lng], 15);
+      if (SK.tambon) SK.tambon.attach(miniMap, { fit: false, labels: false });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(miniMap);
       miniMarker = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: '', iconSize: [24, 24], iconAnchor: [12, 12], html: '<div class="w-6 h-6 rounded-full bg-secondary-container ring-4 ring-white shadow-lg"></div>' }) }).addTo(miniMap);
     } else {
@@ -227,7 +228,7 @@
       document.querySelectorAll('#docs, main > div > div.grid').forEach(function (el) { el.classList.add('hidden'); });
       return;
     }
-    renderSwitcher(p); renderHero(p); renderMilestones(p); renderDiary(); renderAttachments(); renderMap(p); renderProjectDocs(p); renderCommittee(p);
+    renderSwitcher(p); renderHero(p); renderMilestones(p); renderDiary(); renderAttachments(); renderMap(p); renderProjectDocs(p); renderCommittee(p); if (SK.news) SK.news.renderProject(p.id);
   }
 
   // คณะกรรมการตรวจรับตามที่ลงทะเบียนไว้ในฐานข้อมูลโครงการ
