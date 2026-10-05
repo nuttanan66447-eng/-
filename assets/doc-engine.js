@@ -81,7 +81,7 @@
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       // ต้องวางไว้นอกจอแทนการซ่อน เพราะโค้ดเดิมวัดขนาดหน้ากระดาษจากการแสดงผลจริง
-      frame.style.cssText = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none';
+      frame.style.cssText = OFFSCREEN;
       frame.src = 'system.html?engine=1';
       frame.onload = function () {
         var w = W();
@@ -314,16 +314,60 @@
     });
   }
 
+  // ---------- โหมดฟอร์มเดิม: เอกสารที่มีตารางรายวัน/ตารางรายการ แสดงฟอร์มของระบบเดิมในหน้าต่างของเรา ----------
+  // (ย่อเป็นช่องเดี่ยว ๆ แล้ววันที่และหัวตารางหาย) ใช้ฟอร์มเดิมทั้งหมด จึงเห็นวันที่ทุกวัน ตาราง และปุ่มเพิ่ม/ลบรายการครบ
+  var OFFSCREEN = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none';
+  var COMPLEX = '.weekly-work-days, .weekly-matrix-wrap, .performance-table-input-wrap, .completion-signer-list, table, [contenteditable="true"]';
+  function needsNative(doc) {
+    var root = rootEl(doc);
+    return !!(root && root.querySelector(COMPLEX));
+  }
+  function nativeView(doc, holder) {
+    var d = W().document, root = rootEl(doc);
+    var wrap = root.closest('.memo-form-wrap, [id$="FormWrap"]') || root;
+    var home = { parent: wrap.parentNode, next: wrap.nextSibling };
+    var st = d.createElement('style');
+    st.textContent = 'html,body{overflow:hidden!important}' +
+      'body>:not([data-sk-native]){visibility:hidden!important}' +
+      '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:auto!important;margin:0!important;' +
+      'padding:12px 18px 48px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;' +
+      'background:#fff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}' +
+      '[data-sk-native] .form-actions{display:none!important}';
+    var timer = null, shown = false;
+    function place() {
+      var r = holder.getBoundingClientRect();
+      if (!r.width) return;
+      frame.style.cssText = 'position:fixed;left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;border:0;z-index:1105;opacity:1;background:#fff;border-radius:10px;box-shadow:0 0 0 1px #e5eeff';
+    }
+    return {
+      show: function () {
+        if (!wrap.hasAttribute('data-sk-native')) { wrap.setAttribute('data-sk-native', '1'); d.body.appendChild(wrap); d.head.appendChild(st); }
+        shown = true; place();
+        clearInterval(timer); timer = setInterval(function () { if (shown) place(); }, 300);
+        window.addEventListener('resize', place);
+      },
+      hide: function () {
+        shown = false; clearInterval(timer); window.removeEventListener('resize', place);
+        frame.style.cssText = OFFSCREEN;
+        // คืนฟอร์มกลับตำแหน่งเดิมก่อนสร้าง/พิมพ์ (โค้ดเดิมวัดหน้ากระดาษจากหน้าตาปกติ)
+        if (wrap.hasAttribute('data-sk-native')) {
+          wrap.removeAttribute('data-sk-native'); st.remove();
+          home.parent.insertBefore(wrap, home.next && home.next.parentNode === home.parent ? home.next : null);
+        }
+      }
+    };
+  }
+
   function openDocument(doc, project) {
     var formBox = document.createElement('div');
     formBox.innerHTML = '<div class="py-10 text-center text-on-surface-variant"><span class="material-symbols-outlined animate-spin">progress_activity</span><p>กำลังเตรียมแบบฟอร์ม...</p></div>';
     var m = ui.modal({
-      title: doc.title, subtitle: project ? project.name : doc.desc, icon: doc.icon, size: 'lg', body: formBox,
+      title: doc.title, subtitle: project ? project.name : doc.desc, icon: doc.icon, size: 'xl', body: formBox,
       actions: [
         { label: 'ยกเลิก', onClick: function (mm) { mm.close(); } },
         { label: 'สร้างเอกสาร', kind: 'primary', icon: 'description', onClick: function () { build(); } }
       ],
-      onClose: closeAll
+      onClose: function () { if (native) native.hide(); closeAll(); }
     });
     var data = null, busy = false, refreshTimer = null;
 
@@ -337,8 +381,17 @@
       }, 250);
     }
 
+    var native = null;
     openDoc(doc, project ? project.rowNumber : null).then(function (d) {
       data = d;
+      if (needsNative(doc)) {
+        formBox.innerHTML = '<div class="flex items-start gap-2 mb-2 p-2.5 rounded-lg bg-primary-fixed/40 font-body-sm text-body-sm"><span class="material-symbols-outlined text-primary text-[20px]">info</span>' +
+          '<span>กรอกตามแบบฟอร์มด้านล่าง — แต่ละวันมีวันที่กำกับ ตารางสภาพอากาศ/แรงงาน/เครื่องจักรเลือกตามวัน แล้วกด <b>สร้างเอกสาร</b></span></div>' +
+          '<div data-native-holder style="height:calc(92vh - 220px);min-height:360px" class="rounded-lg bg-surface-container-low"></div>';
+        native = nativeView(doc, formBox.querySelector('[data-native-holder]'));
+        native.show();
+        return;
+      }
       renderForm(formBox, d);
     }).catch(function (err) {
       formBox.innerHTML = '<div class="p-4 rounded-lg bg-error-container text-on-error-container">' + esc(err.message || err) + '</div>';
@@ -365,6 +418,7 @@
     function build() {
       if (busy || !data) return;
       busy = true;
+      if (native) data = collect(doc);
       var btn = m.el.querySelector('.sk-modal-actions button:last-child');
       var old = btn.innerHTML;
       btn.disabled = true;
@@ -373,18 +427,19 @@
       formBox.querySelectorAll('[data-i]').forEach(function (el) {
         if (el.type !== 'file') setField(+el.dataset.i, el.type === 'checkbox' ? el.checked : el.value);
       });
+      if (native) native.hide();
       generate(doc).then(function (html) {
-        showPreview(doc, project, html);
+        showPreview(doc, project, html, function () { if (native && document.body.contains(m.el)) native.show(); });
       }).catch(function (err) {
         ui.toast(err.message || String(err), 'error');
-        refresh();
+        if (native) native.show(); else refresh();
       }).then(function () {
         busy = false; btn.disabled = false; btn.innerHTML = old;
       });
     }
   }
 
-  function showPreview(doc, project, html) {
+  function showPreview(doc, project, html, onBack) {
     // ปิดการสั่งพิมพ์อัตโนมัติของหน้าเอกสาร แล้วให้ปุ่มของเราเป็นผู้สั่งพิมพ์
     var guard = '<script>window.__skPrint=window.print;window.print=function(){};window.close=function(){};<\/script>';
     var doc2 = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, function (h) { return h + guard; }) : guard + html;
@@ -393,7 +448,7 @@
     var iframe = wrap.querySelector('iframe');
     var word = wordButton(doc);
     ui.modal({
-      title: 'พรีวิว: ' + doc.title, subtitle: project ? project.name : '', icon: 'preview', size: 'lg', body: wrap,
+      title: 'พรีวิว: ' + doc.title, subtitle: project ? project.name : '', icon: 'preview', size: 'lg', body: wrap, onClose: onBack,
       actions: [{ label: 'กลับไปแก้ไข', icon: 'edit', onClick: function (m) { m.close(); } }]
         .concat(word ? [{ label: 'บันทึกเป็น Word', icon: 'download', onClick: function () { var b = wordButton(doc); if (b) { b.click(); ui.toast('กำลังดาวน์โหลดไฟล์ Word', 'success'); } } }] : [])
         .concat([{ label: 'พิมพ์ / บันทึกเป็น PDF', kind: 'primary', icon: 'print', onClick: function () {
