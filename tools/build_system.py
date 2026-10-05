@@ -64,3 +64,33 @@ server.mkdir(parents=True, exist_ok=True)
 (server / 'config.js').write_text(read('Config.gs'), encoding='utf-8')
 (server / 'code.js').write_text(read('Code.gs'), encoding='utf-8')
 print('wrote system.html (%d KB) and system/server/*.js' % (len(html.encode('utf-8')) // 1024))
+
+# รายชื่อจริงจากระบบ v184 (ผู้ควบคุมงาน บุคลากรสำหรับคณะกรรมการ ผู้บริหาร หมู่บ้าน) ให้หน้าเว็บหลักใช้ร่วมกัน
+import json as _json
+import re as _re
+
+client = read('Client.html')
+dashboard = read('Dashboard.html')
+
+
+def js_array(name):
+    m = _re.search(r'const %s = (\[.*?\n    \]);' % name, client, _re.S)
+    assert m, name
+    text = _re.sub(r'(\w+):', r'"\1":', m.group(1)).replace("'", '"')
+    text = _re.sub(r',\s*([\]}])', r'\1', text)
+    return _json.loads(text)
+
+
+villages = [{'no': int(n), 'name': nm} for n, nm in
+            _re.findall(r'<option value="หมู่ที่ (\d+) [^"]*" data-no="\d+" data-name="([^"]+)"', dashboard)]
+personnel = {
+    'supervisors': js_array('SUPERVISOR_OPTIONS'),
+    'committee': js_array('COMMITTEE_OPTIONS'),
+    'executives': js_array('EXECUTIVE_OPTIONS'),
+    'villages': villages,
+}
+(ROOT / 'assets' / 'personnel.js').write_text(
+    '// สร้างอัตโนมัติจาก system/src/Client.html และ Dashboard.html ด้วย tools/build_system.py — ห้ามแก้ด้วยมือ\n'
+    'window.SK_PERSONNEL = ' + _json.dumps(personnel, ensure_ascii=False, indent=1) + ';\n', encoding='utf-8')
+print('wrote assets/personnel.js (%d supervisors, %d committee, %d villages)' % (
+    len(personnel['supervisors']), len(personnel['committee']), len(villages)))

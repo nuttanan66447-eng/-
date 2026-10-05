@@ -19,6 +19,9 @@
 - `assets/doc-engine.js` = ฟอร์ม/พรีวิว/พิมพ์เอกสารโครงการ (สั่งงาน v184 ใน iframe ที่ซ่อนอยู่)
 - `assets/cloud.js` = เข้าสู่ระบบ Supabase + ซิงก์ SK.db (ตาราง records), ชีท v184 (workbooks), ไฟล์แนบ (Storage `files`) — โครงสร้าง DB ใน `supabase/schema.sql` แก้ DB แล้วต้องอัปเดตไฟล์นี้ด้วย
 - `assets/config.js` = URL + publishable key ของ Supabase
+- `assets/personnel.js` = รายชื่อจริง (ผู้ควบคุมงาน บุคลากร ผู้บริหาร หมู่บ้าน) สร้างจาก `system/src` ด้วย `tools/build_system.py` — ห้ามแก้ด้วยมือ
+- `assets/thai-date.js` = ปฏิทินภาษาไทย แทน `<input type="date">` ทุกช่องอัตโนมัติ
+- ใช้ข้อมูลจริงเท่านั้น ห้ามใส่ข้อมูล/รายชื่อ/ตัวเลขสมมุติในหน้าเว็บ (โครงการมาจากชีท "ฐานข้อมูลโครงการ" ของระบบเอกสาร)
 - `assets/realdata.js` = ใช้ข้อมูลจริงที่นำเข้าจาก Google Sheet (.xlsx) หรือส่งโครงการตัวอย่างให้ตัวสร้างเอกสารถ้ายังไม่นำเข้า
 
 ## คำสั่ง

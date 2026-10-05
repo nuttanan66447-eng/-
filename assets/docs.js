@@ -33,8 +33,10 @@
       '<tr><th>ผลงาน</th><td>งานจริง ' + p.actual + '% / แผน ' + p.plan + '% • งวดที่ ' + p.installment + ' จาก ' + p.installments + ' งวด</td></tr>' +
       '<tr><th>เบิกจ่ายแล้ว</th><td>' + money(p.disbursed, 2) + ' บาท</td></tr></table>';
   }
-  function committeeSign() {
-    return signBlock(ref.COMMITTEE.map(function (c) { return [c.name, c.role, c.position]; }));
+  function committeeSign(p) {
+    var list = ref.committeeOf(p);
+    if (!list.length) list = [{ name: '', role: 'ประธานกรรมการ' }, { name: '', role: 'กรรมการ' }, { name: '', role: 'กรรมการ' }];
+    return signBlock(list.map(function (c) { return [c.name, c.role, c.position]; }));
   }
 
   var T = {
@@ -88,7 +90,7 @@
         '<div class="box"><strong>งวดงานที่ตรวจรับ:</strong> งวดที่ ' + esc(v.installment) + ' &nbsp; <strong>วันที่ตรวจรับ:</strong> ' + ui.dateLong(v.date) +
         '<br><strong>ผลการตรวจรับ:</strong> ' + (v.result === 'pass' ? '☑ ถูกต้องครบถ้วนตามสัญญา ☐ ไม่ถูกต้อง' : '☐ ถูกต้องครบถ้วนตามสัญญา ☑ ไม่ถูกต้อง / ให้แก้ไข') +
         (v.note ? '<br><strong>ความเห็นคณะกรรมการ:</strong> ' + esc(v.note) : '') + '</div>' +
-        '<p class="indent">คณะกรรมการตรวจรับพัสดุได้ตรวจรับงานตามข้อ ๑๗๖ แห่งระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. ๒๕๖๐ แล้ว</p>' + committeeSign();
+        '<p class="indent">คณะกรรมการตรวจรับพัสดุได้ตรวจรับงานตามข้อ ๑๗๖ แห่งระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. ๒๕๖๐ แล้ว</p>' + committeeSign(p);
     },
     execSummary: function (p, milestones, entries) {
       return '<h1>รายงานสรุปโครงการสำหรับผู้บริหาร</h1>' + projectTable(p) +

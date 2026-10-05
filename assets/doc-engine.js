@@ -420,40 +420,55 @@
     return y + '-' + (mo < 10 ? '0' : '') + mo + '-' + (+m[1] < 10 ? '0' : '') + (+m[1]);
   }
 
-  // โครงร่างฟอร์มเดิม: หัวข้อหมวด, หัวข้อย่อย, ช่องข้อมูล (อ้างอิงลำดับใน collect) และคำอธิบายใต้ช่อง
+  // หมวดของฟอร์มโครงการ (จัดกลุ่มช่องของฟอร์มเดิมตามชื่อช่อง ให้อ่านง่ายและกรอกตามลำดับงานจริง)
+  var ENTRY_GROUPS = [
+    { key: 'info', icon: 'description', title: 'ข้อมูลโครงการ', desc: 'ชื่อโครงการ ประเภทงาน และแหล่งงบประมาณ', names: ['projectName', 'localAgency', 'workScope', 'type', 'budgetType', 'budgetYear'] },
+    { key: 'site', icon: 'location_on', title: 'ที่ตั้งโครงการ', desc: 'หมู่บ้าน และพิกัดบนแผนที่', names: ['constructionSite', 'coordinate'] },
+    { key: 'contract', icon: 'contract', title: 'คำสั่งและสัญญาจ้าง', desc: 'เลขที่คำสั่ง สัญญา ระยะเวลา และค่างาน', names: ['orderNo', 'orderDate', 'contractNo', 'contractDate', 'startDate', 'endDate', 'workValue', 'finePerDay'] },
+    { key: 'delivery', icon: 'event_available', title: 'การส่งมอบและตรวจรับงาน', desc: 'กรอกเมื่อถึงขั้นตอน (เว้นว่างไว้ก่อนได้)', names: ['contractorNoticeDate', 'contractorDeliveryDate', 'acceptanceDate'] },
+    { key: 'auto', icon: 'auto_awesome', title: 'สถานะโครงการ', desc: 'ระบบคำนวณให้อัตโนมัติจากวันที่และผลงาน', names: ['status', 'remainingDaysText', 'progress'], auto: true },
+    { key: 'sup', icon: 'engineering', title: 'ผู้ควบคุมงาน', desc: 'เลือกจำนวน แล้วเลือกรายชื่อ — ตำแหน่งเติมให้อัตโนมัติ', match: /^supervisor/ },
+    { key: 'contractor', icon: 'storefront', title: 'ผู้รับจ้าง', desc: 'พิมพ์ชื่อห้าง/บริษัทเพื่อค้นหา — ที่อยู่ เบอร์โทร เลขภาษีเติมให้', match: /^(contractor|taxId)/ },
+    { key: 'committee', icon: 'groups', title: 'คณะกรรมการตรวจรับงานจ้าง', desc: 'เลือก 3 หรือ 5 คน — ตำแหน่งและสังกัดเติมให้อัตโนมัติ', match: /^(committee|chairman)/ },
+    { key: 'tor', icon: 'gavel', title: 'กรรมการ TOR / ราคากลาง', desc: 'ใช้กับเอกสาร TOR และกำหนดราคากลาง (ถ้ามี)', match: /^(tor|price)/, optional: true },
+    { key: 'other', icon: 'sticky_note_2', title: 'หมายเหตุ', desc: 'รายละเอียดเพิ่มเติม' }
+  ];
+
+  // อ่านช่องของฟอร์มเดิม (ลำดับตามหน้าฟอร์ม) แล้วจัดลงหมวด
   function entryLayout(doc) {
     var root = rootEl(doc);
     Array.prototype.forEach.call(root.querySelectorAll('details'), function (d) { d.open = true; });
-    var data = collect(doc), els = W().__skFields, items = [];
-    Array.prototype.forEach.call(root.querySelectorAll('.form-section-title, .control'), function (node) {
-      if (!visible(node)) return;
-      if (node.classList.contains('form-section-title')) {
-        items.push({ section: clean(node.textContent), collapsible: !!node.closest('details') });
-        return;
-      }
-      if (node.parentElement.closest('.control')) return;
-      var fields = Array.prototype.map.call(node.querySelectorAll('input, select, textarea'), function (el) { return els.indexOf(el); })
-        .filter(function (i) { return i >= 0; });
-      var note = Array.prototype.map.call(node.querySelectorAll('.memo-filter-note, .coordinate-picker-hint'), function (n) { return clean(n.textContent); }).join(' ');
-      if (!fields.length) { var t = clean(node.textContent); if (t) items.push({ sub: t }); return; }
-      fields.forEach(function (i, k) {
-        var f = data.fields[i], el = els[i];
-        f.wide = node.classList.contains('wide') || node.classList.contains('committee-count-control') || f.tag === 'textarea';
-        f.trio = !!node.closest('.project-committee-person');
-        f.thaiDate = el.getAttribute('data-thai-date') === '1';
-        f.coord = el.name === 'coordinate';
-        if (el.list) f.list = Array.prototype.map.call(el.list.options, function (o) { return o.value; });
-        if (k === fields.length - 1 && note) f.note = note;
-        items.push({ field: f });
-      });
+    var data = collect(doc), els = W().__skFields;
+    var groups = ENTRY_GROUPS.map(function (g) { return Object.assign({ fields: [] }, g); });
+    var byKey = {}; groups.forEach(function (g) { byKey[g.key] = g; });
+    data.fields.forEach(function (f, i) {
+      var el = els[i], node = el.closest('.control') || el.parentElement;
+      var name = el.name || el.id || '';
+      f.name = name;
+      f.wide = node.classList.contains('wide') || node.classList.contains('committee-count-control') || f.tag === 'textarea';
+      f.trio = !!node.closest('.project-committee-person');
+      f.thaiDate = el.getAttribute('data-thai-date') === '1';
+      f.coord = name === 'coordinate';
+      if (el.list) f.list = Array.prototype.map.call(el.list.options, function (o) { return o.value; });
+      f.note = Array.prototype.map.call(node.querySelectorAll('.memo-filter-note'), function (n) { return clean(n.textContent); }).join(' ');
+      var g = groups.filter(function (x) { return x.names && x.names.indexOf(name) >= 0; })[0] ||
+        groups.filter(function (x) { return x.match && x.match.test(name); })[0] || byKey.other;
+      if (g.names) f.order = g.names.indexOf(name);
+      g.fields.push(f);
     });
-    data.layout = items;
+    groups.forEach(function (g) { if (g.names) g.fields.sort(function (x, y) { return x.order - y.order; }); });
+    data.groups = groups.filter(function (g) { return g.fields.length; });
     return data;
   }
 
-  function entryFieldHtml(f) {
+  function entryFieldHtml(f, auto) {
     var id = 'skf-' + f.i, ro = f.readonly;
     var label = '<label for="' + id + '" class="font-label-md text-label-md text-on-surface font-semibold">' + esc(f.label || 'ช่องข้อมูล') + (f.required ? ' <span class="text-error">*</span>' : '') + '</label>';
+    if (auto) {
+      return '<div class="sm:col-span-2 rounded-lg bg-surface-container-low px-3 py-2 flex flex-col">' +
+        '<span class="font-label-sm text-label-sm text-on-surface-variant">' + esc(f.label) + '</span>' +
+        '<input id="' + id + '" data-i="' + f.i + '" readonly tabindex="-1" value="' + esc(f.value) + '" placeholder="คำนวณเมื่อบันทึก" class="bg-transparent border-0 p-0 font-headline-sm text-headline-sm text-primary font-bold outline-none placeholder:text-outline placeholder:font-normal"/></div>';
+    }
     var cls = inputCls + (ro ? ' !bg-surface-container text-on-surface-variant cursor-not-allowed' : '');
     var attrs = ' id="' + id + '" data-i="' + f.i + '"' + (ro ? ' readonly tabindex="-1"' : '') + (f.required ? ' required' : '');
     var input;
@@ -465,48 +480,62 @@
       input = '<textarea' + attrs + ' rows="2" class="' + cls + ' resize-y" placeholder="' + esc(f.placeholder) + '">' + esc(f.value) + '</textarea>';
     } else {
       var listId = f.list ? 'skl-' + f.i : '';
-      input = '<input type="' + (f.type === 'number' ? 'number' : 'text') + '"' + attrs + ' value="' + esc(f.value) + '" placeholder="' + esc(f.placeholder) + '" class="' + cls + '"' +
+      input = '<input type="' + (f.type === 'number' ? 'number' : 'text') + '"' + attrs + ' value="' + esc(f.value) + '" placeholder="' + esc(ro ? 'เติมให้อัตโนมัติ' : f.placeholder) + '" class="' + cls + '"' +
         (listId ? ' list="' + listId + '" autocomplete="off"' : '') + (f.thaiDate ? ' autocomplete="off"' : '') + '/>' +
         (listId ? '<datalist id="' + listId + '">' + f.list.map(function (v) { return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>' : '');
       if (f.thaiDate) {
         input = '<div class="flex gap-1">' + input +
-          '<label class="relative shrink-0 p-2 rounded-lg bg-surface-container-low text-primary hover:bg-surface-container-high cursor-pointer" title="เลือกจากปฏิทิน" aria-label="เลือกวันที่จากปฏิทิน">' +
-          '<span class="material-symbols-outlined text-[20px]">calendar_month</span><input type="date" data-date-for="' + f.i + '" class="absolute inset-0 opacity-0 cursor-pointer" value="' + thaiToIso(f.value) + '"/></label>' +
-          '<button type="button" data-clear="' + f.i + '" class="shrink-0 p-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-error" title="ล้างวันที่" aria-label="ล้างวันที่"><span class="material-symbols-outlined text-[20px]">close</span></button></div>';
+          '<button type="button" data-date-for="' + f.i + '" class="shrink-0 px-2.5 rounded-lg bg-primary-fixed/50 text-primary hover:bg-primary-fixed" title="เลือกจากปฏิทิน" aria-label="เลือก' + esc(f.label) + 'จากปฏิทิน">' +
+          '<span class="material-symbols-outlined text-[20px]">calendar_month</span></button>' +
+          '<button type="button" data-clear="' + f.i + '" class="shrink-0 px-2 rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container/40" title="ล้างวันที่" aria-label="ล้าง' + esc(f.label) + '"><span class="material-symbols-outlined text-[18px]">close</span></button></div>';
       } else if (f.coord) {
-        input = '<div class="flex gap-1">' + input + '<button type="button" data-pick-map="' + f.i + '" class="' + ui.btnClass('ghost') + ' shrink-0"><span class="material-symbols-outlined text-[18px]">map</span>เลือกจากแผนที่</button></div>';
+        input = '<div class="flex gap-1">' + input + '<button type="button" data-pick-map="' + f.i + '" class="' + ui.btnClass('accent') + ' shrink-0"><span class="material-symbols-outlined text-[18px]">map</span>เลือกจากแผนที่</button></div>';
       }
     }
     return '<div class="flex flex-col gap-1 min-w-0 ' + (f.wide ? 'sm:col-span-6' : f.trio ? 'sm:col-span-2' : 'sm:col-span-3') + '">' + label + input +
       (f.note ? '<span class="font-body-sm text-body-sm text-on-surface-variant">' + esc(f.note) + '</span>' : '') + '</div>';
   }
 
+  function groupFilled(g) {
+    var editable = g.fields.filter(function (f) { return !f.readonly; });
+    return [editable.filter(function (f) { return String(f.value || '').trim(); }).length, editable.length];
+  }
+
   function renderEntry(box, data) {
-    var html = '', open = false, grid = false;
-    function closeGrid() { if (grid) { html += '</div>'; grid = false; } }
-    function openGrid() { if (!grid) { html += '<div class="grid grid-cols-1 sm:grid-cols-6 gap-3 mb-4">'; grid = true; } }
-    data.layout.forEach(function (it) {
-      if (it.section) {
-        closeGrid();
-        if (open) { html += '</details>'; open = false; }
-        if (it.collapsible) {
-          html += '<details class="mb-4 rounded-lg ring-1 ring-surface-container p-3"' + (box.__openTor ? ' open' : '') + ' data-tor><summary class="cursor-pointer font-headline-sm text-headline-sm text-primary">' + esc(it.section) + '</summary><div class="h-3"></div>';
-          open = true;
-        } else {
-          html += '<h4 class="font-headline-sm text-headline-sm text-primary mb-2 pb-1 border-b border-surface-container">' + esc(it.section) + '</h4>';
-        }
-      } else if (it.sub) {
-        openGrid();
-        html += '<div class="sm:col-span-6 font-label-md text-label-md text-on-surface-variant mt-1">' + esc(it.sub) + '</div>';
-      } else {
-        openGrid();
-        html += entryFieldHtml(it.field);
-      }
+    var nav = '', body = '';
+    data.groups.forEach(function (g, n) {
+      var cnt = groupFilled(g);
+      nav += '<button type="button" data-goto="' + g.key + '" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left hover:bg-surface-container-high">' +
+        '<span class="material-symbols-outlined text-[20px] text-primary">' + g.icon + '</span><span class="flex-1 min-w-0 font-label-md text-label-md leading-tight">' + esc(g.title) + '</span>' +
+        (g.auto ? '' : '<span data-count="' + g.key + '" class="font-label-sm text-label-sm ' + (cnt[0] ? 'text-emerald-700' : 'text-outline') + '">' + cnt[0] + '/' + cnt[1] + '</span>') + '</button>';
+      var head = '<span class="w-8 h-8 shrink-0 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">' + (n + 1) + '</span>' +
+        '<span class="material-symbols-outlined text-primary mt-1">' + g.icon + '</span>' +
+        '<span class="flex-1 min-w-0"><span class="block font-headline-sm text-headline-sm text-primary font-bold">' + esc(g.title) + '</span>' +
+        '<span class="block font-body-sm text-body-sm text-on-surface-variant">' + esc(g.desc) + '</span></span>' +
+        (g.optional ? '<span class="shrink-0 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">ไม่บังคับ</span>' : '');
+      var grid = '<div class="p-4 grid grid-cols-1 sm:grid-cols-6 gap-3">' + g.fields.map(function (f) { return entryFieldHtml(f, g.auto); }).join('') + '</div>';
+      body += g.optional
+        ? '<details id="entry-sec-' + g.key + '" data-tor class="rounded-xl ring-1 ring-surface-container bg-surface-container-lowest scroll-mt-2"' + (box.__openTor ? ' open' : '') + '>' +
+          '<summary class="flex items-start gap-3 px-4 py-3 cursor-pointer bg-surface-container-low/60 rounded-xl list-none">' + head + '<span class="material-symbols-outlined text-on-surface-variant mt-1">expand_more</span></summary>' + grid + '</details>'
+        : '<section id="entry-sec-' + g.key + '" class="rounded-xl ring-1 ring-surface-container bg-surface-container-lowest scroll-mt-2">' +
+          '<header class="flex items-start gap-3 px-4 py-3 border-b border-surface-container bg-surface-container-low/60 rounded-t-xl">' + head + '</header>' + grid + '</section>';
     });
-    closeGrid();
-    if (open) html += '</details>';
-    box.innerHTML = html;
+    box.innerHTML = '<div class="lg:grid lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-5">' +
+      '<nav class="hidden lg:flex flex-col gap-0.5 sticky top-0 self-start py-1" aria-label="หมวดของฟอร์ม">' + nav +
+        '<p class="mt-3 px-3 font-body-sm text-body-sm text-on-surface-variant">ช่องที่มี <span class="text-error">*</span> จำเป็นต้องกรอก ช่องอื่นเว้นว่างแล้วมาแก้ไขภายหลังได้</p></nav>' +
+      '<div class="flex flex-col gap-4 min-w-0">' +
+        '<div class="flex items-start gap-3 p-3 rounded-xl bg-primary-fixed/40 text-on-surface font-body-sm text-body-sm"><span class="material-symbols-outlined text-primary">tips_and_updates</span>' +
+        '<span>กรอกข้อมูลเท่าที่มีตอนนี้แล้วกด <b>บันทึก</b> ได้เลย — ช่องสีเทาระบบเติมให้เอง ข้อมูลชุดนี้ใช้พิมพ์เอกสารทุกฉบับของโครงการ</span></div>' +
+        body + '</div></div>';
     box.__sig = data.fields.map(function (f) { return f.sig + f.label; }).join('|');
+  }
+  function updateCounts(box, data) {
+    data.groups.forEach(function (g) {
+      var el = box.querySelector('[data-count="' + g.key + '"]'); if (!el) return;
+      var cnt = groupFilled(g);
+      el.textContent = cnt[0] + '/' + cnt[1];
+      el.className = 'font-label-sm text-label-sm ' + (cnt[0] ? 'text-emerald-700' : 'text-outline');
+    });
   }
 
   // ---------- เลือกพิกัดจากแผนที่ ----------
@@ -532,7 +561,7 @@
         onClose: function () { resolve(null); }
       });
       loadLeaflet().then(function () {
-        var center = pos || (SK.db.external && SK.db.external.center) || [16.0824, 103.5932];
+        var center = pos || (SK.db.external && SK.db.external.center) || SK.ref.CENTER;
         var map = L.map(body.querySelector('[data-map]')).setView(center, pos ? 16 : 13);
         var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
         var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '&copy; Esri' });
@@ -562,7 +591,7 @@
     box.innerHTML = '<div class="py-10 text-center text-on-surface-variant"><span class="material-symbols-outlined animate-spin">progress_activity</span><p>กำลังเตรียมแบบฟอร์ม...</p></div>';
     var data = null, saving = false;
     var m = ui.modal({
-      title: doc.title, subtitle: project ? project.name : 'กองช่าง เทศบาลตำบลสีแก้ว • บันทึกลงฐานข้อมูลโครงการ (ชุดเดียวกับที่ใช้พิมพ์เอกสาร)', icon: project ? 'edit_note' : 'add_circle', size: 'lg', body: box,
+      title: doc.title, subtitle: project ? project.name : 'กองช่าง เทศบาลตำบลสีแก้ว • บันทึกลงฐานข้อมูลโครงการ (ชุดเดียวกับที่ใช้พิมพ์เอกสาร)', icon: project ? 'edit_note' : 'add_circle', size: 'xl', body: box,
       actions: [{ label: 'ยกเลิก', onClick: function (mm) { mm.close(); } }, { label: project ? 'บันทึกการแก้ไข' : 'ลงทะเบียนโครงการ', kind: 'primary', icon: 'save', onClick: save }],
       onClose: closeAll
     });
@@ -573,6 +602,9 @@
       return waitFor(function () { var f = rootEl(doc); return f && visible(f) && (!project || (f.elements.projectName && f.elements.projectName.value)); }, 8000);
     }).then(function () {
       data = entryLayout(doc);
+      // โครงการใหม่: เลือกปีงบประมาณปัจจุบันไว้ให้
+      var fy = String(SK.currentFiscalYear()), yf = !project && data.fields.filter(function (f) { return f.name === 'budgetYear' && !f.value; })[0];
+      if (yf && yf.options.some(function (o) { return o[0] === fy; })) { setField(yf.i, fy); data = entryLayout(doc); }
       renderEntry(box, data);
     }).catch(function (err) { box.innerHTML = '<div class="p-4 rounded-lg bg-error-container text-on-error-container">' + esc(err.message || err) + '</div>'; });
 
@@ -586,23 +618,26 @@
           box.__openTor = tor && tor.open;
           renderEntry(box, n);
           body.scrollTop = top;
-        } else syncValues(box, n);
+        } else { syncValues(box, n); updateCounts(box, n); }
         data = n;
       }, 250);
     }
     box.addEventListener('change', function (e) {
-      var d = e.target.closest('[data-date-for]');
-      if (d) {
-        var target = box.querySelector('[data-i="' + d.dataset.dateFor + '"]');
-        target.value = isoToThai(d.value);
-        setField(+d.dataset.dateFor, target.value);
-        return refreshFields();
-      }
       var el = e.target.closest('[data-i]'); if (!el) return;
       setField(+el.dataset.i, el.type === 'checkbox' ? el.checked : el.value);
       refreshFields();
     });
     box.addEventListener('click', function (e) {
+      var go = e.target.closest('[data-goto]');
+      if (go) { var sec = box.querySelector('#entry-sec-' + go.dataset.goto); if (sec) { if (sec.tagName === 'DETAILS') sec.open = true; sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } return; }
+      var d = e.target.closest('[data-date-for]');
+      if (d) {
+        var target = box.querySelector('[data-i="' + d.dataset.dateFor + '"]');
+        SK.thaiDate.open(target, { value: thaiToIso(target.value), onPick: function (iso) {
+          target.value = isoToThai(iso); setField(+d.dataset.dateFor, target.value); refreshFields();
+        } });
+        return;
+      }
       var c = e.target.closest('[data-clear]');
       if (c) {
         var t = box.querySelector('[data-i="' + c.dataset.clear + '"]');

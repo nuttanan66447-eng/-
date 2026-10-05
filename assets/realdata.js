@@ -1,5 +1,5 @@
-// ใช้ข้อมูลโครงการจริงจาก Google Sheet (ที่นำเข้าในระบบงานเอกสาร) แสดงบนหน้าเว็บหลัก
-// ถ้ายังไม่ได้นำเข้า หน้าเว็บจะแสดงข้อมูลตัวอย่างพร้อมแถบแจ้ง
+// ฐานข้อมูลโครงการจริง: อ่านจากชีท "ฐานข้อมูลโครงการ" ของระบบเอกสาร (ลงทะเบียนผ่านฟอร์ม หรือนำเข้าจาก Google Sheet)
+// แล้วแสดงบนหน้าเว็บหลักทุกหน้า (ไม่มีข้อมูลตัวอย่าง)
 (function () {
   'use strict';
   var SK = window.SK;
@@ -97,7 +97,8 @@
         statusLabel: row.status || f(row, 'สถานะ'),
         lat: lat || null, lng: lng || null,
         createdAt: start || '',
-        real: true
+        real: true,
+        fields: row.fields || {}
       };
     });
     // หมู่บ้านจริงจากชีท: ใช้ค่ากึ่งกลางของพิกัดโครงการในหมู่นั้น
@@ -113,128 +114,19 @@
     return projects;
   }
 
-  // โครงการตัวอย่างของเว็บไซต์ -> แถวในชีท "ฐานข้อมูลโครงการ" ของระบบเดิม (ใช้พิมพ์เอกสาร)
-  var CATEGORY_TYPES = { road: 'งานถนน', drainage: 'งานระบายน้ำ', building: 'งานอาคาร', electrical: 'งานไฟฟ้า' };
-  function thaiDate(iso) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
-    return m ? +m[3] + ' ' + MONTHS[+m[2] - 1] + ' ' + (+m[1] + 543) : '';
-  }
-  function person(text) {
-    var m = /^(.*?)\s*\((.*)\)\s*$/.exec(text || '');
-    return m ? [m[1], m[2]] : [text || '', ''];
-  }
-  function genRow(p) {
-    var v = SK.ref.VILLAGES[p.village] || { name: '' };
-    var vm = /^ม\.(\d+)\s*(.*)$/.exec(v.name) || [null, '', v.name];
-    var sup = person(p.supervisor), cm = SK.ref.COMMITTEE || [];
-    var start = /^(\d{4})-(\d{2})/.exec(p.start || '');
-    var row = {
-      'ชื่อโครงการ': p.name,
-      'ชื่อหน่วยงานท้องถิ่น': 'เทศบาลตำบลสีแก้ว',
-      'ปริมาณงาน': p.location || '',
-      'งบประมาณ': SK.ref.SOURCES[p.source] || '',
-      'งบประมาณประจำปี': p.year || (start ? String(+start[1] + 543 + (+start[2] >= 10 ? 1 : 0)) : ''),
-      'เลขที่สัญญา': p.contractNo || '',
-      'ลงวันที่สัญญา': thaiDate(p.start),
-      'วันเริ่มสัญญา': thaiDate(p.start),
-      'สิ้นสุดสัญญา': thaiDate(p.end),
-      'พิกัดโครงการ': p.lat && p.lng ? p.lat + ', ' + p.lng : '',
-      'ค่างาน': Number(p.budget || 0).toLocaleString('en-US'),
-      'ค่าปรับวันละ': Math.round(Number(p.budget || 0) / 1000).toLocaleString('en-US'),
-      'สถานที่ก่อสร้าง': vm[1] ? 'หมู่ที่ ' + vm[1] + ' ' + vm[2] : v.name,
-      'หมู่ที่': vm[1],
-      'หมู่บ้าน': vm[2],
-      'ประเภทงาน': CATEGORY_TYPES[p.category] || '',
-      'ความก้าวหน้า': p.actual != null ? String(p.actual) : '',
-      'จำนวนผู้ควบคุมงาน': sup[0] ? '1' : '',
-      'ผู้ควบคุมงาน คนที่ 1': sup[0],
-      'ตำแหน่งผู้ควบคุมงาน คนที่ 1': sup[1],
-      'ผู้รับจ้าง': p.contractor && p.contractor !== '-' ? p.contractor : '',
-      'หมายเหตุ': 'โครงการตัวอย่างของเว็บไซต์ (' + p.id + ')'
-    };
-    if (cm.length) {
-      row['จำนวนคณะกรรมการตรวจรับงานจ้าง'] = cm.length + ' คน';
-      row['ประธานกรรมการตรวจรับงานจ้าง'] = cm[0].name; row['ตำแหน่งประธาน'] = cm[0].position;
-      cm.slice(1, 5).forEach(function (c, i) {
-        row['กรรมการตรวจรับงานจ้าง ' + (i + 1)] = c.name; row['ตำแหน่งกรรมการ ' + (i + 1)] = c.position;
-      });
-    }
-    return row;
-  }
-  // โครงการที่บันทึกผ่านฟอร์มโครงการ (p.sheet = แถวในชีท): ใช้ค่าจากฟอร์มทุกช่อง
-  // ยกเว้นช่องที่ถูกแก้ไขจากหน้าเว็บภายหลัง (ค่าที่สร้างได้ต่างจากตอนบันทึก p.sheetGen)
-  function sampleRow(p) {
-    var gen = genRow(p);
-    if (!p.sheet) return gen;
-    var out = Object.assign({}, p.sheet), base = p.sheetGen || {};
-    Object.keys(gen).forEach(function (k) { if (gen[k] !== base[k]) out[k] = gen[k]; else if (!(k in out)) out[k] = ''; });
-    return out;
-  }
-
-  // แถวในชีทหลังบันทึกฟอร์มโครงการ -> โครงการของเว็บ (โหมดข้อมูลตัวอย่าง)
-  function captureEntry(existing) {
-    var list = SK.db.data.projects;
-    return SK.docEngine.call('getDashboardDataFast').then(function (data) {
-      if (!data || !data.rows) return;
-      var row = existing ? data.rows.filter(function (r) { return r.rowNumber === existing.rowNumber; })[0]
-        : data.rows.filter(function (r) { return !list.some(function (p) { return p.rowNumber === r.rowNumber; }); }).sort(function (a, b) { return b.rowNumber - a.rowNumber; })[0];
-      if (!row) return;
-      var keep = Object.assign({}, SK.ref.VILLAGES);
-      var m = mapRows({ rows: [row], defaultCenter: data.defaultCenter })[0];
-      var vill = SK.ref.VILLAGES[m.village];
-      // mapRows ปรับหมู่บ้านของเว็บตามแถวนี้: คืนค่าเดิม (ชื่อหมู่บ้านตัวอย่างไม่เปลี่ยน)
-      for (var k in SK.ref.VILLAGES) if (!keep[k]) delete SK.ref.VILLAGES[k];
-      Object.assign(SK.ref.VILLAGES, keep);
-      // หมู่บ้านที่ยังไม่มีในเว็บ: เก็บไว้กับข้อมูล (ใช้ได้ทุกเครื่อง)
-      if (!SK.ref.VILLAGES[m.village] && vill) {
-        var meta = SK.db.data.meta || (SK.db.data.meta = {});
-        (meta.villages = meta.villages || {})[m.village] = vill;
-        SK.ref.VILLAGES[m.village] = vill;
-      }
-      var p = existing ? list.filter(function (x) { return x.id === existing.id; })[0] : null;
-      if (!p) {
-        var yy = String((parseInt(m.year, 10) || new Date().getFullYear() + 543) % 100).padStart(2, '0');
-        var n = 1, id;
-        do { id = 'SK-' + yy + '-' + String(n++).padStart(3, '0'); } while (list.some(function (x) { return x.id === id; }));
-        p = { id: id, egp: '', disbursed: 0, installment: 0, installments: 1, actual: m.actual || 0, plan: 0,
-          status: m.status === 'unknown' ? 'signing' : m.status, createdAt: new Date().toISOString().slice(0, 10) };
-        list.push(p);
-      }
-      ['name', 'contractNo', 'category', 'typeLabel', 'village', 'location', 'source', 'sourceLabel', 'year', 'budget', 'contractor', 'supervisor', 'start', 'end', 'lat', 'lng']
-        .forEach(function (k) { if (m[k] !== undefined && m[k] !== '') p[k] = m[k]; });
-      if (m.status === 'completed') p.status = 'completed';
-      p.rowNumber = row.rowNumber;
-      p.sheet = Object.assign({}, row.fields);
-      p.sheetGen = genRow(p);
-      SK.db.save();
-    });
-  }
-  // บันทึกฟอร์มโครงการแล้ว: ข้อมูลจริงอ่านจากชีทเมื่อโหลดหน้าใหม่อยู่แล้ว ส่วนข้อมูลตัวอย่างต้องเก็บเป็นโครงการของเว็บ
-  SK.afterEntrySave = function (existing) { return SK.db.external ? null : captureEntry(existing); };
-
-  // ยังไม่ได้นำเข้าข้อมูลจริง: ส่งโครงการตัวอย่างให้ตัวสร้างเอกสาร ทุกโครงการจึงพิมพ์เอกสารได้ทันที
-  function useSampleProjects() {
-    var list = SK.db.data.projects, mv = (SK.db.data.meta || {}).villages || {};
-    Object.keys(mv).forEach(function (k) { if (!SK.ref.VILLAGES[k]) SK.ref.VILLAGES[k] = mv[k]; });
-    return SKGas.syncSample(list.map(sampleRow)).then(function (res) {
-      if (!res || !res.sample) return false;
-      list.forEach(function (p, i) { p.rowNumber = i + 2; });
-      return true;
-    });
-  }
-
-  // รอโหลดข้อมูลจากคลาวด์ (assets/cloud.js) ก่อน
-  SK.dataReady = Promise.resolve(SK.cloudReady).then(useSampleProjects).then(function (sample) {
-    if (sample) return;
-    return SKGas.call('getDashboardDataFast').then(loadReal);
-  }).catch(function (err) { console.warn('โหลดข้อมูลจริงไม่สำเร็จ', err); });
+  // เปิดหน้าเว็บ: รอโหลดข้อมูลจากคลาวด์ (assets/cloud.js) แล้วอ่านฐานข้อมูลโครงการจริง (ชีทของระบบเอกสาร)
+  SK.dataReady = Promise.resolve(SK.cloudReady).then(function () { return SKGas.ready; }).then(function () {
+    return SKGas.call('getDashboardDataFast');
+  }).then(loadReal).catch(function (err) {
+    console.warn('โหลดฐานข้อมูลโครงการไม่สำเร็จ', err);
+    SK.db.useExternalProjects([], { count: 0, error: String(err && err.message || err) });
+  });
 
   function loadReal(data) {
-    if (!data || !data.ok || !data.rows || !data.rows.length) return;
-    var list = mapRows(data);
+    var list = data && data.ok && data.rows ? mapRows(data) : [];
     return SKGas.summary().then(function (sum) {
-      SK.db.useExternalProjects(list, { count: list.length, title: sum.title, savedAt: sum.savedAt, center: data.defaultCenter });
-      // ข้อมูลตัวอย่าง (ฎีกา บันทึกหน้างาน แจ้งเตือน เอกสาร) ที่อ้างถึงโครงการตัวอย่างไม่แสดงร่วมกับข้อมูลจริง
+      SK.db.useExternalProjects(list, { count: list.length, title: sum.title, savedAt: sum.savedAt, center: (data && data.defaultCenter) || SK.ref.CENTER });
+      // รายการที่อ้างถึงโครงการที่ไม่มีแล้ว (เช่น ถูกลบจากชีท) ไม่แสดง
       var d = SK.db.data, has = function (id) { return !id || list.some(function (p) { return p.id === id; }); };
       d.diary = d.diary.filter(function (e) { return has(e.projectId); });
       d.payments = d.payments.filter(function (x) { return has(x.projectId); });
@@ -244,46 +136,56 @@
     });
   }
 
-  // แถบแจ้งแหล่งข้อมูลบนทุกหน้า
+  // แถบสถานะฐานข้อมูลบนทุกหน้า
   function banner() {
     var main = document.querySelector('main');
     if (!main) return;
-    var ext = SK.db.external;
+    var ext = SK.db.external || { count: 0 }, cloud = SK.cloud && SK.cloud.active;
     var el = document.createElement('div');
-    el.className = 'no-print flex flex-wrap items-center justify-between gap-2 px-4 py-2 mb-4 rounded-lg font-body-sm text-body-sm ' + (ext ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200' : 'bg-secondary-fixed text-on-secondary-fixed-variant');
-    el.innerHTML = ext
-      ? '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">cloud_done</span>ข้อมูลจริงจาก Google Sheet • ' + ext.count + ' โครงการ' +
-        (ext.savedAt ? (SK.cloud && SK.cloud.active ? ' • ซิงก์บนคลาวด์ • อัปเดต ' : ' • อัปเดตในเครื่องนี้ ') + new Date(ext.savedAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</span>' +
-        '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้า / ส่งออกข้อมูล</button>'
-      : '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">info</span>กำลังแสดงข้อมูลตัวอย่าง (พิมพ์เอกสารได้ทุกโครงการ) — นำเข้าข้อมูลจริงจาก Google Sheet เพื่อใช้โครงการจริง</span>' +
-        '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้าข้อมูลจริง →</button>';
+    el.className = 'no-print flex flex-wrap items-center justify-between gap-2 px-4 py-2 mb-4 rounded-lg font-body-sm text-body-sm ' +
+      (ext.count ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200' : 'bg-secondary-fixed text-on-secondary-fixed-variant');
+    var btn = function (act, icon, label, strong) {
+      return '<button type="button" data-action="' + act + '" class="inline-flex items-center gap-1 px-3 py-1 rounded-full ' + (strong ? 'bg-primary text-on-primary' : 'bg-white/70 hover:bg-white') + ' font-semibold"><span class="material-symbols-outlined text-[16px]">' + icon + '</span>' + label + '</button>';
+    };
+    el.innerHTML = ext.count
+      ? '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">' + (cloud ? 'cloud_done' : 'database') + '</span>ฐานข้อมูลโครงการ • ' + ext.count + ' โครงการ' +
+        (ext.savedAt ? ' • ' + (cloud ? 'บันทึกบนคลาวด์' : 'บันทึกในเครื่องนี้') + ' ' + new Date(ext.savedAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</span>' +
+        '<span class="flex gap-2">' + btn('data-panel', 'swap_vert', 'นำเข้า / ส่งออก Excel') + '</span>'
+      : '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">info</span>ยังไม่มีโครงการในฐานข้อมูล — ลงทะเบียนโครงการใหม่ หรือนำเข้าโครงการทั้งหมดจาก Google Sheet (Excel)</span>' +
+        '<span class="flex flex-wrap gap-2">' + btn('register-project', 'add_circle', 'ลงทะเบียนโครงการใหม่', true) + btn('data-panel', 'upload_file', 'นำเข้าจาก Excel') + '</span>';
     var first = main.firstElementChild;
     (first && first.classList.contains('flex') && first.firstElementChild ? first : main).insertAdjacentElement('afterbegin', el);
   }
 
-  // ข้อมูลจริงเพิ่ม/แก้ไขด้วยแบบฟอร์มโครงการชุดเดิม เพื่อให้เป็นข้อมูลเดียวกับที่ใช้พิมพ์เอกสาร
-  // ลงทะเบียน/แก้ไขโครงการด้วยแบบฟอร์มโครงการชุดเดิม (ทุกช่องที่ใช้พิมพ์เอกสาร) ทั้งข้อมูลจริงและข้อมูลตัวอย่าง
-  // ข้อมูลตัวอย่างยังใช้ฟอร์มย่อของเว็บสำหรับปรับผลงาน/สถานะ (ข้อมูลจริงคำนวณจากชีท)
+  // ลงทะเบียน/แก้ไขโครงการด้วยแบบฟอร์มโครงการชุดเดิม (ทุกช่องที่ใช้พิมพ์เอกสาร)
   function redirectEdits() {
     if (!SK.docEngine) return;
-    var basic = SK.ui.openProjectForm;
-    SK.ui.openProjectFormBasic = SK.db.external ? null : basic;
     SK.ui.openProjectForm = function (existing) { SK.docEngine.openEntry(existing && existing.rowNumber ? existing : null); };
   }
+  SK.actions['register-project'] = function () { SK.ui.openProjectForm(null); };
 
   SK.actions['data-panel'] = function () { if (window.SKData) SKData.open(); };
 
-  // ปีงบประมาณบนหัวหน้าเว็บ: ใช้ปีล่าสุดในข้อมูลจริง
+  // ปีงบประมาณในข้อความของหน้าเว็บ (แบบหน้าเว็บเขียนไว้เป็น 2567): ใช้ปีงบประมาณจริง
   function budgetYear() {
-    if (!SK.db.external) return;
-    var years = SK.db.data.projects.map(function (p) { return parseInt(arabic(p.year), 10); }).filter(function (y) { return y > 2400; });
-    if (!years.length) return;
-    var y = String(Math.max.apply(null, years));
-    var walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    var n;
+    var y = String(SK.fiscalYear()), yy = y.slice(-2);
+    var rules = [
+      [/((?:ปีงบ(?:ประมาณ|ฯ)|ประจำปี(?:งบประมาณ)?|รอบปี|งบประมาณ)\s*(?:พ\.ศ\.\s*)?)2567/g, '$1' + y],
+      [/((?:ปีงบฯ?|ปี)\s*)67\b/g, '$1' + yy],
+      [/ไตรมาส\s*3\/2567\s*\(1 เม\.ย\. - 30 มิ\.ย\. 2567\)/g, quarterText()]
+    ];
+    var walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), n;
     while ((n = walk.nextNode())) {
-      if (/ปีงบ(ประมาณ|ฯ)\s*2567/.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(/(ปีงบ(?:ประมาณ|ฯ)\s*)2567/, '$1' + y);
+      var v = n.nodeValue, o = v;
+      rules.forEach(function (r) { v = v.replace(r[0], r[1]); });
+      if (v !== o) n.nodeValue = v;
     }
+  }
+  // ไตรมาสปัจจุบันของปีงบประมาณ
+  function quarterText() {
+    var now = new Date(), m = now.getMonth(), q = m >= 9 ? 1 : Math.floor(m / 3) + 2;
+    var names = ['1 ต.ค. - 31 ธ.ค.', '1 ม.ค. - 31 มี.ค.', '1 เม.ย. - 30 มิ.ย.', '1 ก.ค. - 30 ก.ย.'];
+    return 'ไตรมาส ' + q + '/' + SK.fiscalYear() + ' (' + names[q - 1] + ')';
   }
 
   SK.ui.onReady(function () { banner(); redirectEdits(); budgetYear(); });

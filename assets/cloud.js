@@ -17,7 +17,8 @@
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'sikaew-auth' }
   });
   var NS = 'sikaew-cloud:' + cfg.url.replace(/^https?:\/\//, '') + ':';
-  var BASE_KEY = NS + 'base', WB_KEY = NS + 'wb';
+  // v2: ใช้ข้อมูลจริงเท่านั้น (ข้อมูลตัวอย่างชุดเก่าบนคลาวด์ถูกล้างเมื่อพบ)
+  var BASE_KEY = NS + 'base2', WB_KEY = NS + 'wb2', DATASET = 'real-v2';
 
   function lsGet(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
   function lsSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -85,7 +86,7 @@
     return rows;
   }
   function fromRows(list) {
-    var d = { version: 1 }, items = {}, order = {};
+    var d = { version: 2 }, items = {}, order = {};
     list.forEach(function (r) {
       if (r.collection === '_kv') d[r.id] = r.data;
       else if (r.collection === '_order') order[r.id] = r.data;
@@ -178,6 +179,15 @@
     var hasBase = !!lsGet(BASE_KEY);
     return (hasBase ? pushRecords() : Promise.resolve()).then(fetchRecords).then(function (rows) {
       if (cancelled) return;
+      var legacy = rows.length && !rows.some(function (r) { return r.collection === '_kv' && r.id === 'dataset' && r.data === DATASET; });
+      if (legacy) {
+        // ข้อมูลตัวอย่างชุดเก่า: ลบออกจากคลาวด์ แล้วเริ่มจากข้อมูลจริงในเครื่องนี้
+        var byCol = {};
+        rows.forEach(function (r) { (byCol[r.collection] = byCol[r.collection] || []).push(r.id); });
+        return Object.keys(byCol).reduce(function (acc, c) {
+          return acc.then(function () { return sb.from('records').delete().eq('collection', c).in('id', byCol[c]).then(check); });
+        }, Promise.resolve()).then(function () { lsSet(BASE_KEY, {}); return pushRecords(); });
+      }
       if (!rows.length) {
         // คลาวด์ยังว่าง: ใช้ข้อมูลในเครื่องนี้เป็นข้อมูลตั้งต้น
         lsSet(BASE_KEY, {});
@@ -233,12 +243,13 @@
   }
   function syncWorkbook() {
     if (!window.SKGas) return Promise.resolve();
-    return Promise.all([
+    return Promise.resolve(SKGas.ready).then(function () { return Promise.all([
       sb.from('workbooks').select('saved_at,sample').eq('id', 'main').maybeSingle().then(check),
       readLocalWorkbook().catch(function () { return null; })
-    ]).then(function (res) {
+    ]); }).then(function (res) {
       var remote = res[0], local = res[1], marker = lsGet(WB_KEY);
-      if (!remote) return local ? pushWorkbook() : null;
+      // ไม่มีบนคลาวด์ หรือเป็นข้อมูลตัวอย่างชุดเก่า: ใช้ชีทในเครื่องนี้
+      if (!remote || remote.sample) { if (marker == null) lsSet(WB_KEY, 0); return local ? pushWorkbook() : null; }
       if (!local) return pullWorkbook();
       if (marker == null) {
         // เครื่องนี้ยังไม่เคยซิงก์: ข้อมูลจริงที่นำเข้าไว้ในเครื่องสำคัญกว่าข้อมูลตัวอย่างบนคลาวด์

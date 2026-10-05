@@ -89,7 +89,7 @@
     wrap.className = 'sk-modal fixed inset-0 z-[1100] flex items-end sm:items-center justify-center sm:p-4 bg-tertiary/60 backdrop-blur-sm';
     wrap.setAttribute('role', 'dialog');
     wrap.setAttribute('aria-modal', 'true');
-    var width = { sm: 'sm:max-w-md', md: 'sm:max-w-2xl', lg: 'sm:max-w-4xl' }[opts.size || 'md'];
+    var width = { sm: 'sm:max-w-md', md: 'sm:max-w-2xl', lg: 'sm:max-w-4xl', xl: 'sm:max-w-6xl' }[opts.size || 'md'];
     wrap.innerHTML =
       '<div class="bg-surface-container-lowest w-full ' + width + ' max-h-[92vh] flex flex-col rounded-t-xl sm:rounded-xl shadow-2xl">' +
         '<div class="flex items-start justify-between gap-3 px-5 py-4 border-b border-surface-container">' +
@@ -343,7 +343,7 @@
       { name: 'category', label: 'ประเภทงาน', type: 'select', options: opt(ref.CATEGORIES, 'label'), value: p.category },
       { name: 'village', label: 'พื้นที่ (หมู่บ้าน)', type: 'select', options: opt(ref.VILLAGES, 'name'), value: p.village },
       { name: 'location', label: 'รายละเอียดที่ตั้ง / ปริมาณงาน', span: 2, value: p.location, placeholder: 'เช่น กว้าง 5.00 ม. ยาว 850 ม. หนา 0.15 ม.' },
-      { name: 'contractNo', label: 'เลขที่สัญญา', value: p.contractNo, placeholder: 'สท. xx/2567' },
+      { name: 'contractNo', label: 'เลขที่สัญญา', value: p.contractNo, placeholder: 'เช่น 22/' + SK.fiscalYear() },
       { name: 'egp', label: 'เลขโครงการ e-GP', value: p.egp },
       { name: 'source', label: 'แหล่งงบประมาณ', type: 'select', options: opt(ref.SOURCES), value: p.source },
       { name: 'budget', label: 'วงเงินตามสัญญา (บาท)', type: 'number', min: 0, step: '0.01', required: true, value: p.budget },
@@ -378,7 +378,7 @@
     }
     formModal({
       title: isNew ? 'ลงทะเบียนโครงการใหม่' : 'แก้ไขข้อมูลโครงการ ' + existing.id,
-      subtitle: 'กองช่าง เทศบาลตำบลสีแก้ว • ปีงบประมาณ 2567',
+      subtitle: 'กองช่าง เทศบาลตำบลสีแก้ว • ปีงบประมาณ ' + SK.fiscalYear(),
       icon: isNew ? 'add_circle' : 'edit_note', size: 'lg', fields: fields,
       submitLabel: isNew ? 'ลงทะเบียนโครงการ' : 'บันทึกการแก้ไข',
       extraActions: isNew ? [] : [{

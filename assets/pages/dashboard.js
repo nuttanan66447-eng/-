@@ -4,7 +4,7 @@
   var SK = window.SK, ui = SK.ui, ref = SK.ref, esc = ui.esc, money = ui.money;
   var $ = function (id) { return document.getElementById(id); };
 
-  var CENTER = [16.0824, 103.5932];
+  var CENTER = SK.ref.CENTER;
   function center() { var e = SK.db.external; return e && e.center ? e.center : CENTER; }
   var GROUP = function (p) {
     if (p.status === 'completed') return 'done';
@@ -82,7 +82,7 @@
     $('donut').innerHTML = svg;
     $('budget-breakdown').innerHTML = list;
     $('donut-total').textContent = (total / 1e6).toFixed(2) + 'M';
-    $('budget-sub').textContent = 'การจัดสรรงบลงทุน ' + (total / 1e6).toFixed(2) + ' ล้านบาท ประจำปีงบประมาณ 2567 (คลิกเพื่อดูรายการ)';
+    $('budget-sub').textContent = 'การจัดสรรงบลงทุน ' + (total / 1e6).toFixed(2) + ' ล้านบาท ประจำปีงบประมาณ ' + SK.fiscalYear() + ' (คลิกเพื่อดูรายการ)';
   }
 
   // ---------- แผนที่ GIS ----------

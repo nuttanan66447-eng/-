@@ -8,7 +8,7 @@
   var dateFilter = null, miniMap, miniMarker;
 
   function project() {
-    if (!projectId) projectId = SK.db.data.projects.some(function (p) { return p.id === 'SK-67-002'; }) ? 'SK-67-002' : ((SK.db.data.projects[0] || {}).id || '');
+    if (!projectId) projectId = (SK.db.data.projects[0] || {}).id || '';
     return SK.db.project(projectId);
   }
 
@@ -215,10 +215,35 @@
   function refresh() {
     var p = project();
     if (!p) {
-      $('hero').innerHTML = '<div class="py-8 text-center"><p class="font-headline-md text-headline-md text-primary">ไม่พบโครงการ ' + esc(projectId) + '</p><a class="text-primary underline" href="projects.html">กลับไปทะเบียนโครงการ</a></div>';
+      // ยังไม่มีโครงการ / ไม่พบรหัสนี้: แสดงหน้าว่างพร้อมทางไปต่อ ซ่อนส่วนอื่นของหน้า
+      var none = !SK.db.data.projects.length;
+      $('hero').innerHTML = '<div class="py-10 flex flex-col items-center gap-3 text-center"><span class="material-symbols-outlined text-[48px] text-outline">' + (none ? 'inventory_2' : 'search_off') + '</span>' +
+        '<p class="font-headline-md text-headline-md text-primary font-bold">' + (none ? 'ยังไม่มีโครงการในฐานข้อมูล' : 'ไม่พบโครงการ ' + esc(projectId)) + '</p>' +
+        '<p class="text-on-surface-variant">' + (none ? 'ลงทะเบียนโครงการแรก หรือนำเข้าโครงการทั้งหมดจาก Google Sheet' : 'โครงการอาจถูกลบหรือเปลี่ยนรหัส') + '</p>' +
+        '<div class="flex flex-wrap justify-center gap-2 mt-2"><button type="button" data-action="register-project" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">add_circle</span>ลงทะเบียนโครงการใหม่</button>' +
+        '<a href="projects.html" class="' + ui.btnClass('ghost') + '">ไปที่ทะเบียนโครงการ</a></div></div>';
+      var hero = $('hero');
+      Array.prototype.forEach.call(hero.parentElement.children, function (el) { if (el !== hero) el.classList.add('hidden'); });
+      document.querySelectorAll('#docs, main > div > div.grid').forEach(function (el) { el.classList.add('hidden'); });
       return;
     }
-    renderSwitcher(p); renderHero(p); renderMilestones(p); renderDiary(); renderAttachments(); renderMap(p); renderProjectDocs(p);
+    renderSwitcher(p); renderHero(p); renderMilestones(p); renderDiary(); renderAttachments(); renderMap(p); renderProjectDocs(p); renderCommittee(p);
+  }
+
+  // คณะกรรมการตรวจรับตามที่ลงทะเบียนไว้ในฐานข้อมูลโครงการ
+  function renderCommittee(p) {
+    var list = ref.committeeOf(p), f = p.fields || p.sheet || {};
+    var order = f['คำสั่งที่'] || '';
+    $('committee-order').textContent = order ? 'คำสั่งที่ ' + order : '';
+    $('committee-order').classList.toggle('hidden', !order);
+    $('committee-list').innerHTML = list.length ? list.map(function (c, i) {
+      var initial = (/[ก-ฮA-Za-z]/.exec(c.name.replace(/^(นางสาว|นาง|นาย|ร้อยตำรวจเอก|ว่าที่\s*ร\.ต\.)\s*/, '')) || ['?'])[0];
+      return '<div class="p-space-md rounded-lg bg-surface-container-low flex items-start gap-space-md">' +
+        '<div class="w-10 h-10 rounded-full ' + (i ? 'bg-surface-container-high text-primary' : 'bg-primary-container text-on-primary') + ' flex items-center justify-center shrink-0 font-bold font-headline-sm">' + esc(initial) + '</div>' +
+        '<div class="flex flex-col flex-1 min-w-0"><div class="flex items-center justify-between gap-2"><span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">' + esc(c.name) + '</span>' +
+        '<span class="px-space-xs py-space-2xs rounded font-label-sm text-label-sm shrink-0 ' + (i ? 'bg-surface-container text-on-surface-variant' : 'bg-secondary-fixed text-on-secondary-fixed-variant font-semibold') + '">' + (i ? 'กรรมการ' : 'ประธาน') + '</span></div>' +
+        '<span class="font-label-sm text-label-sm text-on-surface-variant">' + esc(c.position || '-') + '</span></div></div>';
+    }).join('') : '<div class="p-space-md rounded-lg bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm">ยังไม่ได้กำหนดคณะกรรมการตรวจรับ — <button type="button" data-action="update-progress" class="text-primary font-semibold underline">แก้ไขข้อมูลโครงการ</button> เพื่อเลือกกรรมการ</div>';
   }
 
   function newDiary() {
