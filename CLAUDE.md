@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-เว็บไซต์กองช่าง เทศบาลตำบลสีแก้ว — เว็บ static บน Vercel (deploy อัตโนมัติจาก `main`) และ GitHub Pages (https://nuttanan66447-eng.github.io/-/)
+เว็บไซต์กองช่าง เทศบาลตำบลสีแก้ว — เว็บ static บน Vercel https://sikaew-kongchang.vercel.app (โปรเจกต์ `sikaew-kongchang`, deploy อัตโนมัติจาก `main`) และ GitHub Pages (https://nuttanan66447-eng.github.io/-/)
 ข้อมูลเก็บใน Supabase (โปรเจกต์ `sikaew-kongchang`, id `goiigbvnlzsovcxykynr`) เมื่อเจ้าหน้าที่เข้าสู่ระบบ
 
 ## กติกาการทำงาน (สำคัญ)
