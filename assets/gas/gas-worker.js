@@ -49,6 +49,39 @@ function saveNow(savedAt) {
   return savePending;
 }
 
+// วันที่จากไฟล์ Excel: SheetJS แสดงชื่อเดือนภาษาอังกฤษ (เช่น "30 April 2569") — แปลงเป็นเดือนไทย
+var EN_MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+var EN_SHORT = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+var TH_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+var EN_DATE = /(\d{1,2})[\s\-\/]*(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept|Sep|Oct|Nov|Dec)\.?[\s\-\/,]*(\d{2,4})/gi;
+function thaiMonths(text) {
+  return String(text).replace(EN_DATE, function (all, d, mon, y) {
+    var k = mon.toLowerCase(), i = EN_MONTHS.indexOf(k);
+    if (i < 0) i = EN_SHORT.indexOf(k.slice(0, 3));
+    if (i < 0) return all;
+    var year = Number(y);
+    if (y.length === 2) year += year > 40 ? 2500 : 2500; // ปีย่อ ใช้ พ.ศ.
+    else if (year < 2400) year += 543;
+    return Number(d) + ' ' + TH_MONTHS[i] + ' ' + year;
+  });
+}
+function normalizeWorkbookDates() {
+  var wb = GasEmu.getWorkbook(), changed = false;
+  (wb.sheets || []).forEach(function (sh) {
+    (sh.rows || []).forEach(function (row) {
+      (row || []).forEach(function (v, c) {
+        if (typeof v === 'string' && /[A-Za-z]/.test(v)) { var n = thaiMonths(v); if (n !== v) { row[c] = n; changed = true; } }
+      });
+    });
+    Object.keys(sh.disp || {}).forEach(function (k) {
+      var v = sh.disp[k];
+      if (typeof v === 'string' && /[A-Za-z]/.test(v)) { var n = thaiMonths(v); if (n !== v) { sh.disp[k] = n; changed = true; } }
+    });
+  });
+  if (changed) GasEmu.setWorkbook(wb);
+  return changed;
+}
+
 function runSetup() {
   SETUP.forEach(function (fn) {
     if (typeof self[fn] === 'function') {
@@ -94,6 +127,7 @@ var ready = idb('readonly', function (s) { return s.get(KEY); }).catch(function 
   GasEmu.setWorkbook(wb || { title: 'ข้อมูลกองช่าง (เริ่มต้น)' });
   runSetup();
   if (!wb) return saveNow();
+  if (normalizeWorkbookDates()) return saveNow();
 });
 
 // JSON แบบเดียวกับ google.script.run: Date กลายเป็นข้อความ, ฟังก์ชันถูกตัดทิ้ง
@@ -115,6 +149,7 @@ self.onmessage = function (e) {
       } else if (msg.type === 'import') {
         GasEmu.setWorkbook(msg.workbook);
         runSetup();
+        normalizeWorkbookDates();
         // ข้อมูลจากคลาวด์: คงเวลาบันทึกเดิมไว้ จะได้ไม่ถูกส่งกลับขึ้นคลาวด์ซ้ำ
         return saveNow(msg.savedAt || null).then(function () { self.postMessage({ id: msg.id, ok: true, result: summary() }); });
       } else if (msg.type === 'sample') {

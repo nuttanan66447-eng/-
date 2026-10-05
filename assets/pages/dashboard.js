@@ -104,6 +104,53 @@
     renderMarkers();
     document.addEventListener('fullscreenchange', function () { setTimeout(function () { map.invalidateSize(); }, 100); });
   }
+  // พิมพ์แผนที่: แนวนอน A4 พร้อมชื่อแผนที่ คำอธิบายสัญลักษณ์ และวันที่พิมพ์
+  function printMap() {
+    if (!map) return;
+    var card = $('map-card'), st = document.getElementById('sk-map-print-css');
+    if (!st) {
+      st = document.createElement('style'); st.id = 'sk-map-print-css';
+      st.textContent = '@media print{@page{size:A4 landscape;margin:10mm}' +
+        'body.sk-print-map *{visibility:hidden!important}' +
+        'body.sk-print-map #map-card,body.sk-print-map #map-card *{visibility:visible!important}' +
+        'body.sk-print-map #map-card{position:fixed!important;left:0!important;top:0!important;margin:0!important;box-shadow:none!important;border:1px solid #c5c5d3}' +
+        'body.sk-print-map #map-card [data-map-tools],body.sk-print-map #map-card .leaflet-control-zoom{display:none!important}' +
+        'body.sk-print-map .leaflet-popup{display:none!important}' +
+        '*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}' +
+        '#map-print-head{display:none}body.sk-print-map #map-print-head{display:flex}';
+      document.head.appendChild(st);
+    }
+    var head = document.createElement('div');
+    head.id = 'map-print-head';
+    head.className = 'absolute z-[500] top-3 left-3 right-3 justify-between items-start gap-4 bg-surface-container-lowest/95 rounded-lg shadow-md px-4 py-2';
+    head.innerHTML = '<div><div class="font-headline-sm text-headline-sm text-primary">แผนที่โครงการก่อสร้าง ตำบลสีแก้ว อำเภอเมืองร้อยเอ็ด จังหวัดร้อยเอ็ด</div>' +
+      '<div class="font-body-sm text-body-sm text-on-surface-variant">กองช่าง เทศบาลตำบลสีแก้ว • ปีงบประมาณ ' + esc(String(SK.fiscalYear())) + ' • โครงการ ' + markers.length + ' จุด</div></div>' +
+      '<div class="font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">พิมพ์เมื่อ ' + esc(ui.dateLong(new Date().toISOString().slice(0, 10))) + '</div>';
+    card.appendChild(head);
+    // ขนาดเท่าหน้ากระดาษ A4 แนวนอน (277 x 190 มม.) แล้วซูมให้พอดีตำบล
+    var old = card.getAttribute('style') || '';
+    card.style.width = '1047px'; card.style.height = '718px';
+    document.body.classList.add('sk-print-map');
+    map.closePopup();
+    map.invalidateSize();
+    if (tambon && tambon.bounds && tambon.bounds.isValid()) map.fitBounds(tambon.bounds, { padding: [70, 20], animate: false });
+    ui.toast('กำลังเตรียมแผนที่สำหรับพิมพ์...');
+    var done = false;
+    function restore() {
+      if (done) return; done = true;
+      window.removeEventListener('afterprint', restore);
+      document.body.classList.remove('sk-print-map');
+      head.remove();
+      card.setAttribute('style', old);
+      map.invalidateSize();
+      if (tambon) tambon.fit();
+    }
+    // รอโหลดภาพแผนที่ให้ครบก่อนสั่งพิมพ์
+    var tiles = layers[layerIdx].layer, waited = false;
+    function go() { if (waited) return; waited = true; window.addEventListener('afterprint', restore); setTimeout(function () { window.print(); setTimeout(function () { document.addEventListener('mousemove', restore, { once: true }); }, 1000); }, 300); }
+    tiles.once('load', go);
+    setTimeout(go, 4000);
+  }
   function renderMarkers() {
     var P = SK.db.data.projects;
     var counts = { done: 0, active: 0, late: 0 };
@@ -239,6 +286,7 @@
       else if (card.requestFullscreen) card.requestFullscreen();
       else window.open('https://www.google.com/maps/@' + center()[0] + ',' + center()[1] + ',14z', '_blank', 'noopener');
     },
+    'map-print': function () { printMap(); },
     'map-filter': function (el) {
       hiddenCats[el.dataset.cat] = !hiddenCats[el.dataset.cat];
       renderMarkers();
