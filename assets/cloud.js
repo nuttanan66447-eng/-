@@ -462,6 +462,8 @@
   }
 
   cloud.open = openPanel;
+  // ส่งทุกอย่างที่ค้างขึ้นคลาวด์ทันที (ก่อนโหลดหน้าใหม่)
+  cloud.flush = function () { return pushRecords().catch(function () {}).then(pushWorkbook); };
   ui.onReady(mountStatus);
   if (document.readyState !== 'loading') mountStatus(); else document.addEventListener('DOMContentLoaded', mountStatus);
 })();

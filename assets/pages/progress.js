@@ -291,7 +291,7 @@
         actions: [{ label: 'บันทึกผลตรวจรับใหม่', kind: 'accent', icon: 'fact_check', onClick: function (m) { m.close(); SK.flows.inspection(p.id, refresh); } }]
       });
     },
-    'update-progress': function () { ui.openProjectForm(project(), function (p) { if (!p) location.href = 'projects.html'; else refresh(); }); },
+    'update-progress': function () { (ui.openProjectFormBasic || ui.openProjectForm)(project(), function (p) { if (!p) location.href = 'projects.html'; else refresh(); }); },
     'diary-filter': function () {
       if (dateFilter) { dateFilter = null; renderDiary(); return; }
       ui.formModal({
