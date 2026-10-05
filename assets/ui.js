@@ -70,7 +70,7 @@
       toastEl = document.createElement('div');
       toastEl.setAttribute('role', 'status');
       toastEl.setAttribute('aria-live', 'polite');
-      toastEl.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[80] max-w-[92vw] px-4 py-2.5 rounded-lg shadow-lg text-sm font-semibold transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2';
+      toastEl.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[1200] max-w-[92vw] px-4 py-2.5 rounded-lg shadow-lg text-sm font-semibold transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2';
       document.body.appendChild(toastEl);
     }
     var tones = { error: 'bg-error text-on-error', success: 'bg-emerald-700 text-white', info: 'bg-tertiary text-surface' };
@@ -86,7 +86,7 @@
   var openModals = [];
   function modal(opts) {
     var wrap = document.createElement('div');
-    wrap.className = 'sk-modal fixed inset-0 z-[70] flex items-end sm:items-center justify-center sm:p-4 bg-tertiary/60 backdrop-blur-sm';
+    wrap.className = 'sk-modal fixed inset-0 z-[1100] flex items-end sm:items-center justify-center sm:p-4 bg-tertiary/60 backdrop-blur-sm';
     wrap.setAttribute('role', 'dialog');
     wrap.setAttribute('aria-modal', 'true');
     var width = { sm: 'sm:max-w-md', md: 'sm:max-w-2xl', lg: 'sm:max-w-4xl' }[opts.size || 'md'];
@@ -452,7 +452,7 @@
   function dropdown(anchor, html, width) {
     closeDropdowns();
     var box = document.createElement('div');
-    box.className = 'sk-dropdown fixed z-[60] bg-surface-container-lowest rounded-xl shadow-2xl ring-1 ring-surface-container overflow-hidden';
+    box.className = 'sk-dropdown fixed z-[1050] bg-surface-container-lowest rounded-xl shadow-2xl ring-1 ring-surface-container overflow-hidden';
     box.style.width = Math.min(width || 340, window.innerWidth - 24) + 'px';
     box.innerHTML = html;
     document.body.appendChild(box);
@@ -503,14 +503,40 @@
     });
   }
 
+  // ผู้ใช้ปัจจุบัน: ชื่อจากบัญชีคลาวด์ (ตั้งได้ที่ไอคอนเมฆ › แก้ไขชื่อ) ไม่ได้เข้าสู่ระบบ = ผู้เยี่ยมชม
+  function currentUser() {
+    var c = SK.cloud;
+    if (c && c.user) {
+      var m = c.user.user_metadata || {}, staff = c.staff || {};
+      var name = m.full_name || (staff.name && staff.name !== 'ผู้ดูแลระบบ' ? staff.name : '') || String(c.user.email || '').split('@')[0];
+      var pos = m.position || (c.staff ? (staff.role === 'admin' ? 'ผู้ดูแลระบบ' : 'เจ้าหน้าที่กองช่าง') : 'ยังไม่ได้รับสิทธิ์');
+      return { name: name, position: pos, email: c.user.email, signedIn: true };
+    }
+    return { name: 'ยังไม่ได้เข้าสู่ระบบ', position: c && c.enabled ? 'กดเพื่อเข้าสู่ระบบ' : 'ผู้ใช้งานในเครื่องนี้', signedIn: false };
+  }
+  function avatarHtml(u, size) {
+    var cls = (size || 'w-8 h-8') + ' shrink-0 rounded-full flex items-center justify-center ';
+    if (!u.signedIn) return '<span class="' + cls + 'bg-surface-container text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">person</span></span>';
+    var m = /[ก-ฮA-Za-z0-9]/.exec(String(u.name).replace(/^(นางสาว|นาง|นาย|น\.ส\.|ว่าที่\s*ร\.ต\.)\s*/, ''));
+    return '<span class="' + cls + 'bg-primary-container text-on-primary font-bold">' + esc(m ? m[0].toUpperCase() : '?') + '</span>';
+  }
+  function renderProfile() {
+    var btn = document.getElementById('profile-btn');
+    if (!btn) return;
+    var u = currentUser();
+    btn.innerHTML = avatarHtml(u) + '<div class="hidden sm:flex flex-col text-left min-w-0"><span class="font-label-md text-label-md font-semibold text-on-surface leading-tight truncate max-w-[180px]">' + esc(u.name) + '</span>' +
+      '<span class="font-label-sm text-label-sm text-on-surface-variant truncate max-w-[180px]">' + esc(u.position) + '</span></div>';
+  }
+
   function openProfileMenu(btn) {
     var item = function (act, icon, label) {
       return '<button type="button" data-act="' + act + '" class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-container-low"><span class="material-symbols-outlined text-primary">' + icon + '</span><span>' + label + '</span></button>';
     };
     var cloud = SK.cloud && SK.cloud.enabled ? SK.cloud : null;
-    var html = '<div class="px-4 py-3 border-b border-surface-container flex items-center gap-3"><img src="assets/director.jpg" alt="" class="w-10 h-10 rounded-full object-cover"/>' +
-      '<div><div class="font-label-md text-label-md">นายธีรภัทร ชาญวิทย์</div><div class="font-body-sm text-body-sm text-on-surface-variant">ผู้อำนวยการกองช่าง</div>' +
-      (cloud && cloud.user ? '<div class="font-body-sm text-body-sm text-primary truncate max-w-[200px]">' + esc(cloud.user.email) + '</div>' : '') + '</div></div>' +
+    var u = currentUser();
+    var html = '<div class="px-4 py-3 border-b border-surface-container flex items-center gap-3">' + avatarHtml(u, 'w-10 h-10') +
+      '<div class="min-w-0"><div class="font-label-md text-label-md truncate">' + esc(u.name) + '</div><div class="font-body-sm text-body-sm text-on-surface-variant">' + esc(u.position) + '</div>' +
+      (u.email ? '<div class="font-body-sm text-body-sm text-primary truncate max-w-[200px]">' + esc(u.email) + '</div>' : '') + '</div></div>' +
       '<div class="py-1">' + (cloud ? item('cloud', cloud.user ? 'cloud_done' : 'login', cloud.user ? 'บัญชีและการซิงก์คลาวด์' : 'เข้าสู่ระบบ (บันทึกข้อมูลบนคลาวด์)') : '') +
       item('export', 'download', 'สำรองข้อมูล (ไฟล์ JSON)') + item('import', 'upload', 'นำเข้าข้อมูลจากไฟล์สำรอง') +
       (cloud && cloud.active ? '' : item('reset', 'restart_alt', 'คืนค่าข้อมูลตัวอย่าง')) +
@@ -564,6 +590,7 @@
     if (bell) bell.addEventListener('click', function (e) { e.stopPropagation(); openNotifications(bell); });
     var prof = document.getElementById('profile-btn');
     if (prof) prof.addEventListener('click', function (e) { e.stopPropagation(); openProfileMenu(prof); });
+    renderProfile();
     refreshBell();
     if (!localStorageWorks()) toast('เบราว์เซอร์นี้ไม่อนุญาตให้บันทึกข้อมูล ข้อมูลจะหายเมื่อปิดหน้า', 'error');
   }
@@ -595,7 +622,7 @@
     download: download, csv: csv, pickFile: pickFile, resizeImage: resizeImage, printDoc: printDoc,
     statusBadge: statusBadge, progressBar: progressBar, villageName: villageName,
     openProjectForm: openProjectForm, openProjectDetail: openProjectDetail, projectOptions: projectOptions,
-    refreshBell: refreshBell, onReady: onReady
+    refreshBell: refreshBell, onReady: onReady, currentUser: currentUser, renderProfile: renderProfile
   };
   onReady(initShell);
 })();

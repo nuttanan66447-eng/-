@@ -245,7 +245,7 @@
     'doc-filter': function (el) {
       var opts = [['', 'ทุกสถานะ'], ['approved', 'อนุมัติแล้ว'], ['waiting', 'รอปลัดเทศบาลลงนาม'], ['draft', 'ร่างฉบับแก้ไข']];
       var box = document.createElement('div');
-      box.className = 'sk-dropdown fixed z-[60] bg-surface-container-lowest rounded-xl shadow-2xl ring-1 ring-surface-container py-1';
+      box.className = 'sk-dropdown fixed z-[1050] bg-surface-container-lowest rounded-xl shadow-2xl ring-1 ring-surface-container py-1';
       box.innerHTML = opts.map(function (o) { return '<button type="button" data-v="' + o[0] + '" class="w-full text-left px-4 py-2 hover:bg-surface-container-low ' + (o[0] === statusFilter ? 'font-bold text-primary' : '') + '">' + o[1] + '</button>'; }).join('');
       document.body.appendChild(box);
       var r = el.getBoundingClientRect();
@@ -305,33 +305,52 @@
       '<span class="min-w-0"><span class="block font-headline-sm text-headline-sm text-on-surface font-semibold">' + esc(d.title) + '</span>' +
       '<span class="block font-body-sm text-body-sm text-on-surface-variant">' + esc(d.desc) + '</span></span></button>';
   }
+  // เอกสารโครงการแบบปุ่มครบชุดอยู่ที่หน้าติดตามความก้าวหน้าของแต่ละโครงการแล้ว
+  // หน้านี้จึงเหลือแค่ตัวเลือกโครงการ + เอกสาร และปุ่มเอกสารทั่วไปที่ไม่ผูกกับโครงการ
   function renderPrintDocs() {
-    var box = $('print-docs-body'), sel = $('docs-project');
+    var box = $('print-docs-body');
     if (!box) return;
     var real = SK.db.data.projects.filter(function (p) { return p.rowNumber; });
     if (!real.length || !SK.docEngine) {
-      sel.closest('label').classList.add('hidden');
       box.innerHTML = '<div class="p-space-md rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant flex flex-wrap items-center justify-between gap-2">' +
         '<span>นำเข้าข้อมูลจริงจาก Google Sheet ก่อน แล้วจึงพิมพ์เอกสารได้ทุกแบบ</span>' +
         '<button type="button" data-action="data-panel" class="' + ui.btnClass('primary') + '">นำเข้าข้อมูลจริง</button></div>';
       return;
     }
-    sel.innerHTML = real.map(function (p) { return '<option value="' + p.id + '">' + esc(p.id + ' • ' + p.name) + '</option>'; }).join('');
-    var groups = [];
+    var groups = [], general = [];
     SK.docEngine.DOCS.forEach(function (d) {
-      var name = d.general ? 'เอกสารทั่วไป: ' + d.group : 'เอกสารโครงการ: ' + d.group;
-      var g = groups.filter(function (x) { return x.name === name; })[0];
-      if (!g) groups.push(g = { name: name, docs: [] });
+      if (d.general) { general.push(d); return; }
+      var g = groups.filter(function (x) { return x.name === d.group; })[0];
+      if (!g) groups.push(g = { name: d.group, docs: [] });
       g.docs.push(d);
     });
-    box.innerHTML = groups.map(function (g) {
-      return '<div class="mb-space-md last:mb-0"><h3 class="font-label-md text-label-md text-on-surface-variant mb-space-xs">' + esc(g.name) + '</h3>' +
-        '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">' + g.docs.map(docButton).join('') + '</div></div>';
-    }).join('');
+    var selCls = 'w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-md text-body-md';
+    box.innerHTML =
+      '<h3 class="font-label-md text-label-md text-on-surface-variant mb-space-xs">เอกสารโครงการ</h3>' +
+      '<div class="grid grid-cols-1 lg:grid-cols-[2fr_2fr_auto] gap-space-sm items-end">' +
+        '<label class="flex flex-col gap-1 min-w-0 font-label-md text-label-md">โครงการ<select id="docs-project" class="' + selCls + '">' +
+          real.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.id + ' • ' + p.name) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="flex flex-col gap-1 min-w-0 font-label-md text-label-md">เอกสาร<select id="docs-type" class="' + selCls + '">' +
+          groups.map(function (g) {
+            return '<optgroup label="' + esc(g.name) + '">' + g.docs.map(function (d) { return '<option value="' + d.key + '">' + esc(d.title) + '</option>'; }).join('') + '</optgroup>';
+          }).join('') + '</select></label>' +
+        '<button type="button" data-action="print-doc-picked" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">print</span><span>สร้างเอกสาร</span></button>' +
+      '</div>' +
+      '<p class="mt-space-xs font-body-sm text-body-sm text-on-surface-variant">ดูเอกสารทั้งหมดของโครงการพร้อมงวดงานและบันทึกหน้างานได้ที่ <a id="docs-project-link" class="text-primary font-semibold underline" href="#">หน้าติดตามความก้าวหน้า</a></p>' +
+      (general.length ? '<h3 class="font-label-md text-label-md text-on-surface-variant mt-space-md mb-space-xs">เอกสารทั่วไป (ไม่ผูกกับโครงการ)</h3>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">' + general.map(docButton).join('') + '</div>' : '');
+    var sel = $('docs-project'), link = $('docs-project-link');
+    var syncLink = function () { link.href = 'progress.html?id=' + encodeURIComponent(sel.value) + '#docs'; };
+    sel.addEventListener('change', syncLink);
+    syncLink();
   }
+  function findDoc(key) { return SK.docEngine.DOCS.filter(function (x) { return x.key === key; })[0]; }
   SK.actions['print-doc'] = function (el) {
-    var d = SK.docEngine.DOCS.filter(function (x) { return x.key === el.dataset.doc; })[0];
+    var d = findDoc(el.dataset.doc);
     SK.docEngine.openDocument(d, d.general ? null : SK.db.project($('docs-project').value));
+  };
+  SK.actions['print-doc-picked'] = function () {
+    SK.docEngine.openDocument(findDoc($('docs-type').value), SK.db.project($('docs-project').value));
   };
 
   SK.page = { refresh: function () { renderEstimate(); renderDocs(); renderPrintDocs(); } };

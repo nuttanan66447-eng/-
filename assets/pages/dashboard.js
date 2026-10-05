@@ -240,7 +240,7 @@
     'recent-filter': function (el) {
       var opts = [['', 'ทุกสถานะ']].concat(Object.keys(ref.STATUSES).map(function (k) { return [k, ref.STATUSES[k].long]; }));
       var box = document.createElement('div');
-      box.className = 'sk-dropdown fixed z-[60] bg-surface-container-lowest rounded-xl shadow-2xl ring-1 ring-surface-container py-1';
+      box.className = 'sk-dropdown fixed z-[1050] bg-surface-container-lowest rounded-xl shadow-2xl ring-1 ring-surface-container py-1';
       box.innerHTML = opts.map(function (o) {
         return '<button type="button" data-v="' + o[0] + '" class="w-full text-left px-4 py-2 hover:bg-surface-container-low ' + (o[0] === statusFilter ? 'font-bold text-primary' : '') + '">' + esc(o[1]) + '</button>';
       }).join('');

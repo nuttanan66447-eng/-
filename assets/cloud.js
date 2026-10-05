@@ -391,6 +391,7 @@
     var actions = [{ label: 'ออกจากระบบ', icon: 'logout', onClick: function (m) {
       sb.auth.signOut().then(function () { m.close(); ui.toast('ออกจากระบบแล้ว', 'success'); setTimeout(function () { location.reload(); }, 500); });
     } }];
+    actions.push({ label: 'แก้ไขชื่อ-ตำแหน่ง', icon: 'badge', onClick: function (m) { m.close(); profileForm(); } });
     if (cloud.staff && cloud.staff.role === 'admin') actions.push({ label: 'จัดการเจ้าหน้าที่', icon: 'group', onClick: function (m) { m.close(); staffPanel(); } });
     if (cloud.active) actions.push({ label: 'ซิงก์ตอนนี้', icon: 'sync', kind: 'primary', onClick: function (m) {
       m.close();
@@ -398,6 +399,26 @@
       pushRecords().then(pushWorkbook).then(function () { location.reload(); }, function (err) { ui.toast('ซิงก์ไม่สำเร็จ: ' + errText(err), 'error'); });
     } });
     ui.modal({ title: 'ข้อมูลบนคลาวด์', icon: 'cloud', size: 'sm', body: body, actions: actions });
+  }
+
+  // ชื่อ-ตำแหน่งที่แสดงบนหัวหน้าเว็บ (เก็บในบัญชีผู้ใช้ของ Supabase)
+  function profileForm() {
+    var u = ui.currentUser(), meta = cloud.user.user_metadata || {};
+    ui.formModal({
+      title: 'ชื่อและตำแหน่งที่แสดง', icon: 'badge', size: 'sm',
+      fields: [
+        { name: 'full_name', label: 'ชื่อ-นามสกุล', value: meta.full_name || (u.name !== String(cloud.user.email).split('@')[0] ? u.name : ''), required: true, span: 2, placeholder: 'เช่น นายสมชาย ใจดี' },
+        { name: 'position', label: 'ตำแหน่ง', value: meta.position || '', span: 2, placeholder: 'เช่น นายช่างโยธาชำนาญงาน' }
+      ],
+      onSubmit: function (v) {
+        return sb.auth.updateUser({ data: { full_name: v.full_name, position: v.position } }).then(function (r) {
+          if (r.error) { ui.toast('บันทึกไม่สำเร็จ: ' + r.error.message, 'error'); return true; }
+          cloud.user = r.data.user;
+          ui.renderProfile();
+          ui.toast('บันทึกชื่อแล้ว', 'success');
+        });
+      }
+    });
   }
 
   function staffPanel() {
