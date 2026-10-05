@@ -227,7 +227,7 @@
         { name: 'title', label: 'ชื่อเรื่อง', required: true, span: 2 },
         { name: 'detail', label: 'รายละเอียด', type: 'textarea', span: 2, rows: 2 },
         { name: 'projectId', label: 'โครงการที่เกี่ยวข้อง', type: 'select', span: 2, options: [['', '— ไม่ระบุ —']].concat(ui.projectOptions()) },
-        { name: 'owner', label: 'ผู้จัดทำ', value: 'นายธีรภัทร ชาญวิทย์' },
+        { name: 'owner', label: 'ผู้จัดทำ', value: (ui.currentUser && ui.currentUser().signedIn && ui.currentUser().name) || '' },
         { name: 'status', label: 'สถานะ', type: 'select', options: [['draft', 'ร่างฉบับแก้ไข'], ['waiting', 'รอปลัดเทศบาลลงนาม'], ['approved', 'อนุมัติแล้ว']] },
         { name: 'date', label: 'วันที่เอกสาร', type: 'date', value: ui.today() },
         { name: 'file', label: 'แนบไฟล์ต้นฉบับ (ถ้ามี)', type: 'file', accept: '.pdf,.dwg,.dxf,.xls,.xlsx,.csv,.doc,.docx,.jpg,.jpeg,.png' }
@@ -366,12 +366,15 @@
     SK.docEngine.openDocument(findDoc($('docs-type').value), SK.db.project($('docs-project').value));
   };
 
-  SK.page = { refresh: function () { renderEstimate(); renderDocs(); renderPrintDocs(); } };
+  // หน้าเดียวกับติดตามความก้าวหน้า: รีเฟรชทั้งสองส่วน
+  var prevPage = SK.page;
+  SK.page = { refresh: function () { if (prevPage && prevPage.refresh) prevPage.refresh(); renderEstimate(); renderDocs(); renderPrintDocs(); } };
   ui.onReady(function () {
     if (params.get('q')) $('doc-search').value = params.get('q');
     $('doc-search').addEventListener('input', renderDocs);
     renderEstimate();
     renderPrintDocs();
     setTab(tab);
+    if (location.hash === '#docs-center' || params.get('tab') || params.get('q')) setTimeout(function () { var c = $('docs-center'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }, 300);
   });
 })();

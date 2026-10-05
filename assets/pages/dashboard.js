@@ -19,9 +19,60 @@
     electrical: { dot: 'bg-primary', text: 'text-primary' }
   };
 
+  // ---------- ตัวกรอง (ปีงบประมาณ หมู่บ้าน ประเภทงาน แหล่งงบ สถานะ) ----------
+  var FKEY = 'sikaew-dashboard-filter';
+  var F = (function () { try { return JSON.parse(sessionStorage.getItem(FKEY)) || {}; } catch (e) { return {}; } })();
+  var FIELDS = [
+    { key: 'year', label: 'ปีงบประมาณ', icon: 'event_note', get: function (p) { return String(p.year || '').replace(/\D/g, ''); }, name: function (v) { return 'ปีงบฯ ' + v; } },
+    { key: 'village', label: 'หมู่บ้าน', icon: 'home_pin', get: function (p) { return p.village; }, name: function (v) { return ui.villageName(v); }, sort: function (a, b) { return (parseInt(a.slice(1), 10) || 99) - (parseInt(b.slice(1), 10) || 99); } },
+    { key: 'category', label: 'ประเภทงาน', icon: 'category', get: function (p) { return p.category; }, name: function (v) { return (ref.CATEGORIES[v] || {}).label || v; } },
+    { key: 'source', label: 'แหล่งงบประมาณ', icon: 'account_balance_wallet', get: function (p) { return p.source; }, name: function (v) { return ref.SOURCES[v] || v; } },
+    { key: 'status', label: 'สถานะ', icon: 'flag', get: function (p) { return p.status; }, name: function (v) { return (ref.STATUSES[v] || {}).long || v; } }
+  ];
+  function FP() {
+    return SK.db.data.projects.filter(function (p) {
+      return FIELDS.every(function (f) { return !F[f.key] || f.get(p) === F[f.key]; });
+    });
+  }
+  function filtered() { return FIELDS.some(function (f) { return F[f.key]; }); }
+  function renderFilters() {
+    var bar = $('dash-filters');
+    if (!bar) {
+      bar = document.createElement('section');
+      bar.id = 'dash-filters';
+      bar.className = 'no-print bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-sm';
+      var h = document.querySelector('main h2'), top = (h && h.closest('main > div > div')) || document.querySelector('main > div > div');
+      top.insertAdjacentElement('afterend', bar);
+    }
+    var all = SK.db.data.projects, cls = 'w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-md text-body-md';
+    bar.innerHTML = '<div class="flex flex-wrap items-center justify-between gap-2"><span class="flex items-center gap-2 font-headline-sm text-headline-sm text-primary"><span class="material-symbols-outlined">filter_alt</span>ตัวกรองข้อมูล</span>' +
+      '<span class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">แสดง <b class="text-primary">' + FP().length + '</b> จาก ' + all.length + ' โครงการ' +
+      (filtered() ? '<button type="button" data-action="dash-filter-reset" class="' + ui.btnClass('ghost') + '"><span class="material-symbols-outlined text-[18px]">restart_alt</span>ล้างตัวกรอง</button>' : '') + '</span></div>' +
+      '<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-space-sm">' + FIELDS.map(function (f) {
+        var counts = {};
+        all.forEach(function (p) { var v = f.get(p); if (v) counts[v] = (counts[v] || 0) + 1; });
+        var keys = Object.keys(counts).sort(f.sort || function (a, b) { return a < b ? -1 : a > b ? 1 : 0; });
+        if (F[f.key] && !counts[F[f.key]]) keys.push(F[f.key]);
+        return '<label class="flex flex-col gap-1 min-w-0 font-label-md text-label-md text-on-surface-variant"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">' + f.icon + '</span>' + f.label + '</span>' +
+          '<select data-dash-filter="' + f.key + '" class="' + cls + (F[f.key] ? ' ring-2 ring-primary text-primary font-semibold' : '') + '"><option value="">ทั้งหมด</option>' +
+          keys.map(function (k) { return '<option value="' + esc(k) + '"' + (F[f.key] === k ? ' selected' : '') + '>' + esc(f.name(k)) + ' (' + (counts[k] || 0) + ')</option>'; }).join('') + '</select></label>';
+      }).join('') + '</div>';
+  }
+  function setFilter(key, value) {
+    if (value) F[key] = value; else delete F[key];
+    try { sessionStorage.setItem(FKEY, JSON.stringify(F)); } catch (e) {}
+    page = 1;
+    refresh();
+    if (tambon && map && filtered() && markers.length) map.fitBounds(L.featureGroup(markers).getBounds(), { padding: [40, 40], maxZoom: 16 });
+  }
+  document.addEventListener('change', function (e) {
+    var sel = e.target.closest && e.target.closest('[data-dash-filter]');
+    if (sel) setFilter(sel.dataset.dashFilter, sel.value);
+  });
+
   // ---------- KPI ----------
   function renderKpis() {
-    var P = SK.db.data.projects;
+    var P = FP();
     var budget = P.reduce(function (s, p) { return s + p.budget; }, 0);
     var disb = P.reduce(function (s, p) { return s + p.disbursed; }, 0);
     var pct = budget ? disb / budget * 100 : 0;
@@ -57,7 +108,7 @@
 
   // ---------- งบประมาณตามประเภทงาน ----------
   function renderBudget() {
-    var P = SK.db.data.projects;
+    var P = FP();
     var total = P.reduce(function (s, p) { return s + p.budget; }, 0) || 1;
     var colors = { road: '#00236f', drainage: '#a73a00', building: '#122c45', electrical: '#4059aa' };
     var bars = { road: 'bg-primary', drainage: 'bg-secondary', building: 'bg-tertiary', electrical: 'bg-surface-tint' };
@@ -82,7 +133,7 @@
     $('donut').innerHTML = svg;
     $('budget-breakdown').innerHTML = list;
     $('donut-total').textContent = (total / 1e6).toFixed(2) + 'M';
-    $('budget-sub').textContent = 'การจัดสรรงบลงทุน ' + (total / 1e6).toFixed(2) + ' ล้านบาท ประจำปีงบประมาณ ' + SK.fiscalYear() + ' (คลิกเพื่อดูรายการ)';
+    $('budget-sub').textContent = 'การจัดสรรงบลงทุน ' + (total / 1e6).toFixed(2) + ' ล้านบาท ' + (F.year ? 'ปีงบประมาณ ' + F.year : 'ประจำปีงบประมาณ ' + SK.fiscalYear()) + (filtered() ? ' (ตามตัวกรอง)' : '') + ' (คลิกเพื่อดูรายการ)';
   }
 
   // ---------- แผนที่ GIS ----------
@@ -152,7 +203,7 @@
     setTimeout(go, 4000);
   }
   function renderMarkers() {
-    var P = SK.db.data.projects;
+    var P = FP();
     var counts = { done: 0, active: 0, late: 0 };
     P.forEach(function (p) { counts[GROUP(p)]++; });
     $('lg-done').textContent = counts.done;
@@ -182,7 +233,9 @@
 
   // ---------- บันทึกหน้างานล่าสุด ----------
   function renderFeed() {
-    var rows = SK.flows.sortedDiary().slice(0, 3);
+    var ids = {};
+    FP().forEach(function (p) { ids[p.id] = 1; });
+    var rows = SK.flows.sortedDiary().filter(function (e) { return ids[e.projectId]; }).slice(0, 3);
     $('diary-feed').innerHTML = rows.map(function (e) {
       var p = SK.db.project(e.projectId) || {};
       var photo = e.photos && e.photos[0];
@@ -201,7 +254,7 @@
   var PAGE = 3, page = 1, statusFilter = '';
   function recentRows() {
     var q = $('recent-search').value.trim().toLowerCase();
-    return SK.db.data.projects.slice().sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); })
+    return FP().sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); })
       .filter(function (p) {
         if (statusFilter && p.status !== statusFilter) return false;
         if (!q) return true;
@@ -236,7 +289,7 @@
     if (!SK.db.external) return; // ข้อมูลตัวอย่างใช้การ์ดตัวอย่างใน HTML
     var today = ui.today();
     var soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-    var P = SK.db.data.projects;
+    var P = FP();
     var items = P.filter(function (p) { return p.status === 'delayed'; }).map(function (p) { return { p: p, kind: 'late' }; })
       .concat(P.filter(function (p) { return p.status === 'on-schedule' && p.end && p.end >= today && p.end <= soon; }).map(function (p) { return { p: p, kind: 'soon' }; }));
     $('alerts-count').textContent = items.length + ' รายการ';
@@ -257,13 +310,14 @@
     }).join('') || '<p class="text-on-surface-variant font-body-sm text-body-sm">ไม่มีโครงการล่าช้าหรือใกล้สิ้นสุดสัญญาใน 30 วัน</p>';
   }
 
-  function refresh() { renderKpis(); renderBudget(); renderMarkers(); renderFeed(); renderRecent(); renderAlerts(); }
+  function refresh() { renderFilters(); renderKpis(); renderBudget(); renderMarkers(); renderFeed(); renderRecent(); renderAlerts(); }
 
   Object.assign(SK.actions, {
     'exec-report': function () {
-      SK.docs.print('slaReport', 'รายงานสรุปผู้บริหาร', SK.db.data.projects, 'รายงานสรุปโครงการและงบประมาณสำหรับผู้บริหาร');
+      SK.docs.print('slaReport', 'รายงานสรุปผู้บริหาร', FP(), 'รายงานสรุปโครงการและงบประมาณสำหรับผู้บริหาร');
     },
     'new-project': function () { ui.openProjectForm(null, refresh); },
+    'dash-filter-reset': function () { F = {}; try { sessionStorage.removeItem(FKEY); } catch (e) {} page = 1; refresh(); if (tambon) tambon.fit(); },
     'map-layers': function () {
       if (!map) return;
       map.removeLayer(layers[layerIdx].layer);

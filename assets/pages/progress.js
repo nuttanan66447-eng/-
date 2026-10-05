@@ -152,7 +152,7 @@
     $('att-list').innerHTML = docs.map(function (d, i) {
       var icon = SK.flows.FORMAT_ICON[d.format] || 'draft';
       var st = SK.flows.DOC_STATUS[d.status] || SK.flows.DOC_STATUS.approved;
-      return '<button type="button" data-action="open-doc" data-index="' + i + '" class="w-full text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high/60 transition-all flex items-center justify-between gap-2 group">' +
+      return '<button type="button" data-action="open-project-doc" data-index="' + i + '" class="w-full text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high/60 transition-all flex items-center justify-between gap-2 group">' +
         '<div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined ' + (i % 2 ? 'text-primary' : 'text-secondary') + ' text-space-xl shrink-0">' + icon + '</span>' +
         '<div class="flex flex-col min-w-0"><span class="font-body-md text-body-md text-on-surface font-semibold truncate group-hover:text-primary">' + esc(d.fileName || d.title) + '</span>' +
         '<span class="font-label-sm text-label-sm text-on-surface-variant truncate">' + st[0] + ' • ' + (d.fileId ? SK.flows.fileSize(d.fileSize) : 'ยังไม่มีไฟล์ต้นฉบับ') + '</span></div></div>' +
@@ -178,11 +178,32 @@
     }
   }
 
+  // ตัวกรองหมู่บ้านของรายการเลือกโครงการ (จำค่าไว้ระหว่างเปลี่ยนโครงการ)
+  var VKEY = 'sikaew-progress-village';
+  function villageFilter() { try { return sessionStorage.getItem(VKEY) || ''; } catch (e) { return ''; } }
+  function renderVillageFilter(p) {
+    var counts = {};
+    SK.db.data.projects.forEach(function (x) { counts[x.village] = (counts[x.village] || 0) + 1; });
+    var keys = Object.keys(counts).sort(function (a, b) { return (parseInt(a.slice(1), 10) || 99) - (parseInt(b.slice(1), 10) || 99); });
+    var cur = villageFilter();
+    if (cur && !counts[cur]) cur = '';
+    $('village-filter').innerHTML = '<option value="">ทุกหมู่บ้าน (' + SK.db.data.projects.length + ')</option>' + keys.map(function (k) {
+      return '<option value="' + esc(k) + '"' + (k === cur ? ' selected' : '') + '>' + esc(ui.villageName(k)) + ' (' + counts[k] + ')</option>';
+    }).join('');
+  }
+  function fillSwitch(p) {
+    var v = $('village-filter').value;
+    var list = SK.db.data.projects.filter(function (x) { return !v || x.village === v; });
+    var inList = list.some(function (x) { return x.id === p.id; });
+    $('project-switch').innerHTML = (inList ? '' : '<option value="" selected>— เลือกโครงการ (' + list.length + ') —</option>') + list.map(function (x) {
+      return '<option value="' + esc(x.id) + '"' + (x.id === p.id ? ' selected' : '') + '>' + esc(x.id + ' • ' + x.name) + '</option>';
+    }).join('');
+  }
+
   function renderSwitcher(p) {
     $('bc-contract').textContent = 'รหัสสัญญา ' + p.contractNo;
-    $('project-switch').innerHTML = ui.projectOptions().map(function (o) {
-      return '<option value="' + o[0] + '"' + (o[0] === p.id ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
-    }).join('');
+    renderVillageFilter(p);
+    fillSwitch(p);
     document.title = p.id + ' ติดตามความก้าวหน้า | กองช่าง เทศบาลตำบลสีแก้ว';
   }
 
@@ -197,9 +218,10 @@
       return;
     }
     var groups = [];
-    SK.docEngine.DOCS.filter(function (d) { return !d.general; }).forEach(function (d) {
-      var g = groups.filter(function (x) { return x.name === d.group; })[0];
-      if (!g) groups.push(g = { name: d.group, docs: [] });
+    SK.docEngine.DOCS.forEach(function (d) {
+      var name = d.general ? 'เอกสารทั่วไป (ไม่ผูกกับโครงการ)' : d.group;
+      var g = groups.filter(function (x) { return x.name === name; })[0];
+      if (!g) groups.push(g = { name: name, docs: [] });
       g.docs.push(d);
     });
     box.innerHTML = groups.map(function (g) {
@@ -225,7 +247,7 @@
         '<a href="projects.html" class="' + ui.btnClass('ghost') + '">ไปที่ทะเบียนโครงการ</a></div></div>';
       var hero = $('hero');
       Array.prototype.forEach.call(hero.parentElement.children, function (el) { if (el !== hero) el.classList.add('hidden'); });
-      document.querySelectorAll('#docs, main > div > div.grid').forEach(function (el) { el.classList.add('hidden'); });
+      document.querySelectorAll('#docs, #progress-part > div.grid').forEach(function (el) { el.classList.add('hidden'); });
       return;
     }
     renderSwitcher(p); renderHero(p); renderMilestones(p); renderDiary(); renderAttachments(); renderMap(p); renderProjectDocs(p); renderCommittee(p); if (SK.news) SK.news.renderProject(p.id);
@@ -369,15 +391,20 @@
     },
     'project-doc': function (el) {
       var d = SK.docEngine.DOCS.filter(function (x) { return x.key === el.dataset.doc; })[0];
-      SK.docEngine.openDocument(d, project());
+      SK.docEngine.openDocument(d, d.general ? null : project());
     },
-    'open-doc': function (el) { SK.flows.openDocument(projectDocs()[Number(el.dataset.index)], renderAttachments); },
+    'open-project-doc': function (el) { SK.flows.openDocument(projectDocs()[Number(el.dataset.index)], renderAttachments); },
     'attach-file': function () { SK.flows.uploadNew({ projectId: projectId, type: 'order' }, renderAttachments); }
   });
 
   SK.page = { refresh: refresh };
   ui.onReady(function () {
-    $('project-switch').addEventListener('change', function () { location.href = 'progress.html?id=' + encodeURIComponent(this.value); });
+    $('project-switch').addEventListener('change', function () { if (this.value) location.href = 'progress.html?id=' + encodeURIComponent(this.value); });
+    $('village-filter').addEventListener('change', function () {
+      try { sessionStorage.setItem(VKEY, this.value); } catch (e) {}
+      var p = project();
+      if (p) fillSwitch(p);
+    });
     refresh();
     if (params.get('new') === 'diary' && project()) newDiary();
     if (location.hash === '#docs') setTimeout(function () { var d = $('docs'); if (d) d.scrollIntoView({ behavior: 'smooth' }); }, 200);

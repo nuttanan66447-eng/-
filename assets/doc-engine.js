@@ -459,7 +459,8 @@
       });
       if (native) native.hide();
       generate(doc).then(function (html) {
-        showPreview(doc, project, html, function () { if (native && document.body.contains(m.el)) native.show(); });
+        var entry = saveHistory(doc, project, html, null);
+        showPreview(doc, project, html, function () { if (native && document.body.contains(m.el)) native.show(); }, entry);
       }).catch(function (err) {
         ui.toast(err.message || String(err), 'error');
         if (native) native.show(); else refresh();
@@ -469,7 +470,56 @@
     }
   }
 
-  function showPreview(doc, project, html, onBack) {
+  // ---------- ประวัติเอกสาร ----------
+  // ทุกครั้งที่สร้างเอกสาร เก็บสำเนา (HTML) ไว้ในทะเบียนเอกสาร พร้อมผู้จัดทำ วันเวลา และโครงการ
+  // เปิดจากทะเบียน/หน้าโครงการได้อีกครั้ง (พรีวิว แก้ไขข้อความ พิมพ์ บันทึกเป็น Word) — ข้อความที่แก้ในพรีวิวบันทึกทับสำเนานี้
+  function historyType(doc) {
+    var t = (doc.group || '') + ' ' + doc.title;
+    return /ตรวจรับ|ส่งมอบ|ผลทดสอบ/.test(t) ? 'inspection' : /ราคากลาง|ปร\.|TOR/.test(t) ? 'estimate' : 'order';
+  }
+  function userName() { var u = ui.currentUser ? ui.currentUser() : null; return (u && u.signedIn && u.name) || ''; }
+  function saveHistory(doc, project, html, entryP) {
+    if (!SK.db.files || !SK.flows) return Promise.resolve(null);
+    var now = new Date(), stamp = now.toISOString().slice(0, 16).replace(/[-:T]/g, '');
+    var name = 'sikaew-' + doc.key + (project && project.id ? '-' + String(project.id).toLowerCase() : '') + '-' + stamp + '.html';
+    return Promise.resolve(entryP).then(function (entry) {
+      var file = new File([html], name, { type: 'text/html' });
+      return SK.db.files.put(file).then(function (fileId) {
+        if (entry) {
+          entry.fileId = fileId; entry.fileSize = file.size; entry.edited = true; entry.updatedAt = now.toISOString(); entry.updatedBy = userName();
+        } else {
+          entry = {
+            id: 'DOC-' + stamp.slice(2), type: historyType(doc), title: doc.title + (project ? ' — ' + project.name : ''),
+            detail: doc.desc || '', projectId: project ? project.id : '', status: 'approved', format: 'html', fileId: fileId,
+            docKey: doc.key, fileName: name, fileSize: file.size, owner: userName(), date: now.toISOString().slice(0, 10), createdAt: now.toISOString()
+          };
+          SK.db.data.documents.unshift(entry);
+        }
+        SK.db.save();
+        if (SK.page && SK.page.refresh) try { SK.page.refresh(); } catch (e) {}
+        return entry;
+      });
+    }).catch(function (err) { console.warn('บันทึกประวัติเอกสารไม่สำเร็จ', err); return null; });
+  }
+  function snapshot(d) {
+    var root = d.documentElement.cloneNode(true);
+    root.setAttribute('data-sk-std', '1');
+    Array.prototype.forEach.call(root.querySelectorAll('script'), function (x) { x.remove(); });
+    return '<!DOCTYPE html>' + root.outerHTML;
+  }
+  // เปิดเอกสารจากประวัติ
+  function reopen(entry) {
+    return SK.db.files.get(entry.fileId).then(function (rec) {
+      if (!rec) throw new Error('ไม่พบสำเนาเอกสารในระบบ');
+      return (rec.blob.text ? rec.blob.text() : new Response(rec.blob).text()).then(function (html) {
+        var doc = DOCS.filter(function (d) { return d.key === entry.docKey; })[0] || { key: entry.docKey || 'doc', title: entry.title };
+        var p = entry.projectId ? SK.db.project(entry.projectId) : null;
+        showPreview(doc, p, html, null, Promise.resolve(entry));
+      });
+    }).catch(function (err) { ui.toast(err.message || String(err), 'error'); });
+  }
+
+  function showPreview(doc, project, html, onBack, entryP) {
     // ปิดการสั่งพิมพ์อัตโนมัติของหน้าเอกสาร แล้วให้ปุ่มของเราเป็นผู้สั่งพิมพ์
     var guard = '<script>window.__skPrint=window.print;window.print=function(){};window.close=function(){};<\/script>';
     var doc2 = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, function (h) { return h + guard; }) : guard + html;
@@ -489,7 +539,13 @@
         '<span data-edit-hint class="hidden ml-auto font-body-sm text-body-sm text-secondary">คลิกที่ข้อความในเอกสารเพื่อแก้ไข — ผลการแก้ไขใช้ทั้งการพิมพ์และไฟล์ Word</span>' +
       '</div>' +
       '<div class="rounded-lg bg-surface-container overflow-hidden"><iframe title="พรีวิวเอกสาร" class="w-full bg-white" style="height:66vh;border:0"></iframe></div>';
-    var iframe = wrap.querySelector('iframe'), editing = false;
+    var iframe = wrap.querySelector('iframe'), editing = false, dirty = false;
+    // ข้อความที่แก้ในพรีวิว: บันทึกทับสำเนาในประวัติเอกสาร
+    function keepEdits() {
+      if (!dirty || !entryP) return;
+      dirty = false;
+      entryP = saveHistory(doc, project, snapshot(iframe.contentDocument), entryP);
+    }
     var editBtn = wrap.querySelector('[data-edit]');
     editBtn.addEventListener('click', function () {
       var d = iframe.contentDocument; if (!d) return;
@@ -497,6 +553,7 @@
       d.designMode = editing ? 'on' : 'off';
       editBtn.classList.toggle('bg-primary', editing); editBtn.classList.toggle('text-on-primary', editing);
       editBtn.querySelector('span:last-child').textContent = editing ? 'เสร็จสิ้นการแก้ไข' : 'แก้ไขข้อความ';
+      if (!editing) keepEdits();
       wrap.querySelectorAll('[data-cmd]').forEach(function (b) { b.disabled = !editing; });
       wrap.querySelector('[data-edit-hint]').classList.toggle('hidden', !editing);
       if (editing) iframe.contentWindow.focus();
@@ -509,12 +566,14 @@
     });
     var fileBase = 'sikaew-' + doc.key + (project && project.id ? '-' + String(project.id).toLowerCase() : '') + '-' + new Date().toISOString().slice(0, 10);
     ui.modal({
-      title: 'พรีวิว: ' + doc.title, subtitle: project ? project.name : '', icon: 'preview', size: 'lg', body: wrap, onClose: onBack,
+      title: 'พรีวิว: ' + doc.title, subtitle: project ? project.name : '', icon: 'preview', size: 'lg', body: wrap,
+      onClose: function () { if (editing) editBtn.click(); keepEdits(); if (onBack) onBack(); },
       actions: [{ label: 'กลับไปแก้ไข', icon: 'edit', onClick: function (m) { m.close(); } },
         { label: 'บันทึกเป็น Word', icon: 'download', onClick: function () {
           if (!SK.wordExport) return ui.toast('ไม่พบตัวสร้างไฟล์ Word', 'error');
+          if (editing) editBtn.click();
           ui.toast('กำลังสร้างไฟล์ Word...');
-          SK.wordExport.download(iframe.contentDocument, fileBase + '.doc').then(function () { ui.toast('ดาวน์โหลดไฟล์ Word แล้ว', 'success'); },
+          SK.wordExport.download(iframe.contentDocument, fileBase + '.docx').then(function () { ui.toast('ดาวน์โหลดไฟล์ Word แล้ว', 'success'); },
             function (err) { ui.toast('สร้างไฟล์ Word ไม่สำเร็จ: ' + (err && err.message || err), 'error'); });
         } },
         { label: 'พิมพ์ / บันทึกเป็น PDF', kind: 'primary', icon: 'print', onClick: function () {
@@ -526,7 +585,11 @@
     });
     // จัดรูปแบบบันทึกข้อความตามมาตรฐานการพิมพ์หนังสือราชการ (assets/doc-standard.js)
     iframe.addEventListener('load', function () {
-      try { if (SK.docStandard) SK.docStandard.apply(iframe.contentDocument); } catch (e) { console.warn('จัดรูปแบบมาตรฐานไม่สำเร็จ', e); }
+      var d = iframe.contentDocument;
+      d.addEventListener('input', function () { dirty = true; });
+      // สำเนาที่จัดรูปแบบแล้ว (จากประวัติ) ไม่ต้องจัดซ้ำ
+      if (d.documentElement.hasAttribute('data-sk-std')) return;
+      try { if (SK.docStandard) SK.docStandard.apply(d); } catch (e) { console.warn('จัดรูปแบบมาตรฐานไม่สำเร็จ', e); }
     });
     iframe.srcdoc = doc2;
   }
@@ -809,5 +872,5 @@
     return load().then(function (w) { return w.SKGas.call.apply(null, args); });
   }
 
-  SK.docEngine = { DOCS: DOCS, load: load, openDocument: openDocument, openEntry: openEntry, call: call };
+  SK.docEngine = { DOCS: DOCS, load: load, openDocument: openDocument, openEntry: openEntry, call: call, reopen: reopen };
 })();

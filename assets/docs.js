@@ -1,6 +1,14 @@
 // แม่แบบเอกสารราชการสำหรับพิมพ์ / บันทึกเป็น PDF
 (function () {
   'use strict';
+  // ผู้อำนวยการกองช่างจากรายชื่อบุคลากรจริง (assets/personnel.js)
+  function DIRECTOR() {
+    var P = window.SK_PERSONNEL || {}, hit = null;
+    Object.keys(P).forEach(function (k) {
+      if (!hit && Array.isArray(P[k])) hit = P[k].filter(function (x) { return x && x.position === 'ผู้อำนวยการกองช่าง'; })[0];
+    });
+    return hit ? hit.name : '(ผู้อำนวยการกองช่าง)';
+  }
   var SK = window.SK, ui = SK.ui, ref = SK.ref, esc = ui.esc, money = ui.money;
 
   function memo(o) {
@@ -8,7 +16,7 @@
       '<div><strong>ส่วนราชการ</strong> กองช่าง เทศบาลตำบลสีแก้ว อำเภอเมืองร้อยเอ็ด จังหวัดร้อยเอ็ด</div>' +
       '<div class="meta"><span><strong>ที่</strong> ' + esc(o.no || 'รอ.๕๕๓๐๑/') + '</span><span><strong>วันที่</strong> ' + ui.dateLong(o.date || ui.today()) + '</span></div>' +
       '<div><strong>เรื่อง</strong> ' + esc(o.subject) + '</div>' +
-      '<div style="margin-top:8px"><strong>เรียน</strong> ' + esc(o.to) + '</div>' + o.body + signBlock(o.signers || [['นายธีรภัทร ชาญวิทย์', 'ผู้อำนวยการกองช่าง']]);
+      '<div style="margin-top:8px"><strong>เรียน</strong> ' + esc(o.to) + '</div>' + o.body + signBlock(o.signers || [[DIRECTOR(), 'ผู้อำนวยการกองช่าง']]);
   }
   function letter(o) {
     return '<div class="meta"><span>ที่ ' + esc(o.no || 'รอ ๕๕๓๐๑/') + '</span><span class="right">สำนักงานเทศบาลตำบลสีแก้ว<br>อำเภอเมืองร้อยเอ็ด จังหวัดร้อยเอ็ด</span></div>' +
@@ -99,7 +107,7 @@
             ({ paid: 'ตรวจรับ/เบิกจ่ายแล้ว', active: 'กำลังดำเนินการ', pending: 'รอดำเนินการ' }[m.state]) + '</td></tr>';
         }).join('') + '</table>' +
         '<h2>บันทึกหน้างานล่าสุด</h2>' + (entries.slice(0, 3).map(function (e) { return '<p>• ' + ui.dateShort(e.date) + ' — ' + esc(e.title) + '</p>'; }).join('') || '<p class="muted">ไม่มีบันทึก</p>') +
-        signBlock([['นายธีรภัทร ชาญวิทย์', 'ผู้อำนวยการกองช่าง']]);
+        signBlock([[DIRECTOR(), 'ผู้อำนวยการกองช่าง']]);
     },
     appointment: function (v, p) {
       return '<h1>คำสั่งเทศบาลตำบลสีแก้ว<br>ที่ ' + esc(v.no) + '<br>เรื่อง แต่งตั้ง' + esc(v.kind) + '</h1>' +
@@ -132,7 +140,7 @@
             '</td><td class="num">' + money(p.disbursed) + '</td><td class="num">' + p.actual + '%</td><td>' + esc(ref.STATUSES[p.status].label) + '</td></tr>';
         }).join('') +
         '<tr><th colspan="4">รวม ' + projects.length + ' โครงการ</th><th class="num">' + money(sum(function (p) { return p.budget; })) + '</th><th class="num">' + money(sum(function (p) { return p.disbursed; })) + '</th><th colspan="2"></th></tr></table>' +
-        signBlock([['นายธีรภัทร ชาญวิทย์', 'ผู้อำนวยการกองช่าง'], ['(ปลัดเทศบาลตำบลสีแก้ว)', 'ปลัดเทศบาล']]);
+        signBlock([[DIRECTOR(), 'ผู้อำนวยการกองช่าง'], ['(ปลัดเทศบาลตำบลสีแก้ว)', 'ปลัดเทศบาล']]);
     },
     paymentPackage: function (pay, p) {
       return '<h1>ชุดเอกสารประกอบการเบิกจ่าย ' + esc(pay.id) + '</h1>' + projectTable(p) +
@@ -140,7 +148,7 @@
         '<h2>รายการเอกสารแนบ</h2><table><tr><th>ที่</th><th>เอกสาร</th><th>สถานะ</th></tr>' +
         ['บันทึกขออนุมัติเบิกจ่าย (ฎีกา)', 'ใบแจ้งหนี้ / ใบส่งมอบงานของผู้รับจ้าง', 'ใบรายงานผลการตรวจรับพัสดุ', 'ภาพถ่ายความก้าวหน้าพร้อมพิกัด GIS', 'สำเนาสัญญาจ้างและหลักประกันสัญญา', 'ใบกำกับภาษี / ใบเสร็จรับเงิน'].map(function (d, i) {
           return '<tr><td class="center">' + (i + 1) + '</td><td>' + d + '</td><td>☑ แนบแล้ว</td></tr>';
-        }).join('') + '</table>' + signBlock([['(ผู้อำนวยการกองคลัง)', 'ผู้ตรวจฎีกา'], ['นายธีรภัทร ชาญวิทย์', 'ผู้อำนวยการกองช่าง']]);
+        }).join('') + '</table>' + signBlock([['(ผู้อำนวยการกองคลัง)', 'ผู้ตรวจฎีกา'], [DIRECTOR(), 'ผู้อำนวยการกองช่าง']]);
     },
     extension: function () {
       return memo({

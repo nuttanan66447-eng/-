@@ -112,5 +112,10 @@ create table public.news_sync (id text primary key, synced_at timestamptz, ok bo
 alter table public.news_sync enable row level security;
 create policy news_sync_read on public.news_sync for select to anon, authenticated using (true);
 revoke insert, update, delete, truncate on public.news_posts, public.news_sync from anon;
-revoke insert, delete, truncate on public.news_posts, public.news_sync from authenticated;
+create policy news_staff_insert on public.news_posts for insert to authenticated with check ((select private.is_staff()));
+create policy news_staff_delete on public.news_posts for delete to authenticated using ((select private.is_staff()));
+-- รูปข่าวที่เจ้าหน้าที่ลงเอง (bucket news สาธารณะ อ่านได้ทุกคน เขียนได้เฉพาะเจ้าหน้าที่)
+create policy news_bucket_staff on storage.objects for all to authenticated using (bucket_id = 'news' and (select private.is_staff())) with check (bucket_id = 'news' and (select private.is_staff()));
+revoke truncate on public.news_posts from authenticated;
+revoke insert, delete, truncate on public.news_sync from authenticated;
 revoke update on public.news_sync from authenticated;
