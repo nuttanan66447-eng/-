@@ -353,7 +353,7 @@
       (general.length ? '<h3 class="font-label-md text-label-md text-on-surface-variant mt-space-md mb-space-xs">เอกสารทั่วไป (ไม่ผูกกับโครงการ)</h3>' +
         '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-space-sm">' + general.map(docButton).join('') + '</div>' : '');
     var sel = $('docs-project'), link = $('docs-project-link');
-    var syncLink = function () { link.href = 'progress.html?id=' + encodeURIComponent(sel.value) + '#docs'; };
+    var syncLink = function () { link.href = 'project-docs.html?id=' + encodeURIComponent(sel.value); };
     sel.addEventListener('change', syncLink);
     syncLink();
   }

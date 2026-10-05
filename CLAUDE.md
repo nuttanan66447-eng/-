@@ -12,7 +12,7 @@
 
 ## โครงสร้าง
 
-- หน้าหลัก 4 หน้า: `index.html`, `projects.html`, `progress.html` (งานก่อสร้างและเอกสาร = ติดตามความก้าวหน้า + ศูนย์จัดทำเอกสารช่าง ในหน้าเดียว ใช้ `assets/pages/progress.js` + `documents.js`), `disbursement.html` + สคริปต์ใน `assets/` และ `assets/pages/`
+- หน้าหลัก 5 หน้า: `index.html`, `projects.html`, `progress.html` (งานก่อสร้างและเอกสาร = ติดตามความก้าวหน้า + ศูนย์จัดทำเอกสารช่าง ในหน้าเดียว ใช้ `assets/pages/progress.js` + `documents.js`), `project-docs.html` (เอกสารโครงการ: เลือกหมู่บ้าน/โครงการ → ปุ่มเอกสารทุกแบบ + ประวัติเอกสารของโครงการ, `assets/pages/project-docs.js`), `disbursement.html` + สคริปต์ใน `assets/` และ `assets/pages/`
   - `documents.html` เหลือแค่ redirect ไป `progress.html#docs-center` (ลิงก์เก่ายังใช้ได้)
 - `system.html` = ระบบ v184 เดิม ใช้เป็นตัวสร้างเอกสารเบื้องหลังเท่านั้น (`system.html?engine=1`) เปิดตรงจะกลับ `index.html`
   - สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ
