@@ -406,17 +406,164 @@
   }
 
   // ---------- เพิ่ม/แก้ไขโครงการด้วยฟอร์มเดิม ----------
+  // ---------- ฟอร์มลงทะเบียน/แก้ไขโครงการ: แสดงทุกช่องของฟอร์มเดิมตามลำดับและหมวดเดิม ----------
+  var MONTHS_TH = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  function isoToThai(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? +m[3] + ' ' + MONTHS_TH[+m[2] - 1] + ' ' + (+m[1] + 543) : '';
+  }
+  function thaiToIso(text) {
+    var m = /^(\d{1,2})\s+(\S+)\s+(\d{4})$/.exec(String(text || '').trim());
+    var mo = m ? MONTHS_TH.indexOf(m[2]) + 1 : 0;
+    if (!mo) return '';
+    var y = +m[3] - (+m[3] > 2400 ? 543 : 0);
+    return y + '-' + (mo < 10 ? '0' : '') + mo + '-' + (+m[1] < 10 ? '0' : '') + (+m[1]);
+  }
+
+  // โครงร่างฟอร์มเดิม: หัวข้อหมวด, หัวข้อย่อย, ช่องข้อมูล (อ้างอิงลำดับใน collect) และคำอธิบายใต้ช่อง
+  function entryLayout(doc) {
+    var root = rootEl(doc);
+    Array.prototype.forEach.call(root.querySelectorAll('details'), function (d) { d.open = true; });
+    var data = collect(doc), els = W().__skFields, items = [];
+    Array.prototype.forEach.call(root.querySelectorAll('.form-section-title, .control'), function (node) {
+      if (!visible(node)) return;
+      if (node.classList.contains('form-section-title')) {
+        items.push({ section: clean(node.textContent), collapsible: !!node.closest('details') });
+        return;
+      }
+      if (node.parentElement.closest('.control')) return;
+      var fields = Array.prototype.map.call(node.querySelectorAll('input, select, textarea'), function (el) { return els.indexOf(el); })
+        .filter(function (i) { return i >= 0; });
+      var note = Array.prototype.map.call(node.querySelectorAll('.memo-filter-note, .coordinate-picker-hint'), function (n) { return clean(n.textContent); }).join(' ');
+      if (!fields.length) { var t = clean(node.textContent); if (t) items.push({ sub: t }); return; }
+      fields.forEach(function (i, k) {
+        var f = data.fields[i], el = els[i];
+        f.wide = node.classList.contains('wide') || node.classList.contains('committee-count-control') || f.tag === 'textarea';
+        f.trio = !!node.closest('.project-committee-person');
+        f.thaiDate = el.getAttribute('data-thai-date') === '1';
+        f.coord = el.name === 'coordinate';
+        if (el.list) f.list = Array.prototype.map.call(el.list.options, function (o) { return o.value; });
+        if (k === fields.length - 1 && note) f.note = note;
+        items.push({ field: f });
+      });
+    });
+    data.layout = items;
+    return data;
+  }
+
+  function entryFieldHtml(f) {
+    var id = 'skf-' + f.i, ro = f.readonly;
+    var label = '<label for="' + id + '" class="font-label-md text-label-md text-on-surface font-semibold">' + esc(f.label || 'ช่องข้อมูล') + (f.required ? ' <span class="text-error">*</span>' : '') + '</label>';
+    var cls = inputCls + (ro ? ' !bg-surface-container text-on-surface-variant cursor-not-allowed' : '');
+    var attrs = ' id="' + id + '" data-i="' + f.i + '"' + (ro ? ' readonly tabindex="-1"' : '') + (f.required ? ' required' : '');
+    var input;
+    if (f.tag === 'select') {
+      input = '<select' + attrs + ' class="' + cls + '">' + f.options.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (o[0] === f.value ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select>';
+    } else if (f.tag === 'textarea') {
+      input = '<textarea' + attrs + ' rows="2" class="' + cls + ' resize-y" placeholder="' + esc(f.placeholder) + '">' + esc(f.value) + '</textarea>';
+    } else {
+      var listId = f.list ? 'skl-' + f.i : '';
+      input = '<input type="' + (f.type === 'number' ? 'number' : 'text') + '"' + attrs + ' value="' + esc(f.value) + '" placeholder="' + esc(f.placeholder) + '" class="' + cls + '"' +
+        (listId ? ' list="' + listId + '" autocomplete="off"' : '') + (f.thaiDate ? ' autocomplete="off"' : '') + '/>' +
+        (listId ? '<datalist id="' + listId + '">' + f.list.map(function (v) { return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>' : '');
+      if (f.thaiDate) {
+        input = '<div class="flex gap-1">' + input +
+          '<label class="relative shrink-0 p-2 rounded-lg bg-surface-container-low text-primary hover:bg-surface-container-high cursor-pointer" title="เลือกจากปฏิทิน" aria-label="เลือกวันที่จากปฏิทิน">' +
+          '<span class="material-symbols-outlined text-[20px]">calendar_month</span><input type="date" data-date-for="' + f.i + '" class="absolute inset-0 opacity-0 cursor-pointer" value="' + thaiToIso(f.value) + '"/></label>' +
+          '<button type="button" data-clear="' + f.i + '" class="shrink-0 p-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-error" title="ล้างวันที่" aria-label="ล้างวันที่"><span class="material-symbols-outlined text-[20px]">close</span></button></div>';
+      } else if (f.coord) {
+        input = '<div class="flex gap-1">' + input + '<button type="button" data-pick-map="' + f.i + '" class="' + ui.btnClass('ghost') + ' shrink-0"><span class="material-symbols-outlined text-[18px]">map</span>เลือกจากแผนที่</button></div>';
+      }
+    }
+    return '<div class="flex flex-col gap-1 min-w-0 ' + (f.wide ? 'sm:col-span-6' : f.trio ? 'sm:col-span-2' : 'sm:col-span-3') + '">' + label + input +
+      (f.note ? '<span class="font-body-sm text-body-sm text-on-surface-variant">' + esc(f.note) + '</span>' : '') + '</div>';
+  }
+
+  function renderEntry(box, data) {
+    var html = '', open = false, grid = false;
+    function closeGrid() { if (grid) { html += '</div>'; grid = false; } }
+    function openGrid() { if (!grid) { html += '<div class="grid grid-cols-1 sm:grid-cols-6 gap-3 mb-4">'; grid = true; } }
+    data.layout.forEach(function (it) {
+      if (it.section) {
+        closeGrid();
+        if (open) { html += '</details>'; open = false; }
+        if (it.collapsible) {
+          html += '<details class="mb-4 rounded-lg ring-1 ring-surface-container p-3"' + (box.__openTor ? ' open' : '') + ' data-tor><summary class="cursor-pointer font-headline-sm text-headline-sm text-primary">' + esc(it.section) + '</summary><div class="h-3"></div>';
+          open = true;
+        } else {
+          html += '<h4 class="font-headline-sm text-headline-sm text-primary mb-2 pb-1 border-b border-surface-container">' + esc(it.section) + '</h4>';
+        }
+      } else if (it.sub) {
+        openGrid();
+        html += '<div class="sm:col-span-6 font-label-md text-label-md text-on-surface-variant mt-1">' + esc(it.sub) + '</div>';
+      } else {
+        openGrid();
+        html += entryFieldHtml(it.field);
+      }
+    });
+    closeGrid();
+    if (open) html += '</details>';
+    box.innerHTML = html;
+    box.__sig = data.fields.map(function (f) { return f.sig + f.label; }).join('|');
+  }
+
+  // ---------- เลือกพิกัดจากแผนที่ ----------
+  function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'assets/vendor/leaflet/leaflet.css'; document.head.appendChild(css);
+      var js = document.createElement('script'); js.src = 'assets/vendor/leaflet/leaflet.js'; js.onload = resolve; js.onerror = function () { reject(new Error('โหลดแผนที่ไม่สำเร็จ')); };
+      document.head.appendChild(js);
+    });
+  }
+  function pickCoordinate(current) {
+    return new Promise(function (resolve) {
+      var m0 = /(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/.exec(current || '');
+      var pos = m0 ? [+m0[1], +m0[2]] : null, chosen = null;
+      var body = document.createElement('div');
+      body.innerHTML = '<p class="mb-2 font-body-sm text-body-sm text-on-surface-variant">คลิกตำแหน่งโครงการบนแผนที่ (ลากหมุดเพื่อปรับได้) <b data-picked class="text-primary"></b></p>' +
+        '<div class="relative isolate h-[60vh] rounded-lg overflow-hidden bg-surface-container"><div data-map class="absolute inset-0"></div></div>';
+      var mm = ui.modal({
+        title: 'เลือกพิกัดโครงการ', icon: 'map', size: 'lg', body: body,
+        actions: [{ label: 'ยกเลิก', onClick: function (x) { x.close(); } },
+          { label: 'ใช้พิกัดนี้', kind: 'primary', icon: 'check', onClick: function (x) { if (!chosen) return ui.toast('คลิกเลือกตำแหน่งบนแผนที่ก่อน', 'error'); resolve(chosen); x.close(); } }],
+        onClose: function () { resolve(null); }
+      });
+      loadLeaflet().then(function () {
+        var center = pos || (SK.db.external && SK.db.external.center) || [16.0824, 103.5932];
+        var map = L.map(body.querySelector('[data-map]')).setView(center, pos ? 16 : 13);
+        var street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+        var sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '&copy; Esri' });
+        sat.addTo(map);
+        L.control.layers({ 'ภาพถ่ายดาวเทียม': sat, 'แผนที่ถนน': street }).addTo(map);
+        var marker = null;
+        function set(ll) {
+          chosen = ll.lat.toFixed(6) + ', ' + ll.lng.toFixed(6);
+          body.querySelector('[data-picked]').textContent = '• ' + chosen;
+          if (!marker) marker = L.marker(ll, { draggable: true }).addTo(map).on('dragend', function (e) { set(e.target.getLatLng()); });
+          else marker.setLatLng(ll);
+        }
+        if (pos) set(L.latLng(pos[0], pos[1]));
+        map.on('click', function (e) { set(e.latlng); });
+        setTimeout(function () { map.invalidateSize(); }, 150);
+      }).catch(function (err) { ui.toast(err.message, 'error'); });
+      return mm;
+    });
+  }
+
   function openEntry(project) {
     var doc = Object.assign({}, ENTRY, {
-      title: project ? 'แก้ไขข้อมูลโครงการ' : 'สร้างโครงการใหม่',
+      title: project ? 'แก้ไขข้อมูลโครงการ' : 'ลงทะเบียนโครงการใหม่',
       open: project ? "openEntryGate('edit'," + Number(project.rowNumber) + ',' + JSON.stringify(project.name) + ')' : "openEntryGate('new')"
     });
     var box = document.createElement('div');
     box.innerHTML = '<div class="py-10 text-center text-on-surface-variant"><span class="material-symbols-outlined animate-spin">progress_activity</span><p>กำลังเตรียมแบบฟอร์ม...</p></div>';
-    var data = null;
+    var data = null, saving = false;
     var m = ui.modal({
-      title: doc.title, subtitle: project ? project.name : 'บันทึกลงฐานข้อมูลโครงการ (ชุดเดียวกับที่ใช้พิมพ์เอกสาร)', icon: doc.icon, size: 'lg', body: box,
-      actions: [{ label: 'ยกเลิก', onClick: function (mm) { mm.close(); } }, { label: 'บันทึกโครงการ', kind: 'primary', icon: 'save', onClick: save }],
+      title: doc.title, subtitle: project ? project.name : 'กองช่าง เทศบาลตำบลสีแก้ว • บันทึกลงฐานข้อมูลโครงการ (ชุดเดียวกับที่ใช้พิมพ์เอกสาร)', icon: project ? 'edit_note' : 'add_circle', size: 'lg', body: box,
+      actions: [{ label: 'ยกเลิก', onClick: function (mm) { mm.close(); } }, { label: project ? 'บันทึกการแก้ไข' : 'ลงทะเบียนโครงการ', kind: 'primary', icon: 'save', onClick: save }],
       onClose: closeAll
     });
     load().then(function () {
@@ -425,32 +572,80 @@
       // โหมดแก้ไขโหลดข้อมูลเดิมจากฐานข้อมูลก่อน
       return waitFor(function () { var f = rootEl(doc); return f && visible(f) && (!project || (f.elements.projectName && f.elements.projectName.value)); }, 8000);
     }).then(function () {
-      data = collect(doc);
-      renderForm(box, data);
+      data = entryLayout(doc);
+      renderEntry(box, data);
     }).catch(function (err) { box.innerHTML = '<div class="p-4 rounded-lg bg-error-container text-on-error-container">' + esc(err.message || err) + '</div>'; });
+
+    function refreshFields() {
+      setTimeout(function () {
+        var n = entryLayout(doc);
+        var sig = n.fields.map(function (f) { return f.sig + f.label; }).join('|');
+        if (sig !== box.__sig) {
+          // ช่องเพิ่ม/ลด (เช่น จำนวนผู้ควบคุมงาน/กรรมการ): วาดฟอร์มใหม่โดยคงตำแหน่งเลื่อน
+          var body = m.body, top = body.scrollTop, tor = box.querySelector('details[data-tor]');
+          box.__openTor = tor && tor.open;
+          renderEntry(box, n);
+          body.scrollTop = top;
+        } else syncValues(box, n);
+        data = n;
+      }, 250);
+    }
     box.addEventListener('change', function (e) {
+      var d = e.target.closest('[data-date-for]');
+      if (d) {
+        var target = box.querySelector('[data-i="' + d.dataset.dateFor + '"]');
+        target.value = isoToThai(d.value);
+        setField(+d.dataset.dateFor, target.value);
+        return refreshFields();
+      }
       var el = e.target.closest('[data-i]'); if (!el) return;
       setField(+el.dataset.i, el.type === 'checkbox' ? el.checked : el.value);
-      setTimeout(function () { var n = collect(doc); syncValues(box, n); data = n; }, 250);
+      refreshFields();
+    });
+    box.addEventListener('click', function (e) {
+      var c = e.target.closest('[data-clear]');
+      if (c) {
+        var t = box.querySelector('[data-i="' + c.dataset.clear + '"]');
+        t.value = ''; setField(+c.dataset.clear, ''); refreshFields();
+        return;
+      }
+      var p = e.target.closest('[data-pick-map]');
+      if (p) {
+        var inp = box.querySelector('[data-i="' + p.dataset.pickMap + '"]');
+        pickCoordinate(inp.value).then(function (v) {
+          if (!v) return;
+          inp.value = v; setField(+p.dataset.pickMap, v); refreshFields();
+        });
+      }
     });
     function save() {
-      if (!data) return;
-      box.querySelectorAll('[data-i]').forEach(function (el) { setField(+el.dataset.i, el.type === 'checkbox' ? el.checked : el.value); });
+      if (!data || saving) return;
+      box.querySelectorAll('[data-i]').forEach(function (el) { if (!el.readOnly) setField(+el.dataset.i, el.type === 'checkbox' ? el.checked : el.value); });
       var root = rootEl(doc);
       var invalid = Array.prototype.filter.call(root.elements, function (e) { return e.willValidate && !e.checkValidity(); });
       if (invalid.length) return ui.toast('กรุณากรอก: ' + invalid.map(labelOf).join(', '), 'error');
       messages = [];
+      saving = true;
       var ev = new (W().SubmitEvent)('submit', { cancelable: true, submitter: root.querySelector('button[type=submit]') });
       Promise.resolve(W().submitProjectEntry(ev)).then(function () {
         return waitFor(function () { return !visible(root) || errors().length; }, 10000);
       }).then(function () {
-        if (errors().length) return ui.toast(errors().join(' • '), 'error');
-        m.close();
+        if (errors().length) { saving = false; return ui.toast(errors().join(' • '), 'error'); }
         ui.toast('บันทึกข้อมูลโครงการแล้ว', 'success');
-        setTimeout(function () { location.reload(); }, 600);
+        // ข้อมูลตัวอย่าง: นำแถวที่บันทึกในชีทกลับมาเป็นโครงการของเว็บ แล้วรอส่งขึ้นคลาวด์ก่อนโหลดหน้าใหม่
+        return Promise.resolve(SK.afterEntrySave ? SK.afterEntrySave(project) : null).catch(function (err) { console.error(err); })
+          .then(function () { return sleep(400); })
+          .then(function () { return SK.cloud && SK.cloud.active ? SK.cloud.flush() : null; })
+          .then(function () { m.close(); location.reload(); });
       });
     }
   }
 
-  SK.docEngine = { DOCS: DOCS, load: load, openDocument: openDocument, openEntry: openEntry };
+  // เรียกฟังก์ชันฝั่งเซิร์ฟเวอร์ของระบบเดิมผ่านตัวสร้างเอกสาร (ข้อมูลชุดเดียวกับที่ฟอร์มเพิ่งบันทึก)
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments);
+    return load().then(function (w) { return w.SKGas.call.apply(null, args); });
+  }
+
+  SK.docEngine = { DOCS: DOCS, load: load, openDocument: openDocument, openEntry: openEntry, call: call };
 })();

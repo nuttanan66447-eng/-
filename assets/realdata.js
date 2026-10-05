@@ -123,7 +123,7 @@
     var m = /^(.*?)\s*\((.*)\)\s*$/.exec(text || '');
     return m ? [m[1], m[2]] : [text || '', ''];
   }
-  function sampleRow(p) {
+  function genRow(p) {
     var v = SK.ref.VILLAGES[p.village] || { name: '' };
     var vm = /^ม\.(\d+)\s*(.*)$/.exec(v.name) || [null, '', v.name];
     var sup = person(p.supervisor), cm = SK.ref.COMMITTEE || [];
@@ -161,9 +161,61 @@
     }
     return row;
   }
+  // โครงการที่บันทึกผ่านฟอร์มโครงการ (p.sheet = แถวในชีท): ใช้ค่าจากฟอร์มทุกช่อง
+  // ยกเว้นช่องที่ถูกแก้ไขจากหน้าเว็บภายหลัง (ค่าที่สร้างได้ต่างจากตอนบันทึก p.sheetGen)
+  function sampleRow(p) {
+    var gen = genRow(p);
+    if (!p.sheet) return gen;
+    var out = Object.assign({}, p.sheet), base = p.sheetGen || {};
+    Object.keys(gen).forEach(function (k) { if (gen[k] !== base[k]) out[k] = gen[k]; else if (!(k in out)) out[k] = ''; });
+    return out;
+  }
+
+  // แถวในชีทหลังบันทึกฟอร์มโครงการ -> โครงการของเว็บ (โหมดข้อมูลตัวอย่าง)
+  function captureEntry(existing) {
+    var list = SK.db.data.projects;
+    return SK.docEngine.call('getDashboardDataFast').then(function (data) {
+      if (!data || !data.rows) return;
+      var row = existing ? data.rows.filter(function (r) { return r.rowNumber === existing.rowNumber; })[0]
+        : data.rows.filter(function (r) { return !list.some(function (p) { return p.rowNumber === r.rowNumber; }); }).sort(function (a, b) { return b.rowNumber - a.rowNumber; })[0];
+      if (!row) return;
+      var keep = Object.assign({}, SK.ref.VILLAGES);
+      var m = mapRows({ rows: [row], defaultCenter: data.defaultCenter })[0];
+      var vill = SK.ref.VILLAGES[m.village];
+      // mapRows ปรับหมู่บ้านของเว็บตามแถวนี้: คืนค่าเดิม (ชื่อหมู่บ้านตัวอย่างไม่เปลี่ยน)
+      for (var k in SK.ref.VILLAGES) if (!keep[k]) delete SK.ref.VILLAGES[k];
+      Object.assign(SK.ref.VILLAGES, keep);
+      // หมู่บ้านที่ยังไม่มีในเว็บ: เก็บไว้กับข้อมูล (ใช้ได้ทุกเครื่อง)
+      if (!SK.ref.VILLAGES[m.village] && vill) {
+        var meta = SK.db.data.meta || (SK.db.data.meta = {});
+        (meta.villages = meta.villages || {})[m.village] = vill;
+        SK.ref.VILLAGES[m.village] = vill;
+      }
+      var p = existing ? list.filter(function (x) { return x.id === existing.id; })[0] : null;
+      if (!p) {
+        var yy = String((parseInt(m.year, 10) || new Date().getFullYear() + 543) % 100).padStart(2, '0');
+        var n = 1, id;
+        do { id = 'SK-' + yy + '-' + String(n++).padStart(3, '0'); } while (list.some(function (x) { return x.id === id; }));
+        p = { id: id, egp: '', disbursed: 0, installment: 0, installments: 1, actual: m.actual || 0, plan: 0,
+          status: m.status === 'unknown' ? 'signing' : m.status, createdAt: new Date().toISOString().slice(0, 10) };
+        list.push(p);
+      }
+      ['name', 'contractNo', 'category', 'typeLabel', 'village', 'location', 'source', 'sourceLabel', 'year', 'budget', 'contractor', 'supervisor', 'start', 'end', 'lat', 'lng']
+        .forEach(function (k) { if (m[k] !== undefined && m[k] !== '') p[k] = m[k]; });
+      if (m.status === 'completed') p.status = 'completed';
+      p.rowNumber = row.rowNumber;
+      p.sheet = Object.assign({}, row.fields);
+      p.sheetGen = genRow(p);
+      SK.db.save();
+    });
+  }
+  // บันทึกฟอร์มโครงการแล้ว: ข้อมูลจริงอ่านจากชีทเมื่อโหลดหน้าใหม่อยู่แล้ว ส่วนข้อมูลตัวอย่างต้องเก็บเป็นโครงการของเว็บ
+  SK.afterEntrySave = function (existing) { return SK.db.external ? null : captureEntry(existing); };
+
   // ยังไม่ได้นำเข้าข้อมูลจริง: ส่งโครงการตัวอย่างให้ตัวสร้างเอกสาร ทุกโครงการจึงพิมพ์เอกสารได้ทันที
   function useSampleProjects() {
-    var list = SK.db.data.projects;
+    var list = SK.db.data.projects, mv = (SK.db.data.meta || {}).villages || {};
+    Object.keys(mv).forEach(function (k) { if (!SK.ref.VILLAGES[k]) SK.ref.VILLAGES[k] = mv[k]; });
     return SKGas.syncSample(list.map(sampleRow)).then(function (res) {
       if (!res || !res.sample) return false;
       list.forEach(function (p, i) { p.rowNumber = i + 2; });
@@ -210,9 +262,13 @@
   }
 
   // ข้อมูลจริงเพิ่ม/แก้ไขด้วยแบบฟอร์มโครงการชุดเดิม เพื่อให้เป็นข้อมูลเดียวกับที่ใช้พิมพ์เอกสาร
+  // ลงทะเบียน/แก้ไขโครงการด้วยแบบฟอร์มโครงการชุดเดิม (ทุกช่องที่ใช้พิมพ์เอกสาร) ทั้งข้อมูลจริงและข้อมูลตัวอย่าง
+  // ข้อมูลตัวอย่างยังใช้ฟอร์มย่อของเว็บสำหรับปรับผลงาน/สถานะ (ข้อมูลจริงคำนวณจากชีท)
   function redirectEdits() {
-    if (!SK.db.external || !SK.docEngine) return;
-    SK.ui.openProjectForm = function (existing) { SK.docEngine.openEntry(existing || null); };
+    if (!SK.docEngine) return;
+    var basic = SK.ui.openProjectForm;
+    SK.ui.openProjectFormBasic = SK.db.external ? null : basic;
+    SK.ui.openProjectForm = function (existing) { SK.docEngine.openEntry(existing && existing.rowNumber ? existing : null); };
   }
 
   SK.actions['data-panel'] = function () { if (window.SKData) SKData.open(); };
