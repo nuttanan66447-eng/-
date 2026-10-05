@@ -507,18 +507,24 @@
     var item = function (act, icon, label) {
       return '<button type="button" data-act="' + act + '" class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-container-low"><span class="material-symbols-outlined text-primary">' + icon + '</span><span>' + label + '</span></button>';
     };
+    var cloud = SK.cloud && SK.cloud.enabled ? SK.cloud : null;
     var html = '<div class="px-4 py-3 border-b border-surface-container flex items-center gap-3"><img src="assets/director.jpg" alt="" class="w-10 h-10 rounded-full object-cover"/>' +
-      '<div><div class="font-label-md text-label-md">นายธีรภัทร ชาญวิทย์</div><div class="font-body-sm text-body-sm text-on-surface-variant">ผู้อำนวยการกองช่าง</div></div></div>' +
-      '<div class="py-1">' + item('export', 'download', 'สำรองข้อมูล (ไฟล์ JSON)') + item('import', 'upload', 'นำเข้าข้อมูลจากไฟล์สำรอง') +
-      item('reset', 'restart_alt', 'คืนค่าข้อมูลตัวอย่าง') +
+      '<div><div class="font-label-md text-label-md">นายธีรภัทร ชาญวิทย์</div><div class="font-body-sm text-body-sm text-on-surface-variant">ผู้อำนวยการกองช่าง</div>' +
+      (cloud && cloud.user ? '<div class="font-body-sm text-body-sm text-primary truncate max-w-[200px]">' + esc(cloud.user.email) + '</div>' : '') + '</div></div>' +
+      '<div class="py-1">' + (cloud ? item('cloud', cloud.user ? 'cloud_done' : 'login', cloud.user ? 'บัญชีและการซิงก์คลาวด์' : 'เข้าสู่ระบบ (บันทึกข้อมูลบนคลาวด์)') : '') +
+      item('export', 'download', 'สำรองข้อมูล (ไฟล์ JSON)') + item('import', 'upload', 'นำเข้าข้อมูลจากไฟล์สำรอง') +
+      (cloud && cloud.active ? '' : item('reset', 'restart_alt', 'คืนค่าข้อมูลตัวอย่าง')) +
       '<a href="https://www.sikaew.go.th/index/" target="_blank" rel="noopener" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low"><span class="material-symbols-outlined text-primary">public</span><span>เว็บไซต์เทศบาลตำบลสีแก้ว</span></a></div>' +
-      '<p class="px-4 py-2 border-t border-surface-container font-body-sm text-body-sm text-on-surface-variant">ข้อมูลบันทึกไว้ในเบราว์เซอร์เครื่องนี้ ควรสำรองข้อมูลเป็นประจำ</p>';
+      '<p class="px-4 py-2 border-t border-surface-container font-body-sm text-body-sm text-on-surface-variant">' +
+      (cloud && cloud.active ? 'ข้อมูลบันทึกบนคลาวด์ (Supabase) และในเครื่องนี้' : 'ข้อมูลบันทึกไว้ในเบราว์เซอร์เครื่องนี้ ควรสำรองข้อมูลเป็นประจำ') + '</p>';
     var box = dropdown(btn, html, 320);
     box.addEventListener('click', function (e) {
       var b = e.target.closest('[data-act]');
       if (!b) return;
       closeDropdowns();
-      if (b.dataset.act === 'export') {
+      if (b.dataset.act === 'cloud') {
+        SK.cloud.open();
+      } else if (b.dataset.act === 'export') {
         download('kongchang-sikaew-backup-' + today() + '.json', SK.db.exportJSON(), 'application/json');
         toast('ดาวน์โหลดไฟล์สำรองข้อมูลแล้ว', 'success');
       } else if (b.dataset.act === 'import') {

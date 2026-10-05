@@ -1,6 +1,7 @@
 # CLAUDE.md
 
-เว็บไซต์กองช่าง เทศบาลตำบลสีแก้ว — เว็บ static บน GitHub Pages (https://nuttanan66447-eng.github.io/-/)
+เว็บไซต์กองช่าง เทศบาลตำบลสีแก้ว — เว็บ static บน Vercel (deploy อัตโนมัติจาก `main`) และ GitHub Pages (https://nuttanan66447-eng.github.io/-/)
+ข้อมูลเก็บใน Supabase (โปรเจกต์ `sikaew-kongchang`, id `goiigbvnlzsovcxykynr`) เมื่อเจ้าหน้าที่เข้าสู่ระบบ
 
 ## กติกาการทำงาน (สำคัญ)
 
@@ -16,6 +17,8 @@
   - สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ
 - `assets/gas/` = ตัวจำลอง Apps Script (Web Worker + IndexedDB) แทน `google.script.run`
 - `assets/doc-engine.js` = ฟอร์ม/พรีวิว/พิมพ์เอกสารโครงการ (สั่งงาน v184 ใน iframe ที่ซ่อนอยู่)
+- `assets/cloud.js` = เข้าสู่ระบบ Supabase + ซิงก์ SK.db (ตาราง records), ชีท v184 (workbooks), ไฟล์แนบ (Storage `files`) — โครงสร้าง DB ใน `supabase/schema.sql` แก้ DB แล้วต้องอัปเดตไฟล์นี้ด้วย
+- `assets/config.js` = URL + publishable key ของ Supabase
 - `assets/realdata.js` = ใช้ข้อมูลจริงที่นำเข้าจาก Google Sheet (.xlsx) หรือส่งโครงการตัวอย่างให้ตัวสร้างเอกสารถ้ายังไม่นำเข้า
 
 ## คำสั่ง
@@ -24,4 +27,5 @@
 npm run build              # สร้าง assets/styles.css ใหม่ (Tailwind) ทุกครั้งที่เพิ่มคลาสใหม่
 python3 tools/build_system.py
 python3 -m http.server 8765   # ทดสอบในเครื่อง (ต้องเปิดผ่าน http ไม่ใช่ file://)
+node tools/build-dist.js      # สร้าง dist/ แบบที่ Vercel ใช้
 ```

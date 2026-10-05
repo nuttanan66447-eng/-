@@ -74,6 +74,8 @@
     });
   }
 
+  function cloudOn() { return !!(window.SK && SK.cloud && SK.cloud.active); }
+
   // ---------- แผงควบคุม ----------
   var panel;
   function el(html) { var d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
@@ -85,7 +87,7 @@
     panel.querySelector('.skd-body').innerHTML =
       (message ? '<div class="skd-msg skd-' + (tone || 'info') + '">' + esc(message) + '</div>' : '') +
       '<div class="skd-status"><strong>' + projects + '</strong> โครงการ • ' + used.length + ' ชีทมีข้อมูล' +
-      (info.savedAt ? '<br><span>บันทึกในเครื่องนี้ล่าสุด ' + esc(new Date(info.savedAt).toLocaleString('th-TH')) + '</span>' : '') +
+      (info.savedAt ? (cloudOn() ? '<br><span>บันทึกล่าสุด ' : '<br><span>บันทึกในเครื่องนี้ล่าสุด ') + esc(new Date(info.savedAt).toLocaleString('th-TH')) + '</span>' : '') +
       (info.sample ? '<br><span>ที่มา: โครงการตัวอย่างของเว็บไซต์ (ยังไม่ได้นำเข้าข้อมูลจริง)</span>' : info.title ? '<br><span>ที่มา: ' + esc(info.title) + '</span>' : '') + '</div>' +
       '<ol class="skd-steps">' +
         '<li><a href="' + DOWNLOAD_URL + '" target="_blank" rel="noopener">ดาวน์โหลดไฟล์ Excel จาก Google Sheet</a><small>ต้องเข้าสู่ระบบ Google ด้วยบัญชีที่มีสิทธิ์เปิดชีทของกองช่าง</small></li>' +
@@ -93,8 +95,9 @@
       '</ol>' +
       '<div class="skd-row"><button type="button" class="skd-btn" data-skd="export">ส่งออกข้อมูลเป็น Excel</button>' +
       '<a class="skd-btn" href="' + OPEN_URL + '" target="_blank" rel="noopener">เปิด Google Sheet</a></div>' +
-      '<p class="skd-note">ข้อมูลที่บันทึก/แก้ไขในหน้านี้เก็บไว้ในเบราว์เซอร์เครื่องนี้ หากต้องการอัปเดต Google Sheet ให้ส่งออกเป็น Excel แล้วใน Google Sheet เลือก ไฟล์ › นำเข้า › แทนที่สเปรดชีต</p>' +
-      '<div class="skd-row">' + (OPTS.fab === false ? '' : '<a class="skd-btn" href="index.html">กลับหน้าเว็บหลัก</a>') + '<button type="button" class="skd-btn skd-danger" data-skd="reset">ล้างข้อมูลในเครื่องนี้</button></div>';
+      '<p class="skd-note">' + (cloudOn() ? 'เข้าสู่ระบบคลาวด์อยู่: ข้อมูลที่นำเข้า/แก้ไขจะบันทึกขึ้นฐานข้อมูลกลาง (Supabase) อัตโนมัติ ทุกเครื่องที่เข้าสู่ระบบใช้ข้อมูลชุดเดียวกัน' : 'ข้อมูลที่บันทึก/แก้ไขในหน้านี้เก็บไว้ในเบราว์เซอร์เครื่องนี้ (เข้าสู่ระบบคลาวด์เพื่อใช้ข้อมูลร่วมกันทุกเครื่อง)') +
+      ' หากต้องการอัปเดต Google Sheet ให้ส่งออกเป็น Excel แล้วใน Google Sheet เลือก ไฟล์ › นำเข้า › แทนที่สเปรดชีต</p>' +
+      '<div class="skd-row">' + (OPTS.fab === false ? '' : '<a class="skd-btn" href="index.html">กลับหน้าเว็บหลัก</a>') + '<button type="button" class="skd-btn skd-danger" data-skd="reset">' + (cloudOn() ? 'โหลดข้อมูลจากคลาวด์ใหม่' : 'ล้างข้อมูลในเครื่องนี้') + '</button></div>';
   }
 
   function refresh(message, tone) {
@@ -130,6 +133,13 @@
       if (b.dataset.skd === 'export') {
         exportFile().then(function () { refresh('ดาวน์โหลดไฟล์ Excel แล้ว', 'ok'); }).catch(function (err) { refresh('ส่งออกไม่สำเร็จ: ' + (err.message || err), 'err'); });
       } else if (b.dataset.skd === 'reset') {
+        var cloud = window.SK && SK.cloud && SK.cloud.active ? SK.cloud : null;
+        if (cloud) {
+          // เชื่อมคลาวด์อยู่: ไม่ล้างข้อมูลกลาง แค่โหลดชีทจากคลาวด์มาแทนข้อมูลในเครื่องนี้
+          if (!confirm('แทนที่ข้อมูลชีทในเครื่องนี้ด้วยข้อมูลล่าสุดบนคลาวด์?')) return;
+          cloud.reloadWorkbook().then(function () { location.reload(); }, function (err) { refresh('โหลดจากคลาวด์ไม่สำเร็จ: ' + (err.message || err), 'err'); });
+          return;
+        }
         if (!confirm('ล้างข้อมูลทั้งหมดในเบราว์เซอร์นี้? (ข้อมูลใน Google Sheet ไม่ได้รับผลกระทบ)')) return;
         SKGas.reset().then(function () { location.reload(); });
       }
