@@ -4,7 +4,7 @@
   var SK = window.SK, ui = SK.ui, ref = SK.ref, esc = ui.esc;
 
   function addDocument(doc) {
-    SK.db.data.documents.unshift(Object.assign({ date: ui.today(), status: 'approved', owner: 'นายธีรภัทร ชาญวิทย์', format: 'pdf' }, doc));
+    SK.db.data.documents.unshift(Object.assign({ date: ui.today(), status: 'approved', owner: (ui.currentUser && ui.currentUser().signedIn && ui.currentUser().name) || '', format: 'pdf' }, doc));
   }
 
   function inspection(projectId, onDone) {
@@ -104,7 +104,7 @@
     inspection: { label: 'รายงานตรวจรับพัสดุ', icon: 'fact_check' },
     drawing: { label: 'แบบแปลน / มาตรฐาน', icon: 'architecture' }
   };
-  var FORMAT_ICON = { pdf: 'picture_as_pdf', xls: 'table_chart', doc: 'description', dwg: 'architecture', img: 'image', file: 'draft' };
+  var FORMAT_ICON = { html: 'article', pdf: 'picture_as_pdf', xls: 'table_chart', doc: 'description', dwg: 'architecture', img: 'image', file: 'draft' };
   var DOC_STATUS = {
     approved: ['อนุมัติแล้ว', 'bg-surface-container-high text-primary'],
     waiting: ['รอปลัดเทศบาลลงนาม', 'bg-secondary-fixed text-on-secondary-fixed-variant'],
@@ -145,7 +145,7 @@
           var doc = Object.assign({
             id: 'UP-' + Date.now().toString(36).toUpperCase().slice(-5) + Math.floor(Math.random() * 90 + 10),
             type: f.name.match(/\.(dwg|dxf)$/i) ? 'drawing' : 'order', title: f.name.replace(/\.[^.]+$/, ''), detail: 'อัปโหลดเมื่อ ' + ui.dateLong(ui.today()),
-            status: 'approved', owner: 'นายธีรภัทร ชาญวิทย์', date: ui.today(), projectId: ''
+            status: 'approved', owner: (ui.currentUser && ui.currentUser().signedIn && ui.currentUser().name) || '', date: ui.today(), projectId: ''
           }, defaults || {}, { fileId: id, fileName: f.name, fileSize: f.size, format: formatOf(f.name) });
           SK.db.data.documents.unshift(doc);
           return doc;
@@ -161,6 +161,8 @@
   }
 
   function openDocument(doc, onChange) {
+    // เอกสารที่สร้างจากระบบ (ประวัติเอกสาร): เปิดพรีวิวเดิม พิมพ์/บันทึก Word/แก้ไขได้
+    if (doc.fileId && doc.docKey && SK.docEngine && SK.docEngine.reopen) return SK.docEngine.reopen(doc);
     if (doc.fileId) {
       return SK.db.files.get(doc.fileId).then(function (rec) {
         if (!rec) { delete doc.fileId; SK.db.save(); return openDocument(doc, onChange); }

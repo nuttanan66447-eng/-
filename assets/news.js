@@ -79,7 +79,7 @@
         '<li>นำ token ไปแปลงเป็นแบบไม่หมดอายุที่ <a class="text-primary underline" target="_blank" rel="noopener" href="https://developers.facebook.com/tools/debug/accesstoken/">Access Token Debugger</a> (Extend Access Token) แล้วขอ Page token อีกครั้ง</li>' +
         '<li>ใน Supabase → Edge Functions → Secrets เพิ่ม <code>FB_PAGE_TOKEN</code> = token ที่ได้</li>' +
         '<li>กลับมากด "ดึงข่าวล่าสุด" — จากนั้นเว็บจะดึงข่าวใหม่ให้เองทุกชั่วโมงเมื่อเจ้าหน้าที่เปิดเว็บ</li></ol>' +
-        '<p class="mt-3 font-body-sm text-body-sm text-on-surface-variant">ระหว่างนี้หน้าแรกแสดงโพสต์ด้วยกรอบเพจของ Facebook ได้ตามปกติ</p>',
+        '<p class="mt-3 font-body-sm text-body-sm text-on-surface-variant">ระหว่างนี้เจ้าหน้าที่เพิ่มข่าวและรูปกิจกรรมเองได้ด้วยปุ่ม "เพิ่มข่าว"</p>',
       actions: [{ label: 'ปิด', kind: 'primary', onClick: function (m) { m.close(); } }]
     });
   }
@@ -106,6 +106,92 @@
     ui.modal({ title: 'ภาพจากเพจกองช่าง', subtitle: (i + 1) + ' / ' + images.length + ' รูป', icon: 'photo_library', size: 'lg', body: body });
   }
 
+  function manual(post) { return /^manual-/.test(post.id); }
+
+  // ---------- เจ้าหน้าที่ลงข่าวเอง (ใช้ได้ทันทีโดยไม่ต้องเชื่อมเพจ) ----------
+  function shrink(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function () {
+        var max = 1600, k = Math.min(1, max / Math.max(img.width, img.height));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { b ? resolve({ blob: b, w: c.width, h: c.height }) : reject(new Error('แปลงรูปไม่สำเร็จ')); }, 'image/jpeg', 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('อ่านไฟล์รูปไม่ได้: ' + file.name)); };
+      img.src = url;
+    });
+  }
+  function addDialog() {
+    var c = client();
+    if (!c || !staff()) return ui.toast('ต้องเข้าสู่ระบบเจ้าหน้าที่ก่อน', 'error');
+    var inp = 'w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-md text-body-md';
+    var body = document.createElement('div');
+    body.className = 'flex flex-col gap-3';
+    body.innerHTML =
+      '<label class="flex flex-col gap-1 font-label-md text-label-md">รายละเอียดข่าว / กิจกรรม *<textarea data-f="message" rows="5" class="' + inp + '" placeholder="เช่น กองช่างตรวจรับงานก่อสร้างถนน คสล. หมู่ที่ 6 ..."></textarea></label>' +
+      '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><label class="flex flex-col gap-1 font-label-md text-label-md">วันที่<input data-f="date" type="date" value="' + ui.today() + '" class="' + inp + '"/></label>' +
+      '<label class="flex flex-col gap-1 font-label-md text-label-md">ผูกกับโครงการ<select data-f="project" class="' + inp + '"><option value="">— จับคู่อัตโนมัติจากข้อความ —</option>' +
+        SK.db.data.projects.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.id + ' • ' + p.name) + '</option>'; }).join('') + '</select></label></div>' +
+      '<label class="flex flex-col gap-1 font-label-md text-label-md">ลิงก์โพสต์ Facebook (ถ้ามี)<input data-f="link" type="url" class="' + inp + '" placeholder="https://www.facebook.com/TechnicianSeekaew/posts/..."/></label>' +
+      '<label class="flex flex-col gap-1 font-label-md text-label-md">รูปภาพ (เลือกได้หลายรูป)<input data-f="files" type="file" accept="image/*" multiple class="' + inp + '"/></label>' +
+      '<div data-prev class="flex flex-wrap gap-2"></div>';
+    var files = body.querySelector('[data-f=files]');
+    files.addEventListener('change', function () {
+      body.querySelector('[data-prev]').innerHTML = Array.prototype.map.call(files.files, function (f) {
+        return '<img src="' + URL.createObjectURL(f) + '" alt="" class="w-20 h-16 object-cover rounded"/>';
+      }).join('');
+    });
+    var busy = false;
+    ui.modal({ title: 'เพิ่มข่าวและภาพกิจกรรม', icon: 'add_photo_alternate', size: 'md', body: body, actions: [
+      { label: 'ยกเลิก', onClick: function (m) { m.close(); } },
+      { label: 'บันทึกข่าว', kind: 'primary', icon: 'save', onClick: function (m) {
+        if (busy) return;
+        var f = function (k) { return body.querySelector('[data-f=' + k + ']'); };
+        var message = f('message').value.trim();
+        if (!message && !files.files.length) return ui.toast('ใส่รายละเอียดหรือรูปอย่างน้อย 1 อย่าง', 'error');
+        busy = true;
+        ui.toast('กำลังบันทึกข่าว...');
+        var id = 'manual-' + Date.now(), list = Array.prototype.slice.call(files.files);
+        var uploads = list.map(function (file, i) {
+          return shrink(file).then(function (r) {
+            var path = id + '/' + i + '.jpg';
+            return c.storage.from('news').upload(path, r.blob, { contentType: 'image/jpeg', upsert: true }).then(function (up) {
+              if (up.error) throw up.error;
+              return { src: c.storage.from('news').getPublicUrl(path).data.publicUrl, w: r.w, h: r.h, stored: true, path: path };
+            });
+          });
+        });
+        Promise.all(uploads).then(function (images) {
+          var date = f('date').value || ui.today();
+          return c.from('news_posts').insert({
+            id: id, message: message, created_time: new Date(date + 'T12:00:00+07:00').toISOString(), permalink: f('link').value.trim(),
+            images: images, project_ids: f('project').value ? [f('project').value] : null, fetched_at: new Date().toISOString()
+          });
+        }).then(function (r) {
+          if (r && r.error) throw r.error;
+          ui.toast('บันทึกข่าวแล้ว', 'success');
+          m.close(); load(true); renderCard();
+        }).catch(function (err) { busy = false; ui.toast('บันทึกไม่สำเร็จ: ' + (err.message || err), 'error'); });
+      } }
+    ] });
+  }
+  function deletePost(post) {
+    var c = client();
+    ui.confirm('ลบข่าวนี้ออกจากเว็บ?', 'ลบข่าว', 'danger').then(function (ok) {
+      if (!ok) return;
+      var paths = (post.images || []).map(function (im) { return im.path; }).filter(Boolean);
+      (paths.length ? c.storage.from('news').remove(paths) : Promise.resolve()).then(function () {
+        return c.from('news_posts').delete().eq('id', post.id);
+      }).then(function (r) {
+        if (r && r.error) throw r.error;
+        ui.toast('ลบข่าวแล้ว', 'success'); load(true); renderCard();
+      }).catch(function (err) { ui.toast('ลบไม่สำเร็จ: ' + (err.message || err), 'error'); });
+    });
+  }
+
   function postCard(post, opts) {
     var imgs = post.images || [], ids = projectsFor(post);
     var chips = ids.map(function (id) {
@@ -120,8 +206,9 @@
         '<p class="font-body-sm text-body-sm text-on-surface whitespace-pre-line line-clamp-5">' + esc(post.message || '(โพสต์รูปภาพ)') + '</p>' +
         (chips ? '<div class="flex flex-wrap gap-1">' + chips + '</div>' : '') +
         '<div class="mt-auto flex items-center justify-between gap-2 pt-1">' +
-          '<a href="' + esc(post.permalink || PAGE) + '" target="_blank" rel="noopener" class="font-label-md text-label-md text-primary font-semibold hover:underline">อ่านต่อบน Facebook</a>' +
-          (staff() ? '<button type="button" data-news-link="' + esc(post.id) + '" class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">link</span>ผูกโครงการ</button>' : '') +
+          (post.permalink || !manual(post) ? '<a href="' + esc(post.permalink || PAGE) + '" target="_blank" rel="noopener" class="font-label-md text-label-md text-primary font-semibold hover:underline">อ่านต่อบน Facebook</a>' : '<span class="font-label-sm text-label-sm text-on-surface-variant">ลงข่าวโดยกองช่าง</span>') +
+          (staff() ? '<span class="flex items-center gap-2">' + (manual(post) ? '<button type="button" data-news-del="' + esc(post.id) + '" class="font-label-sm text-label-sm text-error hover:underline flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">delete</span>ลบ</button>' : '') +
+            '<button type="button" data-news-link="' + esc(post.id) + '" class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">link</span>ผูกโครงการ</button></span>' : '') +
         '</div></div></article>';
   }
 
@@ -130,11 +217,18 @@
     var box = $('news-body');
     if (!box) return;
     $('news-sync').classList.toggle('hidden', !staff());
+    if ($('news-add')) $('news-add').classList.toggle('hidden', !staff());
     load().then(function (d) {
       // ยังไม่มีข่าวในระบบ: ไม่แสดงส่วนข่าว (เจ้าหน้าที่ยังเห็นปุ่ม "ดึงข่าวล่าสุด")
       $('news').classList.toggle('hidden', !d.posts.length && !staff());
+      var noToken = d.sync && d.sync.message === 'needs-token';
       if (!d.posts.length) {
-        box.innerHTML = '<p class="font-body-sm text-body-sm text-on-surface-variant">ยังไม่มีข่าวในระบบ — กด "ดึงข่าวล่าสุด" เพื่อดึงโพสต์จากเพจ</p>';
+        box.innerHTML = noToken
+          ? '<div class="p-4 rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant flex flex-col gap-2">' +
+              '<p class="font-body-md text-body-md"><b>ยังเชื่อมต่อเพจ Facebook ไม่ได้</b> — Facebook ไม่อนุญาตให้เว็บอื่นอ่านโพสต์ของเพจโดยไม่มีรหัสเชื่อมต่อ (Page Access Token) ที่ผู้ดูแลเพจสร้างให้ จึงยังไม่มีข่าวในระบบ</p>' +
+              '<div class="flex flex-wrap gap-2"><button type="button" data-action="news-setup" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">key</span>วิธีเชื่อมต่อเพจ (ทำครั้งเดียว)</button>' +
+              '<button type="button" data-action="news-add" class="' + ui.btnClass('ghost') + '"><span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>เพิ่มข่าวเอง</button></div></div>'
+          : '<p class="font-body-sm text-body-sm text-on-surface-variant">ยังไม่มีข่าวในระบบ — กด "ดึงข่าวล่าสุด" เพื่อดึงโพสต์จากเพจ หรือ "เพิ่มข่าว" เพื่อลงข่าวและรูปเอง</p>';
         return;
       }
       var list = showAll ? d.posts : d.posts.slice(0, 6);
@@ -216,17 +310,19 @@
   }
 
   document.addEventListener('click', function (e) {
-    var g = e.target.closest('[data-news-gallery]'), l = e.target.closest('[data-news-link]');
-    if (!g && !l) return;
+    var g = e.target.closest('[data-news-gallery]'), l = e.target.closest('[data-news-link]'), x = e.target.closest('[data-news-del]');
+    if (!g && !l && !x) return;
     load().then(function (d) {
-      var post = d.posts.filter(function (p) { return p.id === (g || l).dataset[g ? 'newsGallery' : 'newsLink']; })[0];
+      var key = g ? g.dataset.newsGallery : l ? l.dataset.newsLink : x.dataset.newsDel;
+      var post = d.posts.filter(function (p) { return p.id === key; })[0];
       if (!post) return;
-      if (g) gallery(post.images || [], 0); else linkDialog(post);
+      if (g) gallery(post.images || [], 0); else if (l) linkDialog(post); else deletePost(post);
     });
   });
   Object.assign(SK.actions, {
     'news-sync': function () { sync(true).then(function (res) { if (res && res.ok) { load(true); renderCard(); } }); },
     'news-setup': setupHelp,
+    'news-add': addDialog,
     'news-more': function () { showAll = !showAll; renderCard(); }
   });
 
