@@ -84,4 +84,8 @@
     syncSample: function (projects) { return send({ type: 'sample', projects: projects }); },
     reset: function () { return send({ type: 'reset' }); }
   };
+  // ชีทข้อมูลตัวอย่างจากรุ่นก่อน (โครงการสมมุติ): ล้างทิ้งครั้งเดียว ใช้ข้อมูลจริงเท่านั้น
+  window.SKGas.ready = worker ? window.SKGas.summary().then(function (s) {
+    return s && s.sample ? window.SKGas.reset() : null;
+  }).catch(function () {}) : Promise.resolve();
 })();

@@ -9,7 +9,20 @@
 
   // ---------- ประมาณราคา ----------
   function est() { return SK.db.data.estimate; }
-  function sigs() { return SK.db.data.signatures['estimate-089']; }
+  // ผู้ลงนามราคากลาง: คณะกรรมการกำหนดราคากลางของโครงการ (จากฐานข้อมูลโครงการ)
+  function sigs() {
+    var e = est(), key = 'estimate-' + (e.projectId || 'none'), all = SK.db.data.signatures;
+    if (!all[key]) {
+      var f = ((SK.db.project(e.projectId) || {}).fields) || {};
+      var names = [f['ประธานกรรมการราคากลาง'], f['กรรมการราคากลาง 1'], f['กรรมการราคากลาง 2']];
+      var pool = ref.COMMITTEE_POOL || [];
+      var pos = function (n) { var x = pool.filter(function (c) { return c.name === n; })[0]; return x ? x.position : ''; };
+      all[key] = ['ประธานกรรมการ', 'กรรมการ', 'กรรมการและเลขานุการ'].map(function (role, i) {
+        return { role: role, name: names[i] || '', position: names[i] ? pos(names[i]) : '', signedAt: null };
+      });
+    }
+    return all[key];
+  }
   function totals(e) {
     var direct = e.rows.reduce(function (s, r) { return s + Number(r.cost || 0); }, 0);
     return { direct: direct, total: Math.round(direct * e.factor * 100) / 100 };
@@ -54,8 +67,8 @@
       return '<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col justify-between gap-space-md">' +
         '<div class="flex items-center justify-between"><span class="font-label-sm text-label-sm ' + (i === 0 ? 'bg-primary-container text-surface-bright' : 'bg-surface-container-high text-primary') + ' px-space-xs py-space-2xs rounded font-semibold">' + esc(s.role) + '</span>' +
         '<span class="material-symbols-outlined ' + (s.signedAt ? 'text-primary' : 'text-outline') + '">' + (s.signedAt ? 'check_circle' : 'pending') + '</span></div>' +
-        '<div class="flex flex-col items-center text-center my-space-xs"><div class="h-10 flex items-center justify-center text-headline-md italic font-serif ' + (s.signedAt ? 'text-primary/70' : 'text-outline/40') + ' select-none">' + (s.signedAt ? esc(s.name.replace(/^นาย|^นางสาว|^นาง/, '')) : 'รอลงนาม') + '</div>' +
-        '<span class="font-label-md text-label-md font-bold text-on-surface mt-space-2xs">(' + esc(s.name) + ')</span><span class="font-body-sm text-body-sm text-on-surface-variant">' + esc(s.position) + '</span></div>' +
+        '<div class="flex flex-col items-center text-center my-space-xs"><div class="h-10 flex items-center justify-center text-headline-md italic font-serif ' + (s.signedAt ? 'text-primary/70' : 'text-outline/40') + ' select-none">' + (s.signedAt ? esc((s.name || '').replace(/^นาย|^นางสาว|^นาง/, '')) : 'รอลงนาม') + '</div>' +
+        '<span class="font-label-md text-label-md font-bold text-on-surface mt-space-2xs">(' + esc(s.name || '................................') + ')</span><span class="font-body-sm text-body-sm text-on-surface-variant">' + esc(s.position) + '</span></div>' +
         '<div class="pt-space-2xs bg-surface-container-lowest/60 px-space-xs rounded text-center"><span class="font-code-sm text-code-sm text-outline">' +
         (when ? 'e-Signed: ' + when.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' ' + when.toTimeString().slice(0, 5) + ' น.' : 'ยังไม่ได้ลงนาม') + '</span></div></div>';
     }).join('');
@@ -210,7 +223,7 @@
       title: 'สร้างเอกสารใหม่', subtitle: 'ลงทะเบียนเอกสารช่างเข้าระบบสารบรรณ', icon: 'note_add', size: 'lg',
       fields: [
         { name: 'type', label: 'ประเภทเอกสาร', type: 'select', options: types, value: tab === 'estimate' ? 'order' : tab },
-        { name: 'id', label: 'เลขที่เอกสาร', required: true, placeholder: 'เช่น บันทึก 095/2567' },
+        { name: 'id', label: 'เลขที่เอกสาร', required: true, placeholder: 'เช่น บันทึก 095/' + SK.fiscalYear() },
         { name: 'title', label: 'ชื่อเรื่อง', required: true, span: 2 },
         { name: 'detail', label: 'รายละเอียด', type: 'textarea', span: 2, rows: 2 },
         { name: 'projectId', label: 'โครงการที่เกี่ยวข้อง', type: 'select', span: 2, options: [['', '— ไม่ระบุ —']].concat(ui.projectOptions()) },
@@ -274,12 +287,12 @@
       ui.formModal({
         title: 'คำสั่งแต่งตั้งผู้ควบคุมงาน / คณะกรรมการ', subtitle: 'พ.ร.บ. การจัดซื้อจัดจ้างฯ พ.ศ. 2560 มาตรา 100', icon: 'person_add', size: 'lg', submitLabel: 'ออกคำสั่งและพิมพ์', submitIcon: 'print',
         fields: [
-          { name: 'no', label: 'เลขที่คำสั่ง', required: true, value: (SK.db.data.documents.filter(function (d) { return /^คำสั่ง/.test(d.id); }).length + 143) + '/2567' },
+          { name: 'no', label: 'เลขที่คำสั่ง', required: true, value: '' , placeholder: 'เช่น 138/2569' },
           { name: 'date', label: 'วันที่สั่ง', type: 'date', value: ui.today() },
           { name: 'kind', label: 'ประเภทการแต่งตั้ง', type: 'select', span: 2, options: ['ผู้ควบคุมงานก่อสร้าง', 'คณะกรรมการตรวจรับพัสดุ', 'คณะกรรมการกำหนดราคากลาง'] },
           { name: 'projectId', label: 'โครงการ', type: 'select', span: 2, options: ui.projectOptions() },
           { name: 'members', label: 'รายชื่อผู้ได้รับแต่งตั้ง (บรรทัดละ 1 คน พร้อมตำแหน่ง)', type: 'textarea', span: 2, rows: 4, required: true,
-            value: ref.COMMITTEE.map(function (c) { return c.name + ' ' + c.position + ' — ' + c.role; }).join('\n') }
+            value: '' }
         ],
         onSubmit: function (v) {
           var p = SK.db.project(v.projectId);

@@ -19,7 +19,7 @@
         { name: 'installment', label: 'งวดงานที่ตรวจรับ', type: 'select', options: options, value: Math.max(1, p.installment) },
         { name: 'date', label: 'วันที่ตรวจรับ', type: 'date', value: ui.today(), required: true },
         { name: 'result', label: 'ผลการตรวจรับ', type: 'select', options: [['pass', 'ถูกต้องครบถ้วนตามสัญญา (ตรวจรับ)'], ['fail', 'ไม่ถูกต้อง / ให้ผู้รับจ้างแก้ไข']] },
-        { name: 'committee', label: 'ประธานกรรมการ', type: 'select', options: ref.COMMITTEE.map(function (c) { return c.name; }) },
+        { name: 'committee', label: 'ประธานกรรมการ', type: 'select', options: (ref.committeeOf(p).length ? ref.committeeOf(p) : ref.COMMITTEE_POOL).map(function (c) { return c.name; }) },
         { name: 'note', label: 'ความเห็นคณะกรรมการ', type: 'textarea', span: 2, placeholder: 'ผลการตรวจวัด ข้อบกพร่อง หรือเงื่อนไขการแก้ไข' },
         { name: 'print', label: 'พิมพ์ใบรายงานผลการตรวจรับหลังบันทึก', type: 'checkbox', value: true, span: 2 }
       ],

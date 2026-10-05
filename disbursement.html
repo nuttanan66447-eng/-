@@ -90,7 +90,7 @@
 <div>
 <div class="flex items-center justify-between">
 <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">ผูกพันสัญญาแล้ว (PO)</span>
-<span id="k-po-pct" class="bg-surface-container-high text-primary px-space-xs py-space-2xs rounded font-code-sm text-code-sm font-bold">87.25%</span>
+<span id="k-po-pct" class="bg-surface-container-high text-primary px-space-xs py-space-2xs rounded font-code-sm text-code-sm font-bold">0%</span>
 </div>
 <div class="mt-space-sm flex items-baseline gap-space-xs">
 <span id="k-po" class="font-display-lg text-display-lg text-tertiary font-bold tracking-tight">42,100,000</span>
@@ -136,13 +136,13 @@
 <div class="bg-surface-container-low p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
 <div>
 <div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">เป้าหมาย สถ. ไตรมาส 3</span>
+<span id="k-target-label" class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">เป้าหมาย สถ.</span>
 <span class="material-symbols-outlined text-primary text-space-lg">troubleshoot</span>
 </div>
 <div class="mt-space-sm flex items-baseline justify-between">
 <div>
 <div class="font-label-sm text-label-sm text-on-surface-variant">เกณฑ์ขั้นต่ำ สถ.</div>
-<div class="font-headline-lg text-headline-lg font-bold text-on-surface">63.00%</div>
+<div id="k-target" class="font-headline-lg text-headline-lg font-bold text-on-surface">-</div>
 </div>
 <div class="text-right">
 <div class="font-label-sm text-label-sm text-on-surface-variant">ผลงานเทศบาล</div>
@@ -221,11 +221,11 @@
 <div class="bg-surface-container-low p-space-md rounded-lg flex flex-col sm:flex-row items-center justify-between gap-space-sm text-on-surface">
 <div class="font-body-md text-body-md">
 <span>รวมมูลค่างวดรอตัดจ่ายทั้งสิ้น: </span>
-<span id="pay-total" class="font-bold text-primary text-headline-sm font-code-sm">3,205,000.00 บาท</span>
+<span id="pay-total" class="font-bold text-primary text-headline-sm font-code-sm">0.00 บาท</span>
 </div>
 <div class="flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant">
 <span>ระยะเวลาตรวจสอบการคลังเฉลี่ย: </span>
-<span class="bg-surface-container text-primary font-bold px-space-xs py-space-2xs rounded">2.4 วันทำการ</span>
+<span id="pay-avg" class="bg-surface-container text-primary font-bold px-space-xs py-space-2xs rounded">-</span>
 </div>
 </div>
 </div>
@@ -342,17 +342,17 @@
 <div class="bg-surface-container-low/60 hover:bg-surface-container-low p-space-md rounded-lg flex flex-col gap-space-xs transition-colors">
 <div class="flex items-center justify-between">
 <span class="bg-tertiary text-on-tertiary px-space-xs py-space-2xs rounded font-code-sm text-code-sm font-semibold">เงินกันไว้เบิกเหลื่อมปี</span>
-<span class="text-primary font-code-sm text-code-sm">พ.ศ. 2566 คงค้าง</span>
+<span id="co-year" class="text-primary font-code-sm text-code-sm"></span>
 </div>
 <div class="font-headline-sm text-headline-sm text-on-surface font-semibold">
             สรุปเงินกันไว้เบิกเหลื่อมปีกองช่าง
           </div>
 <div class="flex items-center justify-between text-body-sm font-body-sm text-on-surface-variant">
 <span>วงเงินคงเหลือเบิกจ่าย:</span>
-<span class="font-bold text-on-surface font-code-sm">1,120,000 บาท (1 โครงการ)</span>
+<span id="co-amount" class="font-bold text-on-surface font-code-sm">-</span>
 </div>
 <p class="font-body-sm text-body-sm text-on-surface-variant">
-            กำหนดสิ้นสุดระยะเวลาเบิกจ่าย 30 กันยายน 2567 ตามระเบียบกระทรวงมหาดไทย
+            <span id="co-deadline"></span>
           </p>
 <div class="pt-space-xs">
 <button data-action="extension" class="text-primary hover:text-primary-container font-label-md text-label-md font-bold flex items-center gap-space-2xs" type="button">
@@ -374,4 +374,4 @@
 </div>
 </div>
 </div>
-</main></div><script src="assets/data.js"></script><script src="assets/ui.js"></script><script src="assets/docs.js"></script><script src="assets/flows.js"></script><script src="assets/gas/gas-bridge.js"></script><script src="assets/config.js"></script><script src="assets/vendor/supabase/supabase.js"></script><script src="assets/cloud.js"></script><script>window.SK_DATA_PANEL={fab:false};</script><script src="assets/vendor/xlsx/xlsx.full.min.js" defer></script><script src="assets/gas/data-panel.js"></script><script src="assets/realdata.js"></script><script src="assets/doc-engine.js"></script><script src="assets/pages/disbursement.js"></script></body></html>
+</main></div><script src="assets/personnel.js"></script><script src="assets/data.js"></script><script src="assets/ui.js"></script><script src="assets/thai-date.js"></script><script src="assets/docs.js"></script><script src="assets/flows.js"></script><script src="assets/gas/gas-bridge.js"></script><script src="assets/config.js"></script><script src="assets/vendor/supabase/supabase.js"></script><script src="assets/cloud.js"></script><script>window.SK_DATA_PANEL={fab:false};</script><script src="assets/vendor/xlsx/xlsx.full.min.js" defer></script><script src="assets/gas/data-panel.js"></script><script src="assets/realdata.js"></script><script src="assets/doc-engine.js"></script><script src="assets/pages/disbursement.js"></script></body></html>

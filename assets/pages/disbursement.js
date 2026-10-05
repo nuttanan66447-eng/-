@@ -4,6 +4,8 @@
   var SK = window.SK, ui = SK.ui, ref = SK.ref, esc = ui.esc, money = ui.money;
   var $ = function (id) { return document.getElementById(id); };
   var TARGET_Q3 = 63; // เกณฑ์ขั้นต่ำการเบิกจ่ายไตรมาส 3 ของ สถ. (%)
+  var TARGETS = [30, 51, TARGET_Q3, 93]; // เป้าหมายเบิกจ่ายสะสมรายไตรมาส (%)
+  function currentQuarter() { var m = new Date().getMonth(); return m >= 9 ? 1 : Math.floor(m / 3) + 2; }
   var STEPS = ['sent', 'audit', 'approved', 'paid'];
   var STEP = {
     sent: { label: 'กองช่างส่งเรื่องแล้ว', cls: 'bg-surface-container-low text-secondary', dot: 'bg-secondary-container' },
@@ -29,8 +31,9 @@
     $('k-budget').textContent = money(s.budget);
     $('k-projects').textContent = s.P.length + ' โครงการ';
     $('k-po').textContent = money(s.po);
-    $('k-po-pct').textContent = (s.po / s.budget * 100).toFixed(2) + '%';
-    $('k-po-bar').style.width = (s.po / s.budget * 100).toFixed(2) + '%';
+    var poPct = s.budget ? s.po / s.budget * 100 : 0;
+    $('k-po-pct').textContent = poPct.toFixed(2) + '%';
+    $('k-po-bar').style.width = poPct.toFixed(2) + '%';
     $('k-signed').textContent = 'ลงนามสัญญาแล้ว ' + s.signed + ' โครงการ';
     $('k-po-remain').textContent = 'คงเหลือ ' + ((s.budget - s.po) / 1e6).toFixed(2) + ' ลบ.';
     $('k-disb').textContent = money(s.disb);
@@ -39,7 +42,10 @@
     $('k-paid').textContent = 'จ่ายเงินแล้ว ' + paidCount + ' งวด';
     $('k-wait').textContent = 'รอเบิกจ่าย ' + (pending.reduce(function (t, x) { return t + x.amount; }, 0) / 1e6).toFixed(2) + ' ลบ.';
     $('k-actual').textContent = s.pct.toFixed(2) + '%';
-    var diff = s.pct - TARGET_Q3;
+    var cq = currentQuarter(), target = TARGETS[cq - 1];
+    $('k-target-label').textContent = 'เป้าหมาย สถ. ไตรมาส ' + cq;
+    $('k-target').textContent = target.toFixed(2) + '%';
+    var diff = s.pct - target;
     $('k-vs').textContent = diff >= 0 ? 'เร็วกว่าเป้าหมายราชการ' : 'ต่ำกว่าเป้าหมายราชการ';
     $('k-diff').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(2) + '%';
     renderChart(s.pct);
@@ -53,15 +59,33 @@
     $('sg-text').textContent = 'โครงการเงินอุดหนุนเฉพาะกิจ ' + sg.length + ' โครงการ งบประมาณรวม ' + money(sg.reduce(function (t, p) { return t + p.budget; }, 0)) + ' บาท บันทึกผลใน e-Plan และ e-GP';
     var sgState = SK.db.data.meta.sgReport;
     $('sg-state').textContent = sgState ? 'ส่งรายงานแล้ว ' + ui.dateShort(sgState.date) : 'รอส่งรายงาน';
+    // ระยะเวลาตรวจสอบเฉลี่ย (วันส่งฎีกา -> วันอนุมัติ/จ่าย)
+    var spans = SK.db.data.payments.map(function (x) { var end = x.approvedAt || x.paidAt; return end && x.submitted ? (new Date(end) - new Date(x.submitted)) / 86400000 : null; })
+      .filter(function (d) { return d != null && d >= 0; });
+    $('pay-avg').textContent = spans.length ? (spans.reduce(function (a, b) { return a + b; }, 0) / spans.length).toFixed(1) + ' วัน' : '-';
+    // เงินกันไว้เบิกเหลื่อมปี: โครงการปีงบประมาณก่อนหน้าที่ยังเบิกจ่ายไม่ครบ
+    var fy = SK.fiscalYear();
+    var carry = s.P.filter(function (p) { var y = parseInt(p.year, 10); return y && y < fy && p.status !== 'completed' && p.budget > p.disbursed; });
+    $('co-year').textContent = 'ปีงบประมาณก่อน ' + fy + ' คงค้าง';
+    $('co-amount').textContent = money(carry.reduce(function (t, p) { return t + p.budget - p.disbursed; }, 0)) + ' บาท (' + carry.length + ' โครงการ)';
+    $('co-deadline').textContent = 'กำหนดสิ้นสุดระยะเวลาเบิกจ่ายตามระเบียบกระทรวงมหาดไทย 30 กันยายน ' + fy;
   }
 
   function renderChart(actual) {
-    var q = [
-      { label: 'ไตรมาส 1', target: 30, actual: 34.2 },
-      { label: 'ไตรมาส 2', target: 51, actual: 55 },
-      { label: 'ไตรมาส 3 ปัจจุบัน', target: TARGET_Q3, actual: actual, current: true },
-      { label: 'ไตรมาส 4', target: 93, actual: null }
-    ];
+    // ผลเบิกจ่ายสะสมรายไตรมาสของปีงบประมาณ (ฎีกาที่จ่ายแล้ว) เทียบงบประมาณรวม
+    var budget = stats().budget, fy = SK.fiscalYear(), now = new Date();
+    var cur = currentQuarter();
+    var ends = [fy - 544 + '-12-31', fy - 543 + '-03-31', fy - 543 + '-06-30', fy - 543 + '-09-30'];
+    var paidBy = function (end) {
+      return SK.db.data.payments.filter(function (x) { return x.status === 'paid' && (x.paidAt || x.submitted || '') <= end; })
+        .reduce(function (t, x) { return t + x.amount; }, 0);
+    };
+    var targets = TARGETS;
+    var q = targets.map(function (t, i) {
+      var n = i + 1;
+      return { label: 'ไตรมาส ' + n + (n === cur ? ' ปัจจุบัน' : ''), target: t, current: n === cur,
+        actual: n > cur ? null : n === cur ? actual : (budget ? paidBy(ends[i]) / budget * 100 : 0) };
+    });
     $('q-chart').innerHTML = q.map(function (x) {
       return '<div class="flex-1 flex flex-col items-center gap-space-2xs h-full justify-end ' + (x.current ? 'bg-surface-container-high/40 rounded-lg p-space-2xs' : '') + (x.actual == null ? ' opacity-60' : '') + '">' +
         '<div class="flex items-end gap-space-2xs w-full justify-center h-full">' +
@@ -216,7 +240,7 @@
     'preview-p01': function () {
       var P = stats().P;
       ui.modal({
-        title: 'ร่างรายงานผลการดำเนินงาน (แบบ ผ.01 - ผ.03)', subtitle: 'ปีงบประมาณ พ.ศ. 2567 • ' + P.length + ' โครงการ', icon: 'visibility', size: 'lg',
+        title: 'ร่างรายงานผลการดำเนินงาน (แบบ ผ.01 - ผ.03)', subtitle: 'ปีงบประมาณ พ.ศ. ' + SK.fiscalYear() + ' • ' + P.length + ' โครงการ', icon: 'visibility', size: 'lg',
         body: '<div class="overflow-x-auto"><table class="w-full text-left font-body-sm text-body-sm"><thead><tr class="text-on-surface-variant"><th class="py-1">รหัส</th><th>โครงการ</th><th class="text-right">วงเงิน</th><th class="text-right">เบิกจ่าย</th><th class="text-right">ผลงาน</th></tr></thead><tbody>' +
           P.map(function (p) { return '<tr class="border-t border-surface-container"><td class="py-1.5 whitespace-nowrap">' + p.id + '</td><td>' + esc(p.name) + '</td><td class="text-right">' + money(p.budget) + '</td><td class="text-right">' + money(p.disbursed) + '</td><td class="text-right">' + p.actual + '%</td></tr>'; }).join('') + '</tbody></table></div>',
         actions: [{ label: 'พิมพ์รายงาน', kind: 'primary', icon: 'print', onClick: function () { SK.docs.print('slaReport', 'แบบ ผ.01-ผ.03', P); } }]
@@ -227,7 +251,7 @@
         title: 'อัปเดตผลโครงการเงินอุดหนุนเฉพาะกิจ (สถ.)', icon: 'upload_file', submitLabel: 'บันทึกการส่งรายงาน',
         intro: '<p class="mb-3 font-body-sm text-body-sm text-on-surface-variant">บันทึกว่าส่งรายงานเข้าระบบ e-Plan ของ สถ. แล้ว และพิมพ์รายงานแนบหนังสือนำส่ง</p>',
         fields: [
-          { name: 'round', label: 'รอบรายงาน', type: 'select', options: ['ไตรมาส 3/2567 (เม.ย. - มิ.ย.)', 'ไตรมาส 4/2567 (ก.ค. - ก.ย.)'] },
+          { name: 'round', label: 'รอบรายงาน', type: 'select', options: [1, 2, 3, 4].map(function (q) { return 'ไตรมาส ' + q + '/' + SK.fiscalYear() + ' (' + ['ต.ค. - ธ.ค.', 'ม.ค. - มี.ค.', 'เม.ย. - มิ.ย.', 'ก.ค. - ก.ย.'][q - 1] + ')'; }) },
           { name: 'date', label: 'วันที่ส่ง', type: 'date', value: ui.today() },
           { name: 'ref', label: 'เลขที่อ้างอิงในระบบ e-Plan', span: 2, placeholder: 'ถ้ามี' },
           { name: 'print', label: 'พิมพ์รายงานโครงการเงินอุดหนุนเฉพาะกิจ', type: 'checkbox', value: true, span: 2 }
