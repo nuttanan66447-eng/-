@@ -55,7 +55,10 @@
   }
 
   function mapRows(data) {
-    var center = data.defaultCenter || [16.0538, 103.6520];
+    // ศูนย์กลางตำบลจากขอบเขต OpenStreetMap (ถ้าโหลดไว้แล้ว) และตำแหน่งหมู่บ้านตามชื่อ
+    var osm = (SK.db.data.meta || {}).tambonOsm || null;
+    var center = (osm && osm.center) || data.defaultCenter || SK.ref.CENTER;
+    var osmVillage = function (name) { var n = String(name || '').trim(); return n && osm && (osm.villages || []).filter(function (x) { return x.name === n || x.name === 'บ้าน' + n.replace(/^บ้าน/, ''); })[0]; };
     var villages = {};
     var today = new Date().toISOString().slice(0, 10);
     var projects = data.rows.map(function (row) {
@@ -104,8 +107,9 @@
     // หมู่บ้านจริงจากชีท: ใช้ค่ากึ่งกลางของพิกัดโครงการในหมู่นั้น
     Object.keys(villages).forEach(function (k) {
       var v = villages[k], pts = v.pts;
-      var lat = pts.length ? pts.reduce(function (s, p) { return s + p[0]; }, 0) / pts.length : center[0];
-      var lng = pts.length ? pts.reduce(function (s, p) { return s + p[1]; }, 0) / pts.length : center[1];
+      var ov = !pts.length && osmVillage(v.name.replace(/^ม\.\d+\s*/, ''));
+      var lat = pts.length ? pts.reduce(function (s, p) { return s + p[0]; }, 0) / pts.length : ov ? ov.lat : center[0];
+      var lng = pts.length ? pts.reduce(function (s, p) { return s + p[1]; }, 0) / pts.length : ov ? ov.lng : center[1];
       SK.ref.VILLAGES[k] = { name: v.name, lat: lat, lng: lng };
     });
     projects.forEach(function (p) {

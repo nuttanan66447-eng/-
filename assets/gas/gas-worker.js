@@ -123,6 +123,17 @@ self.onmessage = function (e) {
         else return saveNow().then(function () { self.postMessage({ id: msg.id, ok: true, result: res }); });
       } else if (msg.type === 'export') {
         reply.result = GasEmu.getWorkbook(); reply.ok = true;
+      } else if (msg.type === 'boundary') {
+        // ขอบเขตแผนที่จากหน้าเว็บหลัก: สิทธิ์ตรวจที่หน้าเว็บแล้ว (เจ้าหน้าที่ที่เข้าสู่ระบบคลาวด์)
+        var orig = self.assertMapBoundaryEditPermission_;
+        self.assertMapBoundaryEditPermission_ = function () { return { username: 'website' }; };
+        try {
+          reply.result = clone(msg.op === 'delete'
+            ? deleteMapBoundary('', msg.id, { auditUserName: msg.user || 'เว็บไซต์กองช่าง' })
+            : saveMapBoundary('', Object.assign({ auditUserName: msg.user || 'เว็บไซต์กองช่าง' }, msg.data)));
+        } finally { self.assertMapBoundaryEditPermission_ = orig; }
+        reply.ok = true;
+        scheduleSave();
       } else if (msg.type === 'summary') {
         reply.result = summary(); reply.ok = true;
       } else if (msg.type === 'reset') {

@@ -92,3 +92,25 @@ create policy files_bucket_staff on storage.objects for all to authenticated
 
 -- ผู้ดูแลระบบคนแรก (เพิ่มคนอื่นได้จากหน้าเว็บ: ไอคอนคลาวด์ › จัดการเจ้าหน้าที่)
 insert into public.staff (email, name, role) values ('nuttanan66447@gmail.com', 'ผู้ดูแลระบบ', 'admin');
+
+-- ข่าวจากเพจ Facebook กองช่าง (Edge Function supabase/functions/facebook-sync) — ข่าวสาธารณะ อ่านได้ทุกคน
+create table public.news_posts (
+  id text primary key,
+  message text not null default '',
+  created_time timestamptz,
+  permalink text not null default '',
+  images jsonb not null default '[]'::jsonb,
+  project_ids text[],          -- เจ้าหน้าที่ผูกกับโครงการเอง (null = จับคู่อัตโนมัติจากข้อความ)
+  hidden boolean not null default false,
+  fetched_at timestamptz not null default now()
+);
+create index news_posts_created_idx on public.news_posts (created_time desc);
+alter table public.news_posts enable row level security;
+create policy news_read on public.news_posts for select to anon, authenticated using (not hidden or (select private.is_staff()));
+create policy news_staff_update on public.news_posts for update to authenticated using ((select private.is_staff())) with check ((select private.is_staff()));
+create table public.news_sync (id text primary key, synced_at timestamptz, ok boolean, message text);
+alter table public.news_sync enable row level security;
+create policy news_sync_read on public.news_sync for select to anon, authenticated using (true);
+revoke insert, update, delete, truncate on public.news_posts, public.news_sync from anon;
+revoke insert, delete, truncate on public.news_posts, public.news_sync from authenticated;
+revoke update on public.news_sync from authenticated;
