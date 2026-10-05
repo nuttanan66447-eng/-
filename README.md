@@ -3,7 +3,7 @@
 ระบบบริหารโครงการ กองช่าง (วิศวกรรมโยธา) เทศบาลตำบลสีแก้ว อ.เมือง จ.ร้อยเอ็ด
 เว็บไซต์เทศบาล: https://www.sikaew.go.th/index/
 
-เปิดใช้งาน: https://nuttanan66447-eng.github.io/-/
+เปิดใช้งาน: https://sikaew-kongchang.vercel.app (Vercel) • https://nuttanan66447-eng.github.io/-/ (GitHub Pages)
 
 ## เก็บข้อมูลบนคลาวด์ (Supabase) และเผยแพร่บน Vercel
 
