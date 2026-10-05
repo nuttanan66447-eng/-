@@ -320,6 +320,34 @@
   // (ย่อเป็นช่องเดี่ยว ๆ แล้ววันที่และหัวตารางหาย) ใช้ฟอร์มเดิมทั้งหมด จึงเห็นวันที่ทุกวัน ตาราง และปุ่มเพิ่ม/ลบรายการครบ
   var OFFSCREEN = 'position:fixed;left:-12000px;top:0;width:1280px;height:900px;border:0;opacity:0;pointer-events:none';
   var COMPLEX = '.weekly-work-days, .weekly-matrix-wrap, .performance-table-input-wrap, .completion-signer-list, table, [contenteditable="true"]';
+  // สีและรูปแบบของฟอร์มเดิมปรับให้เข้ากับธีมเว็บ (น้ำเงินกรมท่า พื้นขาว ช่องกรอกแบบเดียวกับฟอร์มอื่นในเว็บ)
+  var NS = '[data-sk-native] ';
+  var NATIVE_THEME = [
+    '[data-sk-native],' + NS + '*{font-family:"Sarabun","Noto Sans Thai","Inter",sans-serif!important}',
+    '[data-sk-native]{background:#f8f9ff!important;color:#0b1c30!important}',
+    NS + '.form-section-title,' + NS + '.evaluation-section-title,' + NS + '.completion-section-line{background:#e5eeff!important;color:#00236f!important;border:0!important;border-left:4px solid #00236f!important;border-radius:6px!important;box-shadow:none!important}',
+    NS + '.form-section-title *{color:#00236f!important}',
+    NS + '.form-section-title::before,' + NS + '.control::before,' + NS + 'label::before{background:#00236f!important;box-shadow:none!important}',
+    NS + '.control,' + NS + '.control.wide,' + NS + '.manual-entry-control,' + NS + '.computed-control,' + NS + '.project-derived-control{background:#fff!important;background-image:none!important;border:1px solid #e5eeff!important;border-left:1px solid #e5eeff!important;border-radius:8px!important;box-shadow:none!important}',
+    NS + '.control > label,' + NS + '.control .label,' + NS + 'label{color:#444651!important}',
+    NS + '.control > label{font-weight:600!important}',
+    NS + '.control span[class*="badge"],' + NS + '.control label span{background:#eff4ff!important;color:#264191!important;border-color:#dce1ff!important}',
+    NS + 'input:not([type=checkbox]):not([type=radio]),' + NS + 'select,' + NS + 'textarea{background:#fff!important;border:1px solid #c5c5d3!important;border-radius:6px!important;color:#0b1c30!important;box-shadow:none!important}',
+    NS + 'input:focus,' + NS + 'select:focus,' + NS + 'textarea:focus{border-color:#00236f!important;outline:2px solid rgba(0,35,111,.15)!important}',
+    NS + 'input[type=checkbox],' + NS + 'input[type=radio]{accent-color:#00236f!important}',
+    NS + '.performance-auto-field,' + NS + 'input[readonly]{background:#eff4ff!important}',
+    NS + '.project-required-note,' + NS + '.memo-filter-note{background:#eff4ff!important;color:#264191!important;border:0!important;border-left:4px solid #1e3a8a!important}',
+    NS + '.project-completed-toggle,' + NS + '.combined-final-week-tools,' + NS + '.combined-workflow-block,' + NS + '.weekly-work-day-card,' + NS + '.weekly-matrix-wrap,' + NS + '.combined-photo-attachment-card{background:#fff!important;border:1px solid #e5eeff!important;border-radius:8px!important;box-shadow:none!important}',
+    NS + '.weekly-work-day-card h5,' + NS + 'h4,' + NS + 'h5{color:#00236f!important}',
+    NS + 'th{background:#e5eeff!important;color:#00236f!important;border-color:#c5c5d3!important}',
+    NS + 'td{background:#fff!important;border-color:#c5c5d3!important}',
+    NS + '.memo-prefix{background:#eff4ff!important;color:#00236f!important;border-color:#c5c5d3!important}',
+    NS + '.weekly-work-quick-select{background:#eff4ff!important;color:#00236f!important;border-color:#b6c4ff!important}',
+    NS + '.thai-date-calendar-btn{background:#e5eeff!important;color:#00236f!important}',
+    NS + '.primary-btn,' + NS + '.performance-mini-btn.add,' + NS + '.completion-signer-mini-btn.add{background:#00236f!important;background-image:none!important;color:#fff!important;border:0!important;box-shadow:none!important}',
+    NS + '.secondary-btn{background:#fff!important;color:#00236f!important;border:1px solid #c5c5d3!important}',
+    NS + '.performance-mini-btn.delete,' + NS + '.completion-signer-mini-btn.delete,' + NS + '.history-delete-btn{background:#ffdad6!important;color:#93000a!important;border:0!important}'
+  ].join('');
   function needsNative(doc) {
     var root = rootEl(doc);
     return !!(root && root.querySelector(COMPLEX));
@@ -334,7 +362,7 @@
       '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:auto!important;margin:0!important;' +
       'padding:12px 18px 48px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;' +
       'background:#fff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}' +
-      '[data-sk-native] .form-actions{display:none!important}';
+      '[data-sk-native] .form-actions{display:none!important}' + NATIVE_THEME;
     var timer = null, shown = false;
     function place() {
       var r = holder.getBoundingClientRect();
@@ -446,18 +474,55 @@
     var guard = '<script>window.__skPrint=window.print;window.print=function(){};window.close=function(){};<\/script>';
     var doc2 = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, function (h) { return h + guard; }) : guard + html;
     var wrap = document.createElement('div');
-    wrap.innerHTML = '<div class="rounded-lg bg-surface-container overflow-hidden"><iframe title="พรีวิวเอกสาร" class="w-full bg-white" style="height:70vh;border:0"></iframe></div>';
-    var iframe = wrap.querySelector('iframe');
-    var word = wordButton(doc);
+    var tb = function (cmd, icon, label) {
+      return '<button type="button" data-cmd="' + cmd + '" title="' + label + '" aria-label="' + label + '" class="p-1.5 rounded hover:bg-surface-container-high disabled:opacity-40" disabled><span class="material-symbols-outlined text-[20px]">' + icon + '</span></button>';
+    };
+    wrap.innerHTML =
+      '<div class="flex flex-wrap items-center gap-1 mb-2 p-1.5 rounded-lg bg-surface-container-low">' +
+        '<button type="button" data-edit class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container-lowest ring-1 ring-surface-container font-label-md text-label-md font-semibold text-primary"><span class="material-symbols-outlined text-[18px]">edit_note</span><span>แก้ไขข้อความ</span></button>' +
+        '<span class="w-px h-6 bg-surface-container-high mx-1"></span>' +
+        tb('bold', 'format_bold', 'ตัวหนา') + tb('italic', 'format_italic', 'ตัวเอียง') + tb('underline', 'format_underlined', 'ขีดเส้นใต้') +
+        '<span class="w-px h-6 bg-surface-container-high mx-1"></span>' +
+        tb('justifyLeft', 'format_align_left', 'ชิดซ้าย') + tb('justifyCenter', 'format_align_center', 'กึ่งกลาง') + tb('justifyRight', 'format_align_right', 'ชิดขวา') + tb('justifyFull', 'format_align_justify', 'กระจายเต็มบรรทัด') +
+        '<span class="w-px h-6 bg-surface-container-high mx-1"></span>' +
+        tb('undo', 'undo', 'เลิกทำ') + tb('redo', 'redo', 'ทำซ้ำ') +
+        '<span data-edit-hint class="hidden ml-auto font-body-sm text-body-sm text-secondary">คลิกที่ข้อความในเอกสารเพื่อแก้ไข — ผลการแก้ไขใช้ทั้งการพิมพ์และไฟล์ Word</span>' +
+      '</div>' +
+      '<div class="rounded-lg bg-surface-container overflow-hidden"><iframe title="พรีวิวเอกสาร" class="w-full bg-white" style="height:66vh;border:0"></iframe></div>';
+    var iframe = wrap.querySelector('iframe'), editing = false;
+    var editBtn = wrap.querySelector('[data-edit]');
+    editBtn.addEventListener('click', function () {
+      var d = iframe.contentDocument; if (!d) return;
+      editing = !editing;
+      d.designMode = editing ? 'on' : 'off';
+      editBtn.classList.toggle('bg-primary', editing); editBtn.classList.toggle('text-on-primary', editing);
+      editBtn.querySelector('span:last-child').textContent = editing ? 'เสร็จสิ้นการแก้ไข' : 'แก้ไขข้อความ';
+      wrap.querySelectorAll('[data-cmd]').forEach(function (b) { b.disabled = !editing; });
+      wrap.querySelector('[data-edit-hint]').classList.toggle('hidden', !editing);
+      if (editing) iframe.contentWindow.focus();
+    });
+    wrap.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cmd]'); if (!b || b.disabled) return;
+      var d = iframe.contentDocument;
+      d.execCommand(b.dataset.cmd, false, null);
+      iframe.contentWindow.focus();
+    });
+    var fileBase = 'sikaew-' + doc.key + (project && project.id ? '-' + String(project.id).toLowerCase() : '') + '-' + new Date().toISOString().slice(0, 10);
     ui.modal({
       title: 'พรีวิว: ' + doc.title, subtitle: project ? project.name : '', icon: 'preview', size: 'lg', body: wrap, onClose: onBack,
-      actions: [{ label: 'กลับไปแก้ไข', icon: 'edit', onClick: function (m) { m.close(); } }]
-        .concat(word ? [{ label: 'บันทึกเป็น Word', icon: 'download', onClick: function () { var b = wordButton(doc); if (b) { b.click(); ui.toast('กำลังดาวน์โหลดไฟล์ Word', 'success'); } } }] : [])
-        .concat([{ label: 'พิมพ์ / บันทึกเป็น PDF', kind: 'primary', icon: 'print', onClick: function () {
+      actions: [{ label: 'กลับไปแก้ไข', icon: 'edit', onClick: function (m) { m.close(); } },
+        { label: 'บันทึกเป็น Word', icon: 'download', onClick: function () {
+          if (!SK.wordExport) return ui.toast('ไม่พบตัวสร้างไฟล์ Word', 'error');
+          ui.toast('กำลังสร้างไฟล์ Word...');
+          SK.wordExport.download(iframe.contentDocument, fileBase + '.doc').then(function () { ui.toast('ดาวน์โหลดไฟล์ Word แล้ว', 'success'); },
+            function (err) { ui.toast('สร้างไฟล์ Word ไม่สำเร็จ: ' + (err && err.message || err), 'error'); });
+        } },
+        { label: 'พิมพ์ / บันทึกเป็น PDF', kind: 'primary', icon: 'print', onClick: function () {
           var w = iframe.contentWindow;
+          if (editing) editBtn.click();
           w.focus();
           (w.__skPrint || w.print).call(w);
-        } }])
+        } }]
     });
     // จัดรูปแบบบันทึกข้อความตามมาตรฐานการพิมพ์หนังสือราชการ (assets/doc-standard.js)
     iframe.addEventListener('load', function () {

@@ -230,6 +230,21 @@
     'news-more': function () { showAll = !showAll; renderCard(); }
   });
 
-  SK.news = { load: load, postsFor: postsFor, renderProject: renderProject, sync: sync };
+  // หลังลบโครงการ: เปลี่ยนรหัสโครงการที่ผูกกับโพสต์ไว้ (map(id) คืนรหัสใหม่ หรือ null = ลบการผูก)
+  function remapProjects(map) {
+    var c = client();
+    if (!c || !staff()) return Promise.resolve();
+    return c.from('news_posts').select('id,project_ids').not('project_ids', 'is', null).then(function (r) {
+      var jobs = (r.data || []).map(function (post) {
+        var ids = (post.project_ids || []).map(map).filter(Boolean);
+        if (JSON.stringify(ids) === JSON.stringify(post.project_ids)) return null;
+        return c.from('news_posts').update({ project_ids: ids }).eq('id', post.id);
+      }).filter(Boolean);
+      cache = null;
+      return Promise.all(jobs);
+    }).then(null, function (err) { console.warn('ปรับการผูกข่าวไม่สำเร็จ', err); });
+  }
+
+  SK.news = { load: load, postsFor: postsFor, renderProject: renderProject, sync: sync, remapProjects: remapProjects };
   ui.onReady(function () { renderCard(); autoSync(); });
 })();

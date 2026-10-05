@@ -108,7 +108,7 @@
     else if (opts.body) body.appendChild(opts.body);
 
     var actionsEl = wrap.querySelector('.sk-modal-actions');
-    (opts.actions || []).forEach(function (a) {
+    (opts.actions || []).filter(Boolean).forEach(function (a) {
       var b = document.createElement('button');
       b.type = a.submit ? 'submit' : 'button';
       if (a.form) b.setAttribute('form', a.form);
@@ -437,6 +437,7 @@
     modal({
       title: p.name, subtitle: 'รหัสโครงการ ' + p.id, icon: ref.CATEGORIES[p.category].icon, size: 'lg', body: body,
       actions: [
+        SK.deleteProject && p.rowNumber ? { label: 'ลบโครงการ', icon: 'delete', kind: 'danger', onClick: function (m) { SK.deleteProject(p).then(function (ok) { if (ok) m.close(); }); } } : null,
         { label: 'แก้ไขข้อมูล', icon: 'edit', onClick: function (m) { m.close(); SK.ui.openProjectForm(p, onChanged); } },
         { label: 'เปิดใน Google Maps', icon: 'map', onClick: function () { window.open('https://www.google.com/maps?q=' + p.lat + ',' + p.lng, '_blank', 'noopener'); } },
         { label: 'ติดตามความก้าวหน้า', kind: 'primary', icon: 'construction', onClick: function () { location.href = 'progress.html?id=' + encodeURIComponent(p.id); } }

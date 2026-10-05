@@ -69,7 +69,8 @@
       // "บันทึกข้อความ" ๒๙ พอยต์ ระยะบรรทัด ๓๕ พอยต์ ฐานบรรทัดตรงกับขอบล่างตราครุฑ
       var head = title.parentElement !== page && title.parentElement.children.length === 1 ? title.parentElement : null;
       if (head) set(head, { margin: '0', padding: '0', 'min-height': '0', height: 'auto', 'text-align': 'center' });
-      set(title, { 'font-size': '29pt', 'font-weight': '700', 'line-height': '35pt', height: '35pt', 'text-align': 'center', margin: '2.65mm 0 0 0', padding: '0', display: 'block', position: 'static' });
+      set(title, { 'font-size': '29pt', 'font-weight': '700', 'line-height': '35pt', height: '35pt', 'text-align': 'center', margin: '2.65mm 0 3mm 0', padding: '0', display: 'block', position: 'static' });
+      // (เว้นใต้หัวเรื่อง ๓ มม. ให้บรรทัด "ส่วนราชการ" ๒๐ พอยต์ไม่ทับตราครุฑ)
 
       // หัวบันทึก: ส่วนราชการ ที่ วันที่ เรื่อง
       var labels = Array.prototype.filter.call(page.querySelectorAll('b, strong, span, div'), function (el) {

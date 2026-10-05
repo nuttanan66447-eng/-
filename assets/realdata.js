@@ -2,7 +2,7 @@
 // แล้วแสดงบนหน้าเว็บหลักทุกหน้า (ไม่มีข้อมูลตัวอย่าง)
 (function () {
   'use strict';
-  var SK = window.SK;
+  var SK = window.SK, ui = SK.ui;
   if (!window.SKGas) return;
 
   var MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -167,6 +167,62 @@
     SK.ui.openProjectForm = function (existing) { SK.docEngine.openEntry(existing && existing.rowNumber ? existing : null); };
   }
   SK.actions['register-project'] = function () { SK.ui.openProjectForm(null); };
+
+  // ลบโครงการ: ลบแถวในชีท "ฐานข้อมูลโครงการ" แล้วเลื่อนรหัสโครงการถัดไป (P-รหัส = แถวในชีท)
+  // ข้อมูลของเว็บที่ผูกกับโครงการ (บันทึกประจำวัน งวดงาน เอกสาร การตรวจรับ แจ้งเตือน ข่าว) ลบ/เลื่อนรหัสตาม
+  function pid(row) { return 'P-' + String(row).padStart(3, '0'); }
+  function remapId(deletedRow) {
+    return function (id) {
+      var m = /^P-(\d+)$/.exec(String(id || ''));
+      if (!m) return id;
+      var n = Number(m[1]);
+      if (n === deletedRow) return null;
+      return n > deletedRow ? pid(n - 1) : id;
+    };
+  }
+  function remapLocal(deletedRow) {
+    var d = SK.db.data, map = remapId(deletedRow);
+    ['diary', 'payments', 'documents', 'inspections'].forEach(function (k) {
+      d[k] = (d[k] || []).filter(function (x) { return !x.projectId || map(x.projectId) !== null; })
+        .map(function (x) { if (x.projectId) x.projectId = map(x.projectId); return x; });
+    });
+    d.notifications = (d.notifications || []).filter(function (n) {
+      var m = /[?&]id=(P-\d+)/.exec(n.href || '');
+      if (!m) return true;
+      var to = map(m[1]);
+      if (to === null) return false;
+      n.href = n.href.replace(m[1], to);
+      n.title = String(n.title || '').replace(m[1], to);
+      return true;
+    });
+    var ms = {};
+    Object.keys(d.milestones || {}).forEach(function (k) { var to = map(k); if (to) ms[to] = d.milestones[k]; });
+    d.milestones = ms;
+  }
+  SK.deleteProject = function (p) {
+    if (!p || !p.rowNumber) { ui.toast('ไม่พบแถวของโครงการนี้ในฐานข้อมูล', 'error'); return Promise.resolve(false); }
+    return ui.confirm('ลบโครงการ "' + p.name + '" (' + p.id + ') ออกจากฐานข้อมูล? บันทึกประจำวัน งวดงาน และเอกสารของโครงการนี้จะถูกลบด้วย และย้อนกลับไม่ได้', 'ลบโครงการ', 'danger').then(function (ok) {
+      if (!ok) return false;
+      ui.toast('กำลังลบโครงการ...');
+      var row = Number(p.rowNumber);
+      return SKGas.call('deleteProjectEntry', '', row)
+        .then(function () {
+          remapLocal(row);
+          SK.db.save();
+          return SK.news && SK.news.remapProjects ? SK.news.remapProjects(remapId(row)) : null;
+        })
+        .then(function () { return SK.cloud && SK.cloud.active ? SK.cloud.flush() : null; })
+        .then(function () {
+          ui.toast('ลบโครงการแล้ว', 'success');
+          setTimeout(function () { location.href = 'projects.html'; }, 500);
+          return true;
+        }, function (err) { ui.toast('ลบไม่สำเร็จ: ' + (err && err.message || err), 'error'); return false; });
+    });
+  };
+  SK.actions['delete-project'] = function (el) {
+    var p = SK.db.data.projects.filter(function (x) { return x.id === el.dataset.id; })[0];
+    SK.deleteProject(p);
+  };
 
   SK.actions['data-panel'] = function () { if (window.SKData) SKData.open(); };
 

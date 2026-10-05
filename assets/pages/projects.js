@@ -56,6 +56,7 @@
       '<td class="py-space-sm px-space-md align-top text-center"><div class="flex items-center justify-center gap-space-xs">' +
         '<button type="button" data-action="view-project" data-id="' + p.id + '" class="p-space-xs rounded bg-surface-container-low hover:bg-surface-container-high text-primary transition-colors" title="ดูรายละเอียดโครงการ" aria-label="ดูรายละเอียด ' + esc(p.id) + '"><span class="material-symbols-outlined text-space-lg">visibility</span></button>' +
         '<button type="button" data-action="edit-project" data-id="' + p.id + '" class="p-space-xs rounded bg-surface-container-low hover:bg-surface-container-high text-secondary transition-colors" title="แก้ไข / บันทึกผลงาน" aria-label="แก้ไข ' + esc(p.id) + '"><span class="material-symbols-outlined text-space-lg">edit_note</span></button>' +
+        (SK.deleteProject && p.rowNumber ? '<button type="button" data-action="delete-project" data-id="' + p.id + '" class="p-space-xs rounded bg-surface-container-low hover:bg-error-container text-error transition-colors" title="ลบโครงการ" aria-label="ลบ ' + esc(p.id) + '"><span class="material-symbols-outlined text-space-lg">delete</span></button>' : '') +
       '</div></td></tr>';
   }
 
