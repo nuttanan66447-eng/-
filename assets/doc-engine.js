@@ -105,7 +105,9 @@
           // ใช้งานในฐานะผู้ดูแลระบบของเว็บไซต์ (ข้อมูลอยู่ในเครื่องนี้เท่านั้น)
           run("currentUser={username:'website',fullName:'ผู้ใช้เว็บไซต์กองช่าง',department:'กองช่าง',position:'',role:'admin',roleLabel:'ผู้ดูแลระบบ'};enterAuthenticatedApp();");
           if (typeof w.showToast === 'function') w.showToast = function (m, type) { if (type === 'error') messages.push(String(m)); };
-          return waitFor(function () { return run('Array.isArray(allRows) && allRows.length > 0 ? allRows.length : 0'); }, 15000).then(function () { resolve(w); });
+          // ยังไม่มีโครงการในฐานข้อมูล: ไม่ต้องรอข้อมูลโครงการ
+          var expect = SK.db.data.projects.length;
+          return waitFor(function () { return !expect || run('Array.isArray(allRows) && allRows.length > 0 ? allRows.length : 0'); }, 15000).then(function () { resolve(w); });
         }, reject);
       };
       frame.onerror = function () { reject(new Error('โหลดตัวสร้างเอกสารไม่สำเร็จ')); };
@@ -456,6 +458,10 @@
           w.focus();
           (w.__skPrint || w.print).call(w);
         } }])
+    });
+    // จัดรูปแบบบันทึกข้อความตามมาตรฐานการพิมพ์หนังสือราชการ (assets/doc-standard.js)
+    iframe.addEventListener('load', function () {
+      try { if (SK.docStandard) SK.docStandard.apply(iframe.contentDocument); } catch (e) { console.warn('จัดรูปแบบมาตรฐานไม่สำเร็จ', e); }
     });
     iframe.srcdoc = doc2;
   }
