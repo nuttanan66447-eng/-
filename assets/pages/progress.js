@@ -204,6 +204,7 @@
     $('bc-contract').textContent = 'รหัสสัญญา ' + p.contractNo;
     renderVillageFilter(p);
     fillSwitch(p);
+    if ($('pd-link')) $('pd-link').href = 'project-docs.html?id=' + encodeURIComponent(p.id);
     document.title = p.id + ' ติดตามความก้าวหน้า | กองช่าง เทศบาลตำบลสีแก้ว';
   }
 
@@ -407,7 +408,7 @@
     });
     refresh();
     if (params.get('new') === 'diary' && project()) newDiary();
-    if (location.hash === '#docs') setTimeout(function () { var d = $('docs'); if (d) d.scrollIntoView({ behavior: 'smooth' }); }, 200);
+    if (location.hash === '#docs') location.replace('project-docs.html?id=' + encodeURIComponent((project() || {}).id || ''));
     // เตรียมตัวสร้างเอกสารไว้ล่วงหน้าเมื่อมีข้อมูลจริง เพื่อให้เปิดฟอร์มได้เร็ว
     if (project() && project().rowNumber && SK.docEngine) setTimeout(function () { SK.docEngine.load().catch(function () {}); }, 800);
   });

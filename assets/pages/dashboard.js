@@ -306,7 +306,7 @@
         '<div class="mt-space-xs pl-space-xs flex flex-wrap gap-space-xs">' +
         (late ? '<button type="button" data-action="urge" data-project="' + p.id + '" class="px-space-sm py-1 bg-error text-on-error rounded font-label-sm text-label-sm font-semibold">ออกหนังสือเร่งรัดสัญญา (ว.119)</button>' : '') +
         '<button type="button" data-action="view-project" data-id="' + p.id + '" class="px-space-sm py-1 bg-surface-container text-on-surface rounded font-label-sm text-label-sm">ดูรายละเอียด</button>' +
-        '<a href="progress.html?id=' + encodeURIComponent(p.id) + '#docs" class="px-space-sm py-1 bg-surface-container text-primary rounded font-label-sm text-label-sm">พิมพ์เอกสาร</a></div></div>';
+        '<a href="project-docs.html?id=' + encodeURIComponent(p.id) + '" class="px-space-sm py-1 bg-surface-container text-primary rounded font-label-sm text-label-sm">พิมพ์เอกสาร</a></div></div>';
     }).join('') || '<p class="text-on-surface-variant font-body-sm text-body-sm">ไม่มีโครงการล่าช้าหรือใกล้สิ้นสุดสัญญาใน 30 วัน</p>';
   }
 
