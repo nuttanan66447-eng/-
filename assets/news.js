@@ -1,6 +1,6 @@
 // ข่าวและภาพกิจกรรมจากเพจ Facebook กองช่าง (https://www.facebook.com/TechnicianSeekaew)
 // - โพสต์ถูกดึงลงตาราง news_posts โดย Edge Function facebook-sync (เจ้าหน้าที่กด "ดึงข่าวล่าสุด" หรือดึงเองทุก 1 ชม. เมื่อเปิดเว็บ)
-// - ยังไม่มีโพสต์ในฐานข้อมูล: แสดงกรอบเพจ Facebook (Page Plugin) แทน
+// - ยังไม่มีโพสต์ในฐานข้อมูล: ซ่อนส่วนข่าว (เจ้าหน้าที่เห็นปุ่มดึงข่าว)
 // - โพสต์ที่ข้อความตรงกับโครงการ: แสดงรูปในหน้าโครงการนั้น (เจ้าหน้าที่ผูก/ยกเลิกเองได้)
 (function () {
   'use strict';
@@ -131,15 +131,10 @@
     if (!box) return;
     $('news-sync').classList.toggle('hidden', !staff());
     load().then(function (d) {
+      // ยังไม่มีข่าวในระบบ: ไม่แสดงส่วนข่าว (เจ้าหน้าที่ยังเห็นปุ่ม "ดึงข่าวล่าสุด")
+      $('news').classList.toggle('hidden', !d.posts.length && !staff());
       if (!d.posts.length) {
-        // ยังไม่มีโพสต์ในฐานข้อมูล: กรอบเพจของ Facebook (แสดงโพสต์ล่าสุดพร้อมรูป)
-        box.innerHTML = '<div class="flex flex-col lg:flex-row gap-4 items-start">' +
-          '<iframe title="เพจ Facebook กองช่าง เทศบาลตำบลสีแก้ว" src="https://www.facebook.com/plugins/page.php?href=' + encodeURIComponent(PAGE) + '&tabs=timeline&width=500&height=640&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false" ' +
-          'width="500" height="640" style="border:none;overflow:hidden;max-width:100%" scrolling="no" frameborder="0" allowfullscreen="true" allow="encrypted-media; picture-in-picture; web-share" loading="lazy"></iframe>' +
-          '<div class="flex-1 p-4 rounded-xl bg-surface-container-low font-body-sm text-body-sm text-on-surface-variant flex flex-col gap-2">' +
-          '<p>แสดงโพสต์ล่าสุดจากเพจ Facebook ของกองช่างโดยตรง</p>' +
-          (staff() ? '<p>ต้องการให้รูปจากโพสต์เข้าไปอยู่ในหน้าโครงการที่ตรงกันโดยอัตโนมัติ ให้ตั้งค่าการดึงข่าวครั้งเดียว</p><button type="button" data-action="news-setup" class="self-start ' + ui.btnClass('primary') + '">วิธีตั้งค่าดึงข่าวอัตโนมัติ</button>' : '') +
-          '<a class="text-primary font-semibold underline" target="_blank" rel="noopener" href="' + PAGE + '">เปิดเพจกองช่างบน Facebook</a></div></div>';
+        box.innerHTML = '<p class="font-body-sm text-body-sm text-on-surface-variant">ยังไม่มีข่าวในระบบ — กด "ดึงข่าวล่าสุด" เพื่อดึงโพสต์จากเพจ</p>';
         return;
       }
       var list = showAll ? d.posts : d.posts.slice(0, 6);
