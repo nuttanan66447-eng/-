@@ -1,5 +1,6 @@
 // ข้อมูลระบบกองช่าง เทศบาลตำบลสีแก้ว
 // ข้อมูลตั้งต้น (ตัวอย่าง) + ที่เก็บข้อมูลในเบราว์เซอร์ (localStorage) + ที่เก็บไฟล์ (IndexedDB)
+// เมื่อเข้าสู่ระบบ assets/cloud.js ซิงก์ข้อมูลชุดนี้และไฟล์กับ Supabase
 (function () {
   'use strict';
 
@@ -263,14 +264,21 @@
   // โครงการจริงจาก Google Sheet (ผ่านระบบงานเอกสาร) แสดงแทนข้อมูลตัวอย่างโดยไม่เขียนทับข้อมูลตัวอย่างในเครื่อง
   var external = null;
 
+  // ข้อมูลที่บันทึกจริง (โครงการจริงจาก Google Sheet อยู่ในชีทของระบบเอกสาร ไม่ได้เก็บซ้ำที่นี่)
+  function snapshot() {
+    var d = load();
+    return external ? Object.assign({}, d, { projects: external.sampleProjects }) : d;
+  }
+
+  var saveHooks = [];
   function save() {
+    saveHooks.forEach(function (fn) { try { fn(); } catch (e) { console.warn(e); } });
     try {
-      var out = memory;
-      if (external) { out = Object.assign({}, memory, { projects: external.sampleProjects }); }
-      localStorage.setItem(KEY, JSON.stringify(out));
+      localStorage.setItem(KEY, JSON.stringify(snapshot()));
       return true;
     } catch (e) {
-      return false;
+      // พื้นที่ในเบราว์เซอร์เต็ม: ถ้าเชื่อมคลาวด์อยู่ข้อมูลยังถูกส่งขึ้นคลาวด์
+      return !!(window.SK.cloud && window.SK.cloud.active);
     }
   }
 
@@ -303,6 +311,15 @@
   window.SK.db = {
     get data() { return load(); },
     save: save,
+    snapshot: snapshot,
+    onSave: function (fn) { saveHooks.push(fn); },
+    // แทนที่ข้อมูลทั้งหมดด้วยข้อมูลจากคลาวด์ (ไม่เรียก onSave)
+    replace: function (obj) {
+      memory = obj; memory.version = 1;
+      if (!memory.meta) memory.meta = {};
+      try { localStorage.setItem(KEY, JSON.stringify(memory)); } catch (e) {}
+    },
+    seed: seed,
     reset: function () { memory = seed(); save(); },
     exportJSON: function () { return JSON.stringify(load(), null, 2); },
     importJSON: function (text) {
@@ -320,10 +337,23 @@
     files: {
       put: function (file) {
         var id = 'F' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        var cloud = window.SK.cloud;
         return tx('readwrite', function (s) { return s.put({ id: id, name: file.name, type: file.type, size: file.size, blob: file }); })
+          .catch(function (e) { if (!(cloud && cloud.active)) throw e; })
+          .then(function () { return cloud && cloud.active ? cloud.putFile(id, file) : null; })
           .then(function () { return id; });
       },
-      get: function (id) { return tx('readonly', function (s) { return s.get(id); }); }
+      get: function (id) {
+        var cloud = window.SK.cloud;
+        return tx('readonly', function (s) { return s.get(id); }).catch(function () { return null; }).then(function (rec) {
+          if (rec || !(cloud && cloud.active)) return rec;
+          // ไฟล์ที่แนบจากเครื่องอื่น: ดาวน์โหลดจากคลาวด์แล้วเก็บไว้ในเครื่อง
+          return cloud.getFile(id).then(function (r) {
+            if (r) tx('readwrite', function (s) { return s.put(r); }).catch(function () {});
+            return r;
+          });
+        });
+      }
     }
   };
 })();

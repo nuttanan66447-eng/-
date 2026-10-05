@@ -171,7 +171,8 @@
     });
   }
 
-  SK.dataReady = useSampleProjects().then(function (sample) {
+  // รอโหลดข้อมูลจากคลาวด์ (assets/cloud.js) ก่อน
+  SK.dataReady = Promise.resolve(SK.cloudReady).then(useSampleProjects).then(function (sample) {
     if (sample) return;
     return SKGas.call('getDashboardDataFast').then(loadReal);
   }).catch(function (err) { console.warn('โหลดข้อมูลจริงไม่สำเร็จ', err); });
@@ -200,7 +201,7 @@
     el.className = 'no-print flex flex-wrap items-center justify-between gap-2 px-4 py-2 mb-4 rounded-lg font-body-sm text-body-sm ' + (ext ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200' : 'bg-secondary-fixed text-on-secondary-fixed-variant');
     el.innerHTML = ext
       ? '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">cloud_done</span>ข้อมูลจริงจาก Google Sheet • ' + ext.count + ' โครงการ' +
-        (ext.savedAt ? ' • อัปเดตในเครื่องนี้ ' + new Date(ext.savedAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</span>' +
+        (ext.savedAt ? (SK.cloud && SK.cloud.active ? ' • ซิงก์บนคลาวด์ • อัปเดต ' : ' • อัปเดตในเครื่องนี้ ') + new Date(ext.savedAt).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '') + '</span>' +
         '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้า / ส่งออกข้อมูล</button>'
       : '<span class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">info</span>กำลังแสดงข้อมูลตัวอย่าง (พิมพ์เอกสารได้ทุกโครงการ) — นำเข้าข้อมูลจริงจาก Google Sheet เพื่อใช้โครงการจริง</span>' +
         '<button type="button" data-action="data-panel" class="font-bold underline">นำเข้าข้อมูลจริง →</button>';

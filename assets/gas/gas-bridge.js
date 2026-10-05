@@ -78,7 +78,7 @@
 
   window.SKGas = {
     call: function (fn) { return send({ type: 'call', fn: fn, args: Array.prototype.slice.call(arguments, 1) }); },
-    importWorkbook: function (wb) { return send({ type: 'import', workbook: wb }); },
+    importWorkbook: function (wb, savedAt) { return send({ type: 'import', workbook: wb, savedAt: savedAt || null }); },
     exportWorkbook: function () { return send({ type: 'export' }); },
     summary: function () { return send({ type: 'summary' }); },
     syncSample: function (projects) { return send({ type: 'sample', projects: projects }); },

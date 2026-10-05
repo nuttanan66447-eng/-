@@ -31,15 +31,19 @@ function idb(mode, fn) {
 }
 
 var saveTimer = null, savePending = Promise.resolve();
+// แจ้งหน้าเว็บทุกแท็บ (รวมตัวสร้างเอกสารใน iframe) ว่าชีทเปลี่ยน เพื่อซิงก์ขึ้นคลาวด์ (assets/cloud.js)
+var channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('sikaew-gas') : null;
 function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveNow, 250);
 }
-function saveNow() {
+function saveNow(savedAt) {
   clearTimeout(saveTimer);
   var wb = GasEmu.getWorkbook();
-  wb.savedAt = new Date().toISOString();
-  savePending = idb('readwrite', function (s) { return s.put(wb, KEY); }).catch(function (e) {
+  wb.savedAt = savedAt || new Date().toISOString();
+  savePending = idb('readwrite', function (s) { return s.put(wb, KEY); }).then(function () {
+    if (channel) channel.postMessage({ type: 'saved', savedAt: wb.savedAt });
+  }, function (e) {
     self.postMessage({ type: 'storage-error', error: String(e && e.message || e) });
   });
   return savePending;
@@ -111,7 +115,8 @@ self.onmessage = function (e) {
       } else if (msg.type === 'import') {
         GasEmu.setWorkbook(msg.workbook);
         runSetup();
-        return saveNow().then(function () { self.postMessage({ id: msg.id, ok: true, result: summary() }); });
+        // ข้อมูลจากคลาวด์: คงเวลาบันทึกเดิมไว้ จะได้ไม่ถูกส่งกลับขึ้นคลาวด์ซ้ำ
+        return saveNow(msg.savedAt || null).then(function () { self.postMessage({ id: msg.id, ok: true, result: summary() }); });
       } else if (msg.type === 'sample') {
         var res = syncSample(msg.projects);
         if (!res.changed) { reply.result = res; reply.ok = true; }
