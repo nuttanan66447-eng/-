@@ -161,10 +161,18 @@
     (first && first.classList.contains('flex') && first.firstElementChild ? first : main).insertAdjacentElement('afterbegin', el);
   }
 
-  // ลงทะเบียน/แก้ไขโครงการด้วยแบบฟอร์มโครงการชุดเดิม (ทุกช่องที่ใช้พิมพ์เอกสาร)
+  // ลงทะเบียน/แก้ไขโครงการ: เปิดหน้า "กรอกข้อมูลโครงการ" ของระบบหลัก (index.html?page=openEntryGate) ทุกหน้า
+  // กลับหน้าเดิมเมื่อบันทึก/ปิดฟอร์ม (back=)
+  function entryUrl(existing) {
+    var q = 'index.html?page=openEntryGate';
+    if (existing && existing.rowNumber) q += '&row=' + encodeURIComponent(existing.rowNumber) + '&name=' + encodeURIComponent(existing.name || '');
+    var here = location.pathname.split('/').pop() || 'index.html';
+    if (here !== 'index.html') q += '&back=' + encodeURIComponent(here + location.search + location.hash);
+    return q;
+  }
+  SK.entryUrl = entryUrl;
   function redirectEdits() {
-    if (!SK.docEngine) return;
-    SK.ui.openProjectForm = function (existing) { SK.docEngine.openEntry(existing && existing.rowNumber ? existing : null); };
+    SK.ui.openProjectForm = function (existing) { location.href = entryUrl(existing && existing.rowNumber ? existing : null); };
   }
   SK.actions['register-project'] = function () { SK.ui.openProjectForm(null); };
 
@@ -182,7 +190,7 @@
   }
   function remapLocal(deletedRow) {
     var d = SK.db.data, map = remapId(deletedRow);
-    ['diary', 'payments', 'documents', 'inspections'].forEach(function (k) {
+    ['diary', 'payments', 'documents', 'inspections', 'photos'].forEach(function (k) {
       d[k] = (d[k] || []).filter(function (x) { return !x.projectId || map(x.projectId) !== null; })
         .map(function (x) { if (x.projectId) x.projectId = map(x.projectId); return x; });
     });

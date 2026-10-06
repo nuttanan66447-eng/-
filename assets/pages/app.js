@@ -5,9 +5,12 @@
   'use strict';
   var SK = window.SK, ui = SK.ui;
   var holder = document.getElementById('app-holder'), loading = document.getElementById('app-loading');
-  var frame = null, ready = null, current = null;
+  var frame = null, ready = null, current = null, settled = false;
   var params = new URLSearchParams(location.search);
   var TABS = { supervisor: 1, clerk: 1, localRoad: 1 };
+  var entryRow = /^\d+$/.test(params.get('row') || '') ? params.get('row') : '', entryName = params.get('name') || '';
+  // ปิดหน้า/บันทึกแล้วกลับหน้าเดิมของเว็บ (back= ชื่อไฟล์หน้าในเว็บเท่านั้น)
+  var back = /^[\w-]+\.html([?#][^\s]*)?$/.test(params.get('back') || '') ? params.get('back') : '';
   // CSS ที่ใส่ในระบบเดิม: ซ่อนเมนูซ้ายและแถบคำสั่งด้านบนของระบบเดิม (เว็บมีเมนู/แถบบนอยู่แล้ว)
   var HIDE = '.topbar{display:none!important}' +
     'body{padding-left:0!important;margin-left:0!important}' +
@@ -54,12 +57,15 @@
 
   // เปิดหน้าตามเมนู
   function open(page) {
-    current = page || 'home';
+    current = page || 'home'; settled = false;
     markMenu(current);
     return load().then(function () {
       run("document.querySelectorAll('.open').forEach(function(x){ if(/[Bb]ackdrop|[Mm]odal/.test(x.id+' '+x.className)) x.classList.remove('open'); }); document.body.classList.remove('modal-open'); if(typeof returnToDashboardHome==='function') returnToDashboardHome();");
       if (TABS[current]) run("switchDashboardPage(" + JSON.stringify(current) + ")");
+      // แก้ไขโครงการจากหน้าอื่นของเว็บ: index.html?page=openEntryGate&row=แถว&name=ชื่อโครงการ
+      else if (current === 'openEntryGate' && entryRow) run("openEntryGate('edit'," + JSON.stringify(entryRow) + "," + JSON.stringify(entryName) + ")");
       else if (current !== 'home' && /^open\w+$/.test(current)) run("typeof " + current + "==='function' && " + current + "()");
+      setTimeout(function () { settled = true; }, 600);
     });
   }
   function markMenu(page) {
@@ -68,6 +74,7 @@
     if (grp) grp.closest('details').open = true;
   }
   function go(page, push) {
+    back = ''; entryRow = '';
     var url = 'index.html' + (page && page !== 'home' ? '?page=' + encodeURIComponent(page) : '');
     try { (push ? history.pushState : history.replaceState).call(history, { page: page }, '', url); } catch (e) {}
     open(page);
@@ -85,9 +92,14 @@
 
   // ปิดหน้าของระบบเดิม (ปุ่ม × ในหน้า) แล้วกลับหน้าแรก: ให้เมนูด้านซ้ายตรงกับหน้าที่แสดง
   setInterval(function () {
-    if (!W() || !current || current === 'home' || TABS[current]) return;
+    if (!W() || !settled || !current || current === 'home' || TABS[current]) return;
     var openNow = run("!!document.querySelector('[id$=\"Backdrop\"].open, [id$=\"backdrop\"].open, .entry-backdrop.open')");
-    if (openNow === false) { current = 'home'; markMenu('home'); try { history.replaceState({ page: 'home' }, '', 'index.html'); } catch (e) {} }
+    if (openNow === false && back) {
+      var to = back; back = ''; settled = false;
+      Promise.resolve(SK.cloud && SK.cloud.active && SK.cloud.flush ? SK.cloud.flush() : null).catch(function () {}).then(function () { location.href = to; });
+      return;
+    }
+    if (openNow === false) { current = 'home'; entryRow = ''; markMenu('home'); try { history.replaceState({ page: 'home' }, '', 'index.html'); } catch (e) {} }
   }, 1200);
 
   // ข้อมูลเปลี่ยนจากคลาวด์/นำเข้า Excel: โหลดข้อมูลในระบบเดิมใหม่

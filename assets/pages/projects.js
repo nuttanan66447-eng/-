@@ -104,24 +104,28 @@
     $('sum-await').textContent = 'รอตรวจรับ ' + n(function (p) { return p.status === 'pending-inspection'; }) + ' รายการ';
   }
 
+  // รูปภาพโครงการ (คลังรูปของแต่ละโครงการ) + ภาพถ่ายจากบันทึกหน้างาน
   function allPhotos() {
-    var out = [];
-    SK.flows.sortedDiary().forEach(function (e) {
-      (e.photos || []).forEach(function (ph) { out.push({ src: ph.src, caption: ph.caption, entry: e }); });
+    var out = (SK.db.data.photos || []).slice().sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); }).map(function (ph) {
+      return { photo: ph, caption: ph.caption, projectId: ph.projectId, date: ph.date, by: ph.owner, href: 'project.html?id=' + encodeURIComponent(ph.projectId) + '#photos' };
     });
-    return out;
+    SK.flows.sortedDiary().forEach(function (e) {
+      (e.photos || []).forEach(function (ph) { out.push({ src: ph.src, caption: ph.caption, projectId: e.projectId, date: e.date, by: e.reporter, href: 'progress.html?id=' + encodeURIComponent(e.projectId) }); });
+    });
+    return out.sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
   }
   function renderGallery() {
     var photos = allPhotos();
     $('gallery').innerHTML = photos.slice(0, 3).map(function (ph) {
-      var p = SK.db.project(ph.entry.projectId) || {};
-      return '<a href="progress.html?id=' + encodeURIComponent(ph.entry.projectId) + '" class="group relative rounded-lg overflow-hidden h-24 bg-surface-container">' +
-        '<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="' + esc(ph.caption) + '" src="' + esc(ph.src) + '"/>' +
+      var p = SK.db.project(ph.projectId) || {};
+      return '<a href="' + ph.href + '" class="group relative rounded-lg overflow-hidden h-24 bg-surface-container">' +
+        '<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="' + esc(ph.caption || '') + '" ' + (ph.photo ? 'data-photo-id="' + esc(ph.photo.id) + '"' : 'src="' + esc(ph.src) + '"') + '/>' +
         '<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent flex items-end p-space-2xs"><span class="font-code-sm text-code-sm text-surface-bright truncate">' + esc(ui.villageName(p.village)) + '</span></div></a>';
     }).join('') || '<p class="col-span-3 text-on-surface-variant">ยังไม่มีภาพถ่าย</p>';
+    if (SK.photos) SK.photos.hydrate($('gallery'));
     $('gallery-count').textContent = 'ดูทั้งหมด (' + photos.length + ' รูป)';
-    var last = SK.flows.sortedDiary()[0];
-    $('gallery-updated').textContent = last ? 'อัปเดตล่าสุด: ' + ui.dateLong(last.date) + ' โดย ' + last.reporter : '';
+    var last = photos[0];
+    $('gallery-updated').textContent = last ? 'อัปเดตล่าสุด: ' + ui.dateLong(last.date) + (last.by ? ' โดย ' + last.by : '') : '';
   }
 
   function renderReminders() {
@@ -173,14 +177,15 @@
     'goto-page': function (el) { page = Number(el.dataset.page); renderTable(); $('projects-body').closest('.rounded-xl').scrollIntoView({ behavior: 'smooth', block: 'start' }); },
     'gallery': function () {
       var photos = allPhotos();
-      ui.modal({
-        title: 'ภาพตรวจงานช่างทั้งหมด', subtitle: photos.length + ' รูป จากสมุดบันทึกหน้างาน', icon: 'photo_library', size: 'lg',
+      var m = ui.modal({
+        title: 'ภาพโครงการทั้งหมด', subtitle: photos.length + ' รูป จากรูปภาพโครงการและบันทึกหน้างาน', icon: 'photo_library', size: 'lg',
         body: '<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">' + photos.map(function (ph) {
-          var p = SK.db.project(ph.entry.projectId) || {};
-          return '<figure class="rounded-lg overflow-hidden bg-surface-container-low"><a href="' + esc(ph.src) + '" target="_blank" rel="noopener"><img src="' + esc(ph.src) + '" alt="' + esc(ph.caption) + '" class="w-full h-32 object-cover"/></a>' +
-            '<figcaption class="p-2 font-body-sm text-body-sm"><strong>' + esc(ph.caption) + '</strong><br><a class="text-primary hover:underline" href="progress.html?id=' + encodeURIComponent(p.id) + '">' + esc(p.name) + '</a><br><span class="text-on-surface-variant">' + ui.dateShort(ph.entry.date) + '</span></figcaption></figure>';
+          var p = SK.db.project(ph.projectId) || {};
+          return '<figure class="rounded-lg overflow-hidden bg-surface-container-low"><a href="' + ph.href + '"><img ' + (ph.photo ? 'data-photo-id="' + esc(ph.photo.id) + '"' : 'src="' + esc(ph.src) + '"') + ' alt="' + esc(ph.caption || '') + '" class="w-full h-32 object-cover"/></a>' +
+            '<figcaption class="p-2 font-body-sm text-body-sm">' + (ph.caption ? '<strong>' + esc(ph.caption) + '</strong><br>' : '') + '<a class="text-primary hover:underline" href="' + ph.href + '">' + esc(p.name || '') + '</a><br><span class="text-on-surface-variant">' + ui.dateShort(ph.date) + '</span></figcaption></figure>';
         }).join('') + '</div>'
       });
+      if (SK.photos && m && m.body) SK.photos.hydrate(m.body);
     },
     'form-supervisor': function () { chooseProject('บันทึกรายงานผู้ควบคุมงาน', 'description', function (p) { SK.docs.print('supervisorReport', 'บันทึกรายงานผู้ควบคุมงาน ' + p.id, p, SK.flows.sortedDiary(p.id)); }); },
     'form-installment': function () { chooseProject('ใบแจ้งตรวจรับงานงวด', 'receipt_long', function (p) { SK.docs.print('installmentNotice', 'ใบแจ้งตรวจรับงานงวด ' + p.id, p); }); },

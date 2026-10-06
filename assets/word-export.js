@@ -262,7 +262,9 @@
       x += '<w:pBdr>' + bl('top', p.bdrTop) + bl('bottom', p.bdr) + bl('between', p.bdrTop || p.bdr) + '</w:pBdr>';
     }
     if (p.tabs && p.tabs.length) x += '<w:tabs>' + p.tabs.map(function (t) { return '<w:tab w:val="' + t.val + '" w:pos="' + tw(t.pos) + '"/>'; }).join('') + '</w:tabs>';
-    x += '<w:spacing w:before="' + Math.max(0, tw(before)) + '" w:after="0" w:line="' + Math.max(120, tw(p.line)) + '" w:lineRule="exact"/>';
+    // ย่อหน้าที่มีรูป (เช่น ตราครุฑในหน้าของระบบหลัก): ระยะบรรทัด "อย่างน้อย" ให้รูปสูงได้เต็มขนาด
+    var hasImg = p.runs && p.runs.some(function (r) { return r.img; });
+    x += '<w:spacing w:before="' + Math.max(0, tw(before)) + '" w:after="0" w:line="' + Math.max(120, tw(p.line)) + '" w:lineRule="' + (hasImg ? 'atLeast' : 'exact') + '"/>';
     var ind = '';
     if (p.indL > 0.5) ind += ' w:left="' + tw(p.indL) + '"';
     if (p.indR > 0.5) ind += ' w:right="' + tw(p.indR) + '"';

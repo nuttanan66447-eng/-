@@ -526,7 +526,6 @@
   }
   function snapshot(d) {
     var root = d.documentElement.cloneNode(true);
-    root.setAttribute('data-sk-std', '1');
     Array.prototype.forEach.call(root.querySelectorAll('script'), function (x) { x.remove(); });
     return '<!DOCTYPE html>' + root.outerHTML;
   }
@@ -606,13 +605,9 @@
           (w.__skPrint || w.print).call(w);
         } }]
     });
-    // จัดรูปแบบบันทึกข้อความตามมาตรฐานการพิมพ์หนังสือราชการ (assets/doc-standard.js)
+    // หนังสือราชการทุกหน้าใช้รูปแบบเดียวกับระบบหลัก (ตามที่ระบบหลักสร้าง ไม่จัดรูปแบบทับ)
     iframe.addEventListener('load', function () {
-      var d = iframe.contentDocument;
-      d.addEventListener('input', function () { dirty = true; });
-      // สำเนาที่จัดรูปแบบแล้ว (จากประวัติ) ไม่ต้องจัดซ้ำ
-      if (d.documentElement.hasAttribute('data-sk-std')) return;
-      try { if (SK.docStandard) SK.docStandard.apply(d); } catch (e) { console.warn('จัดรูปแบบมาตรฐานไม่สำเร็จ', e); }
+      iframe.contentDocument.addEventListener('input', function () { dirty = true; });
     });
     iframe.srcdoc = doc2;
   }

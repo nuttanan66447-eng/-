@@ -32,6 +32,10 @@ if g:
     out.append((g.start(), '<details class="sk-menu-group"><summary class="sk-menu">%s<b>%s</b><span class="sk-menu-arrow" aria-hidden="true">⌄</span></summary><div class="sk-submenu">%s</div></details>'
                 % (icon_of(summ), label.group(1) if label else 'ระบบ', items)))
 out.sort()
+# หน้า "กรอกข้อมูลโครงการ" ของระบบหลัก (ปุ่ม "สร้างโครงการใหม่" ในหน้าแรกของโค้ด) เป็นเมนูแรก
+m = re.search(r'class="dashboard-create-project"[^>]*onclick="(openEntryGate)\(\)"><svg viewBox="0 0 24 24" aria-hidden="true">(.*?)</svg>', dash, re.S)
+if m:
+    out.insert(0, (-1, link(m.group(1), '<span class="sk-menu-icon teal"><svg viewBox="0 0 24 24" aria-hidden="true">%s</svg></span>' % m.group(2), 'กรอกข้อมูลโครงการ')))
 title = re.search(r'<h1 id="title">(.*?)</h1>', dash).group(1)
 inner = ''.join([
     '<div class="sk-side-top">',
