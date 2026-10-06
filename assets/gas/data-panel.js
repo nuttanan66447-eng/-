@@ -25,7 +25,10 @@
               if (!cell || cell.v === undefined || cell.v === null) { row.push(''); continue; }
               row.push(cell.v);
               // เก็บข้อความตามที่แสดงในชีท (เช่น วันที่ ตัวเลขมีจุลภาค) ให้ getDisplayValues คืนค่าเหมือน Google Sheets
-              if ((cell.t === 'n' || cell.t === 'd') && cell.w !== undefined) disp[(R + 1) + ',' + (C + 1)] = String(cell.w);
+              if ((cell.t === 'n' || cell.t === 'd') && cell.w !== undefined) {
+                // ตัวเลขยาวที่ Excel แสดงแบบย่อ (4.53562E+11) เก็บเป็นตัวเลขเต็ม
+                disp[(R + 1) + ',' + (C + 1)] = cell.t === 'n' && /E\+/i.test(cell.w) && Number.isInteger(cell.v) ? cell.v.toFixed(0) : String(cell.w);
+              }
             }
             rows.push(row);
           }

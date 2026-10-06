@@ -75,6 +75,11 @@ function normalizeWorkbookDates() {
     });
     Object.keys(sh.disp || {}).forEach(function (k) {
       var v = sh.disp[k];
+      // ตัวเลขยาวที่ Excel แสดงแบบย่อ (เลขผู้เสียภาษี 4.53562E+11): ใช้ตัวเลขเต็มจากค่าในเซลล์
+      if (typeof v === 'string' && /^-?\d(\.\d+)?E\+\d+$/i.test(v)) {
+        var rc = k.split(','), raw = (sh.rows[+rc[0] - 1] || [])[+rc[1] - 1];
+        if (typeof raw === 'number' && isFinite(raw)) { sh.disp[k] = Number.isInteger(raw) ? raw.toFixed(0) : String(raw); changed = true; return; }
+      }
       if (typeof v === 'string' && /[A-Za-z]/.test(v)) { var n = thaiMonths(v); if (n !== v) { sh.disp[k] = n; changed = true; } }
     });
   });

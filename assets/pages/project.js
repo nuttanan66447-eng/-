@@ -47,11 +47,12 @@
   function committees(p) {
     var person = function (name, role, chair, pos) { return name ? { name: name, role: role, chair: chair, position: pos || positionOf(name) } : null; };
     var list = function (arr) { return arr.filter(Boolean); };
-    var inspect = list([person(F(p, 'ประธานกรรมการตรวจรับงานจ้าง'), 'ประธาน', true, F(p, 'ตำแหน่งประธาน'))]
-      .concat([1, 2, 3, 4].map(function (i) { return person(F(p, 'กรรมการตรวจรับงานจ้าง ' + i), 'กรรมการ', false, F(p, 'ตำแหน่งกรรมการ ' + i)); })));
+    var pd = function (pos, dept) { return [F(p, pos), F(p, dept)].filter(Boolean).join(' • '); };
+    var inspect = list([person(F(p, 'ประธานกรรมการตรวจรับงานจ้าง'), 'ประธาน', true, pd('ตำแหน่งประธาน', 'สังกัดประธาน'))]
+      .concat([1, 2, 3, 4].map(function (i) { return person(F(p, 'กรรมการตรวจรับงานจ้าง ' + i), 'กรรมการ', false, pd('ตำแหน่งกรรมการ ' + i, 'สังกัดกรรมการ ' + i)); })));
     var price = list([person(F(p, 'ประธานกรรมการราคากลาง'), 'ประธาน', true), person(F(p, 'กรรมการราคากลาง 1'), 'กรรมการ'), person(F(p, 'กรรมการราคากลาง 2'), 'กรรมการ')]);
     var tor = list([person(F(p, 'ประธานกรรมการ TOR'), 'ประธาน', true), person(F(p, 'กรรมการ TOR 1'), 'กรรมการ'), person(F(p, 'กรรมการ TOR 2'), 'กรรมการ')]);
-    var sup = list([1, 2, 3, 4].map(function (i) { return person(F(p, 'ผู้ควบคุมงาน คนที่ ' + i), 'ผู้ควบคุมงาน', i === 1, F(p, 'ตำแหน่งผู้ควบคุมงาน คนที่ ' + i)); }));
+    var sup = list([1, 2, 3, 4].map(function (i) { return person(F(p, 'ผู้ควบคุมงาน คนที่ ' + i), 'ผู้ควบคุมงาน', i === 1, pd('ตำแหน่งผู้ควบคุมงาน คนที่ ' + i, 'สังกัดผู้ควบคุมงาน คนที่ ' + i)); }));
     var torOrder = F(p, 'เลขที่คำสั่ง TOR/ราคากลาง'), torDate = F(p, 'ลงวันที่คำสั่ง TOR/ราคากลาง');
     return [
       { icon: 'groups', title: 'คณะกรรมการตรวจรับพัสดุ', note: 'แต่งตั้งตามพระราชบัญญัติการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560', order: F(p, 'คำสั่งที่'), people: inspect },
@@ -69,18 +70,51 @@
       '<span class="font-label-sm text-label-sm text-on-surface-variant">' + esc(c.position || '-') + '</span></div></div>';
   }
 
+  // บุคคลในชีทเก็บ ชื่อ / ตำแหน่ง / สังกัด คนละคอลัมน์: รวมเป็นแถวเดียวต่อคน และจัดกลุ่มบุคคลไว้ด้วยกัน
+  function personRows(fields, used) {
+    var rows = function (defs) {
+      return defs.map(function (d) {
+        var name = String(fields[d[0]] || '').trim();
+        [d[0], d[2], d[3]].forEach(function (k) { if (k) used[k] = 1; });
+        if (!name) return null;
+        var pos = String(fields[d[2]] || '').trim() || positionOf(name), dept = String(fields[d[3]] || '').trim();
+        return { label: d[1], value: name, sub: [pos, dept].filter(Boolean).join(' • ') };
+      }).filter(Boolean);
+    };
+    var n = function (from, to, f) { var out = []; for (var i = from; i <= to; i++) out.push(f(i)); return out; };
+    var count = function (k, label) { var v = String(fields[k] || '').trim(); used[k] = 1; return v ? [{ label: label, value: v }] : []; };
+    var order = function (k, label) { var v = String(fields[k] || '').trim(); used[k] = 1; return v ? [{ label: label, value: v }] : []; };
+    return [
+      { icon: 'engineering', title: 'ผู้ควบคุมงาน', rows: count('จำนวนผู้ควบคุมงาน', 'จำนวนผู้ควบคุมงาน').concat(rows(n(1, 4, function (i) {
+        return ['ผู้ควบคุมงาน คนที่ ' + i, 'ผู้ควบคุมงาน คนที่ ' + i, 'ตำแหน่งผู้ควบคุมงาน คนที่ ' + i, 'สังกัดผู้ควบคุมงาน คนที่ ' + i];
+      }))) },
+      { icon: 'groups', title: 'คณะกรรมการตรวจรับพัสดุ', rows: count('จำนวนคณะกรรมการตรวจรับงานจ้าง', 'จำนวนกรรมการ').concat(rows([['ประธานกรรมการตรวจรับงานจ้าง', 'ประธานกรรมการ', 'ตำแหน่งประธาน', 'สังกัดประธาน']]
+        .concat(n(1, 4, function (i) { return ['กรรมการตรวจรับงานจ้าง ' + i, 'กรรมการคนที่ ' + i, 'ตำแหน่งกรรมการ ' + i, 'สังกัดกรรมการ ' + i]; })))) },
+      { icon: 'calculate', title: 'คณะกรรมการกำหนดราคากลาง', rows: rows([['ประธานกรรมการราคากลาง', 'ประธานกรรมการ'], ['กรรมการราคากลาง 1', 'กรรมการคนที่ 1'], ['กรรมการราคากลาง 2', 'กรรมการคนที่ 2']]) },
+      { icon: 'gavel', title: 'คณะกรรมการจัดทำ TOR', rows: order('เลขที่คำสั่ง TOR/ราคากลาง', 'เลขที่คำสั่ง TOR/ราคากลาง').concat(order('ลงวันที่คำสั่ง TOR/ราคากลาง', 'ลงวันที่คำสั่ง'),
+        rows([['ประธานกรรมการ TOR', 'ประธานกรรมการ'], ['กรรมการ TOR 1', 'กรรมการคนที่ 1'], ['กรรมการ TOR 2', 'กรรมการคนที่ 2']])) }
+    ].filter(function (g) { return g.rows.length; });
+  }
   function groupsOf(p) {
     var fields = p.fields || {}, used = {}, out = [];
+    var people = personRows(fields, used);
+    // ตำแหน่ง/สังกัดของบุคคลที่ไม่มีชื่อ (คอลัมน์ว่าง) ไม่ต้องแสดง
+    Object.keys(fields).forEach(function (k) { if (/^(ตำแหน่ง|สังกัด)(ประธาน|กรรมการ|ผู้ควบคุมงาน)/.test(k)) used[k] = 1; });
     var has = function (k) { return !used[k] && !SYSTEM.test(k) && String(fields[k]).trim() !== ''; };
+    var row = function (k) { return { label: k, value: fmt(fields[k]) }; };
     GROUPS.forEach(function (g) {
-      var rows = Object.keys(fields).filter(function (k) { return has(k) && g.re.test(k); });
-      rows.forEach(function (k) { used[k] = 1; });
-      if (rows.length) out.push({ icon: g.icon, title: g.title, rows: rows });
+      if (/ผู้ควบคุมงาน|คณะกรรมการ|TOR/.test(g.title)) return;
+      var keys = Object.keys(fields).filter(function (k) { return has(k) && g.re.test(k); });
+      keys.forEach(function (k) { used[k] = 1; });
+      if (keys.length) out.push({ icon: g.icon, title: g.title, rows: keys.map(row) });
     });
+    out = out.concat(people);
     var rest = Object.keys(fields).filter(has);
-    if (rest.length) out.push({ icon: 'sticky_note_2', title: 'ข้อมูลอื่น ๆ', rows: rest });
+    if (rest.length) out.push({ icon: 'sticky_note_2', title: 'ข้อมูลอื่น ๆ', rows: rest.map(row) });
     return out;
   }
+  // (ตัวเลขยาวแบบย่อจาก Excel แก้ให้เป็นตัวเลขเต็มตอนโหลดชีทใน assets/gas/gas-worker.js — ที่นี่แสดงตามข้อมูล ไม่เดาหลักที่หายไป)
+  function fmt(v) { return String(v === undefined || v === null ? '' : v).trim(); }
 
   // ---------- ส่วนประกอบ ----------
   function card(inner, cls) { return '<section class="bg-surface-container-lowest rounded-xl shadow-sm ' + (cls || 'p-space-lg') + '">' + inner + '</section>'; }
@@ -142,9 +176,10 @@
     return '<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg items-start">' + groups.map(function (g) {
       return '<section data-group class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden' + (g.rows.length > 8 ? ' lg:col-span-2' : '') + '">' +
         '<h2 class="flex items-center gap-2 px-space-lg py-space-sm bg-surface-container-low font-headline-sm text-headline-sm text-primary font-bold"><span class="material-symbols-outlined">' + g.icon + '</span>' + g.title + '</h2>' +
-        '<dl class="divide-y divide-surface-container' + (g.rows.length > 8 ? ' lg:grid lg:grid-cols-2 lg:divide-y-0' : '') + '">' + g.rows.map(function (k) {
-          return '<div data-row data-search="' + esc((k + ' ' + p.fields[k]).toLowerCase()) + '" class="grid grid-cols-[minmax(7rem,38%)_1fr] gap-3 px-space-lg py-2 font-body-sm text-body-sm' + (g.rows.length > 8 ? ' lg:border-b lg:border-surface-container' : '') + '">' +
-            '<dt class="text-on-surface-variant">' + esc(k) + '</dt><dd class="text-on-surface font-medium break-words">' + esc(p.fields[k]) + '</dd></div>';
+        '<dl class="divide-y divide-surface-container' + (g.rows.length > 8 ? ' lg:grid lg:grid-cols-2 lg:divide-y-0' : '') + '">' + g.rows.map(function (r) {
+          return '<div data-row data-search="' + esc((r.label + ' ' + r.value + ' ' + (r.sub || '')).toLowerCase()) + '" class="grid grid-cols-[minmax(7rem,38%)_1fr] gap-3 px-space-lg py-2 font-body-sm text-body-sm' + (g.rows.length > 8 ? ' lg:border-b lg:border-surface-container' : '') + '">' +
+            '<dt class="text-on-surface-variant">' + esc(r.label) + '</dt><dd class="text-on-surface font-medium break-words">' + esc(r.value) +
+            (r.sub ? '<span class="block font-normal text-on-surface-variant">' + esc(r.sub) + '</span>' : '') + '</dd></div>';
         }).join('') + '</dl></section>';
     }).join('') + '</div>';
   }
