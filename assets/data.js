@@ -127,12 +127,12 @@
     });
   }
 
-  // ปีงบประมาณ (พ.ศ.): ปีล่าสุดในฐานข้อมูลโครงการ หรือปีงบประมาณปัจจุบัน (เริ่ม 1 ต.ค.)
+  // ปีงบประมาณ (พ.ศ.): ปีงบประมาณปัจจุบัน (เริ่ม 1 ต.ค.) หรือปีในฐานข้อมูลถ้าใหม่กว่า
   function fiscalYear() {
     var years = (memory ? memory.projects : []).map(function (p) { return parseInt(String(p.year || '').replace(/[๐-๙]/g, function (d) { return '๐๑๒๓๔๕๖๗๘๙'.indexOf(d); }), 10); })
       .filter(function (y) { return y > 2400; });
     var now = new Date(), cur = now.getFullYear() + 543 + (now.getMonth() >= 9 ? 1 : 0);
-    return years.length ? Math.max.apply(null, years) : cur;
+    return Math.max.apply(null, years.concat([cur]));
   }
 
   window.SK = window.SK || {};

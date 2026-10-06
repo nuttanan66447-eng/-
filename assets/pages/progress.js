@@ -154,9 +154,9 @@
       var st = SK.flows.DOC_STATUS[d.status] || SK.flows.DOC_STATUS.approved;
       return '<button type="button" data-action="open-project-doc" data-index="' + i + '" class="w-full text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high/60 transition-all flex items-center justify-between gap-2 group">' +
         '<div class="flex items-center gap-space-sm min-w-0"><span class="material-symbols-outlined ' + (i % 2 ? 'text-primary' : 'text-secondary') + ' text-space-xl shrink-0">' + icon + '</span>' +
-        '<div class="flex flex-col min-w-0"><span class="font-body-md text-body-md text-on-surface font-semibold truncate group-hover:text-primary">' + esc(d.fileName || d.title) + '</span>' +
-        '<span class="font-label-sm text-label-sm text-on-surface-variant truncate">' + st[0] + ' • ' + (d.fileId ? SK.flows.fileSize(d.fileSize) : 'ยังไม่มีไฟล์ต้นฉบับ') + '</span></div></div>' +
-        '<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">' + (d.fileId ? 'download' : 'visibility') + '</span></button>';
+        '<div class="flex flex-col min-w-0"><span class="font-body-md text-body-md text-on-surface font-semibold truncate group-hover:text-primary">' + esc(SK.flows.docName(d)) + '</span>' +
+        '<span class="font-label-sm text-label-sm text-on-surface-variant truncate">' + (d.docKey ? 'สร้างเมื่อ ' + ui.dateShort(d.date) + (d.owner ? ' • ' + esc(d.owner) : '') : st[0] + ' • ' + (d.fileId ? SK.flows.fileSize(d.fileSize) : 'ยังไม่มีไฟล์ต้นฉบับ')) + '</span></div></div>' +
+        '<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">' + (d.fileId && !d.docKey ? 'download' : 'visibility') + '</span></button>';
     }).join('') || '<p class="text-on-surface-variant font-body-sm text-body-sm">ยังไม่มีเอกสารแนบ</p>';
   }
 

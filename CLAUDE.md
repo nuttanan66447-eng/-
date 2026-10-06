@@ -13,6 +13,7 @@
 ## โครงสร้าง
 
 - หน้าหลัก 5 หน้า: `index.html`, `projects.html`, `progress.html` (งานก่อสร้างและเอกสาร = ติดตามความก้าวหน้า + ศูนย์จัดทำเอกสารช่าง ในหน้าเดียว ใช้ `assets/pages/progress.js` + `documents.js`), `project-docs.html` (เอกสารโครงการ: เลือกหมู่บ้าน/โครงการ → ปุ่มเอกสารทุกแบบ + ประวัติเอกสารของโครงการ, `assets/pages/project-docs.js`), `disbursement.html` + สคริปต์ใน `assets/` และ `assets/pages/`
+  - `project.html?id=` = หน้าข้อมูลโครงการแบบละเอียด (กดโครงการที่ใดก็มาหน้านี้ แทนหน้าต่างลอย) `assets/pages/project.js`
   - `documents.html` เหลือแค่ redirect ไป `progress.html#docs-center` (ลิงก์เก่ายังใช้ได้)
 - `system.html` = ระบบ v184 เดิม ใช้เป็นตัวสร้างเอกสารเบื้องหลังเท่านั้น (`system.html?engine=1`) เปิดตรงจะกลับ `index.html`
   - สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ
@@ -22,9 +23,9 @@
 - `assets/config.js` = URL + publishable key ของ Supabase
 - `assets/personnel.js` = รายชื่อจริง (ผู้ควบคุมงาน บุคลากร ผู้บริหาร หมู่บ้าน) สร้างจาก `system/src` ด้วย `tools/build_system.py` — ห้ามแก้ด้วยมือ
 - `assets/tambon-map.js` = ขอบเขตตำบล (ชีท "ขอบเขตแผนที่" หรือ OpenStreetMap) + เส้นแบ่งหมู่บ้านจากชีท + เครื่องมือวาดขอบเขต (เจ้าหน้าที่) — ทุกแผนที่ปิดซูมด้วยลูกกลิ้งเมาส์
-- `assets/news.js` = ข่าวจากเพจ Facebook กองช่าง (ตาราง news_posts, Edge Function `supabase/functions/facebook-sync` ต้องตั้ง secret FB_PAGE_TOKEN; เจ้าหน้าที่ลงข่าวเองได้ id `manual-*` รูปใน bucket `news`) + รูปเข้าโครงการที่ตรงกัน
+- `assets/news.js` (หน้าแรกไม่แสดงกล่องข่าวแล้ว ตามที่ผู้ใช้ขอ) = ข่าวจากเพจ Facebook กองช่าง (ตาราง news_posts, Edge Function `supabase/functions/facebook-sync` ต้องตั้ง secret FB_PAGE_TOKEN; เจ้าหน้าที่ลงข่าวเองได้ id `manual-*` รูปใน bucket `news`) + รูปเข้าโครงการที่ตรงกัน
 - `assets/word-export.js` = บันทึกพรีวิวเป็น .docx (สร้าง WordprocessingML เอง วัดตำแหน่งจากพรีวิว: แถวหัวหนังสือใช้แท็บ+เส้นประ, แถวหลายช่องเป็นตารางไร้เส้น, ครุฑวางตายตัว) — ตรวจผลด้วย LibreOffice (`apt-get install libreoffice-writer`) แปลงเป็น PDF
-- ประวัติเอกสาร: ทุกเอกสารที่สร้างบันทึกสำเนา HTML ลงทะเบียนเอกสาร (`SK.db.data.documents`, format `html`, `docKey`) เปิดซ้ำผ่าน `SK.docEngine.reopen`
+- ประวัติเอกสาร: ทุกเอกสารที่สร้างบันทึกสำเนา HTML ลงทะเบียนเอกสาร (`SK.db.data.documents`, format `html`, `docKey`, `variant` = สัปดาห์/งวด) เปิดซ้ำผ่าน `SK.docEngine.reopen` — สร้างซ้ำ (แบบ+โครงการ+สัปดาห์เดียวกัน) แทนที่ฉบับเดิม ไม่เพิ่มรายการซ้ำ; แสดงชื่อเอกสารภาษาไทย (`SK.flows.docName`) ไม่ใช่ชื่อไฟล์
 - `assets/doc-standard.js` = จัดรูปแบบ "บันทึกข้อความ" ทุกเอกสารตามมาตรฐานการพิมพ์หนังสือราชการ (ขอบ 3/2/2.5/2 ซม., TH Sarabun PSK 16pt, ครุฑ 1.5 ซม., หัว 29pt/35pt, ป้าย 20pt, ย่อหน้า 2.5 ซม., ลงชื่อกึ่งกลางหน้า) — ทำหลังระบบเดิมสร้างเอกสาร ไม่แก้ system/src
 - `assets/thai-date.js` = ปฏิทินภาษาไทย แทน `<input type="date">` ทุกช่องอัตโนมัติ
 - ใช้ข้อมูลจริงเท่านั้น ห้ามใส่ข้อมูล/รายชื่อ/ตัวเลขสมมุติในหน้าเว็บ (โครงการมาจากชีท "ฐานข้อมูลโครงการ" ของระบบเอกสาร)

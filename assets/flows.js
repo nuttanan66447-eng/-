@@ -3,7 +3,26 @@
   'use strict';
   var SK = window.SK, ui = SK.ui, ref = SK.ref, esc = ui.esc;
 
+  // ชื่อเอกสารที่แสดง (ภาษาไทย ไม่ใช่ชื่อไฟล์): ตัดชื่อโครงการท้ายชื่อออกเมื่อแสดงในหน้าโครงการ
+  function docName(d) {
+    var t = String(d.title || d.fileName || d.id || '');
+    return d.docKey ? t.split(' — ')[0] : t;
+  }
+  // ทะเบียนเอกสาร: รายการซ้ำ (เอกสารเดียวกัน โครงการเดียวกัน) เหลือฉบับล่าสุด
+  function dedupe() {
+    var seen = {}, list = SK.db.data.documents || [], out = [];
+    list.forEach(function (d) {
+      var k = (d.projectId || '') + '|' + (d.docKey ? 'K:' + d.docKey + '|' + (d.variant || '') : 'T:' + d.type + '|' + (d.title || d.id));
+      if (seen[k]) return;
+      seen[k] = 1; out.push(d);
+    });
+    if (out.length !== list.length) { SK.db.data.documents = out; SK.db.save(); }
+  }
   function addDocument(doc) {
+    var list = SK.db.data.documents;
+    for (var i = list.length - 1; i >= 0; i--) {
+      if (!list[i].docKey && (list[i].projectId || '') === (doc.projectId || '') && list[i].title === doc.title && list[i].type === doc.type) list.splice(i, 1);
+    }
     SK.db.data.documents.unshift(Object.assign({ date: ui.today(), status: 'approved', owner: (ui.currentUser && ui.currentUser().signedIn && ui.currentUser().name) || '', format: 'pdf' }, doc));
   }
 
@@ -199,7 +218,8 @@
   SK.flows = {
     DOC_TYPES: DOC_TYPES, FORMAT_ICON: FORMAT_ICON, DOC_STATUS: DOC_STATUS, fileSize: fileSize,
     openDocument: openDocument, attachTo: attachTo, uploadNew: uploadNew,
-    refreshPage: refreshPage, inspection: inspection, urge: urge, diaryAll: diaryAll, sortedDiary: sortedDiary, addDocument: addDocument };
+    refreshPage: refreshPage, inspection: inspection, urge: urge, diaryAll: diaryAll, sortedDiary: sortedDiary, addDocument: addDocument, docName: docName, dedupe: dedupe };
+  ui.onReady(dedupe);
 
   // การกระทำที่ใช้ได้ทุกหน้า
   Object.assign(SK.actions, {

@@ -232,7 +232,8 @@
     var rules = [
       [/((?:ปีงบ(?:ประมาณ|ฯ)|ประจำปี(?:งบประมาณ)?|รอบปี|งบประมาณ)\s*(?:พ\.ศ\.\s*)?)2567/g, '$1' + y],
       [/((?:ปีงบฯ?|ปี)\s*)67\b/g, '$1' + yy],
-      [/ไตรมาส\s*3\/2567\s*\(1 เม\.ย\. - 30 มิ\.ย\. 2567\)/g, quarterText()]
+      [/ไตรมาส\s*3\/2567\s*\(1 เม\.ย\. - 30 มิ\.ย\. 2567\)/g, quarterText()],
+      [/ไตรมาสที่\s*\d/g, 'ไตรมาสที่ ' + quarterNo()]
     ];
     var walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT), n;
     while ((n = walk.nextNode())) {
@@ -241,6 +242,7 @@
       if (v !== o) n.nodeValue = v;
     }
   }
+  function quarterNo() { var m = new Date().getMonth(); return m >= 9 ? 1 : Math.floor(m / 3) + 2; }
   // ไตรมาสปัจจุบันของปีงบประมาณ
   function quarterText() {
     var now = new Date(), m = now.getMonth(), q = m >= 9 ? 1 : Math.floor(m / 3) + 2;
