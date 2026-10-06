@@ -615,12 +615,9 @@
     if (nm) nm.textContent = u.signedIn ? u.name : 'ผู้เยี่ยมชม | ดูภาพรวมโครงการ';
     if (role) role.textContent = u.signedIn ? u.position : 'เข้าสู่ระบบเพื่อบันทึกและซิงก์ข้อมูล';
     if (btn) { btn.textContent = u.signedIn ? 'บัญชีผู้ใช้' : 'เข้าสู่ระบบ'; btn.classList.toggle('is-signed', !!u.signedIn); }
-    var menu = new URLSearchParams(location.search).get('menu') || (/[?&]tab=localRoad/.test(location.search) ? 'คุมสายทาง' : /tab=drawing/.test(location.search) ? 'เอกสารดาวน์โหลด' : '');
-    if (menu) {
-      document.querySelectorAll('#sidebar [data-menu]').forEach(function (a) { a.classList.toggle('is-active', a.dataset.menu === menu); });
-      var cur = document.querySelector('#sidebar [data-menu].is-active');
-      if (cur) document.querySelectorAll('#sidebar [aria-current="page"]').forEach(function (a) { a.removeAttribute('aria-current'); });
-    }
+    // เมนูที่เปิดอยู่ (index.html?page=...) — หน้าอื่นของเว็บไม่มีเมนูที่ตรงกัน
+    var page = /index\.html|\/$/.test(location.pathname) ? new URLSearchParams(location.search).get('page') : null;
+    document.querySelectorAll('#sidebar [data-page]').forEach(function (a) { a.classList.toggle('is-active', !!page && a.dataset.page === page); });
   }
   SK.actions = SK.actions || {};
   SK.actions['sk-side-account'] = function () { var b = document.getElementById('profile-btn'); if (b) b.click(); };

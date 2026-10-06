@@ -327,15 +327,36 @@
 
   // ---------- หน้าต่างบัญชี / เข้าสู่ระบบ ----------
   function redirectUrl() { return location.origin + location.pathname; }
+  // บัญชีแบบชื่อผู้ใช้ (ไม่ต้องมีอีเมลจริง): เก็บเป็นอีเมลภายใน <ชื่อผู้ใช้>@users.sikaew-kongchang.app
+  var USER_DOMAIN = 'users.sikaew-kongchang.app';
+  function toEmail(login) { var t = String(login || '').trim(); return /@/.test(t) ? t.toLowerCase() : t.toLowerCase() + '@' + USER_DOMAIN; }
+  function loginName(email) { var e = String(email || ''); return e.slice(-USER_DOMAIN.length - 1) === '@' + USER_DOMAIN ? e.slice(0, -USER_DOMAIN.length - 1) : e; }
+  cloud.loginName = loginName;
+  // เรียก Edge Function staff-user (ผู้ดูแลระบบสร้าง/เปลี่ยนรหัส/ลบบัญชีชื่อผู้ใช้)
+  function staffUser(body) {
+    return sb.functions.invoke('staff-user', { body: body }).then(function (r) {
+      var res = r.data || {};
+      if (r.error && !res.message) return { ok: false, missing: /not found|404|failed to send|fetch/i.test(String(r.error.message || r.error)), message: String(r.error.message || r.error) };
+      return res;
+    }, function (err) { return { ok: false, missing: true, message: String(err && err.message || err) }; });
+  }
+  // ยังไม่ได้ติดตั้ง Edge Function: สร้างบัญชีจากเบราว์เซอร์ผู้ดูแล (ต้องปิด "Confirm email" ใน Supabase)
+  function signUpWithoutSession(email, password, meta) {
+    var tmp = window.supabase.createClient(cfg.url, cfg.key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'sk-signup-tmp' } });
+    return tmp.auth.signUp({ email: email, password: password, options: { data: meta } }).then(function (r) {
+      if (r.error) return { ok: false, message: r.error.message };
+      return { ok: true, needsConfirm: !(r.data && r.data.session) };
+    });
+  }
 
   function loginForm() {
     ui.formModal({
       title: 'เข้าสู่ระบบคลาวด์', icon: 'cloud', size: 'sm',
       subtitle: 'บันทึกข้อมูลไว้บนฐานข้อมูลกลาง ใช้งานร่วมกันได้ทุกเครื่อง',
-      intro: '<p class="mb-3 font-body-sm text-body-sm text-on-surface-variant">ใช้อีเมลที่ผู้ดูแลระบบเพิ่มไว้ในรายชื่อเจ้าหน้าที่ ครั้งแรกให้กด <b>สมัครใช้งาน</b> แล้วยืนยันอีเมล</p>',
+      intro: '<p class="mb-3 font-body-sm text-body-sm text-on-surface-variant">ใช้ <b>ชื่อผู้ใช้และรหัสผ่าน</b> ที่ผู้ดูแลระบบสร้างให้ — ไม่ต้องใช้อีเมล (บัญชีเดิมที่เป็นอีเมลยังเข้าด้วยอีเมลได้)</p>',
       fields: [
-        { name: 'email', label: 'อีเมล', type: 'email', required: true, span: 2 },
-        { name: 'password', label: 'รหัสผ่าน', type: 'password', required: true, span: 2, help: 'อย่างน้อย 8 ตัวอักษร' }
+        { name: 'email', label: 'ชื่อผู้ใช้ (หรืออีเมล)', required: true, span: 2, placeholder: 'เช่น somchai' },
+        { name: 'password', label: 'รหัสผ่าน', type: 'password', required: true, span: 2 }
       ],
       submitLabel: 'เข้าสู่ระบบ', submitIcon: 'login',
       extraActions: [
@@ -343,9 +364,9 @@
         { label: 'ลืมรหัสผ่าน', icon: 'key', onClick: function (m) { authAction(m, 'reset'); } }
       ],
       onSubmit: function (v, m) {
-        return sb.auth.signInWithPassword({ email: v.email, password: v.password }).then(function (r) {
+        return sb.auth.signInWithPassword({ email: toEmail(v.email), password: v.password }).then(function (r) {
           if (r.error) {
-            ui.toast(/confirm/i.test(r.error.message) ? 'ยังไม่ได้ยืนยันอีเมล — เปิดลิงก์ในอีเมลก่อน' : 'เข้าสู่ระบบไม่สำเร็จ: ' + r.error.message, 'error');
+            ui.toast(/confirm/i.test(r.error.message) ? 'บัญชียังไม่ได้ยืนยัน — แจ้งผู้ดูแลระบบ' : /invalid/i.test(r.error.message) ? 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' : 'เข้าสู่ระบบไม่สำเร็จ: ' + r.error.message, 'error');
             return true;
           }
           ui.toast('เข้าสู่ระบบแล้ว กำลังโหลดข้อมูลจากคลาวด์...', 'success');
@@ -357,6 +378,7 @@
   function authAction(m, kind) {
     var form = m.el.querySelector('form'), email = form.elements.email.value.trim(), pw = form.elements.password.value;
     if (!email) { ui.toast('กรอกอีเมลก่อน', 'error'); return; }
+    if (!/@/.test(email)) { ui.toast('สมัคร/ลืมรหัสผ่านด้วยตัวเองใช้ได้กับอีเมลเท่านั้น — บัญชีชื่อผู้ใช้ให้ผู้ดูแลระบบสร้างหรือตั้งรหัสใหม่ให้', 'error'); return; }
     if (kind === 'reset') {
       sb.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl() }).then(function (r) {
         ui.toast(r.error ? 'ส่งอีเมลไม่สำเร็จ: ' + r.error.message : 'ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลแล้ว', r.error ? 'error' : 'success');
@@ -392,7 +414,7 @@
     if (!cloud.user) return loginForm();
     var st = STATUS[cloud.status] || STATUS.off;
     var body = '<div class="flex flex-col gap-3">' +
-      '<div class="p-3 rounded-lg bg-surface-container-low"><div class="font-label-md text-label-md font-semibold">' + esc(cloud.user.email) + '</div>' +
+      '<div class="p-3 rounded-lg bg-surface-container-low"><div class="font-label-md text-label-md font-semibold">' + esc(loginName(cloud.user.email)) + '</div>' +
       '<div class="font-body-sm text-body-sm text-on-surface-variant">' + (cloud.staff ? (cloud.staff.role === 'admin' ? 'ผู้ดูแลระบบ' : 'เจ้าหน้าที่') + (cloud.staff.name ? ' • ' + esc(cloud.staff.name) : '') : 'ยังไม่ได้รับสิทธิ์') + '</div></div>' +
       '<div class="flex items-start gap-2 ' + st[2].replace('animate-pulse', '') + '"><span class="material-symbols-outlined">' + st[0] + '</span><span>' + esc(st[1]) +
       (cloud.statusDetail ? '<br><small class="text-on-surface-variant">' + esc(cloud.statusDetail) + '</small>' : '') +
@@ -437,35 +459,73 @@
       actions: [{ label: 'เพิ่มเจ้าหน้าที่', icon: 'person_add', kind: 'primary', onClick: function () { addStaff(); } }] });
     function load() {
       sb.from('staff').select('email,name,role,created_at').order('created_at').then(check).then(function (list) {
-        m.body.innerHTML = '<p class="mb-3 font-body-sm text-body-sm text-on-surface-variant">เจ้าหน้าที่ใช้อีเมลในรายชื่อนี้กด "สมัครใช้งาน" ในหน้าเข้าสู่ระบบ แล้วยืนยันอีเมลก่อนใช้งาน</p>' +
+        m.body.innerHTML = '<p class="mb-3 font-body-sm text-body-sm text-on-surface-variant">กด <b>เพิ่มเจ้าหน้าที่</b> เพื่อสร้างบัญชีด้วยชื่อผู้ใช้ + รหัสผ่าน แล้วแจ้งให้เจ้าหน้าที่ใช้เข้าสู่ระบบได้ทันที (ไม่ต้องใช้อีเมล)</p>' +
           '<div class="divide-y divide-surface-container">' + list.map(function (s) {
             return '<div class="flex items-center gap-3 py-2"><span class="material-symbols-outlined text-primary">' + (s.role === 'admin' ? 'admin_panel_settings' : 'person') + '</span>' +
-              '<div class="min-w-0 flex-1"><div class="font-label-md text-label-md truncate">' + esc(s.email) + '</div><div class="font-body-sm text-body-sm text-on-surface-variant">' + esc(s.name || '-') + ' • ' + (s.role === 'admin' ? 'ผู้ดูแลระบบ' : 'เจ้าหน้าที่') + '</div></div>' +
-              (s.email === String(cloud.user.email).toLowerCase() ? '' : '<button type="button" data-del="' + esc(s.email) + '" class="p-1.5 rounded text-error hover:bg-error-container" aria-label="ลบ ' + esc(s.email) + '"><span class="material-symbols-outlined">delete</span></button>') + '</div>';
+              '<div class="min-w-0 flex-1"><div class="font-label-md text-label-md truncate">' + esc(loginName(s.email)) + '</div><div class="font-body-sm text-body-sm text-on-surface-variant">' + esc(s.name || '-') + ' • ' + (s.role === 'admin' ? 'ผู้ดูแลระบบ' : 'เจ้าหน้าที่') + '</div></div>' +
+              (loginName(s.email) !== s.email ? '<button type="button" data-pw="' + esc(s.email) + '" class="p-1.5 rounded text-primary hover:bg-surface-container" title="ตั้งรหัสผ่านใหม่" aria-label="ตั้งรหัสผ่านใหม่ ' + esc(loginName(s.email)) + '"><span class="material-symbols-outlined">key</span></button>' : '') +
+              (s.email === String(cloud.user.email).toLowerCase() ? '' : '<button type="button" data-del="' + esc(s.email) + '" class="p-1.5 rounded text-error hover:bg-error-container" aria-label="ลบ ' + esc(loginName(s.email)) + '"><span class="material-symbols-outlined">delete</span></button>') + '</div>';
           }).join('') + '</div>';
       }).catch(function (err) { m.body.innerHTML = '<p class="text-error">' + esc(errText(err)) + '</p>'; });
     }
     m.body.addEventListener('click', function (e) {
+      var pw = e.target.closest('[data-pw]');
+      if (pw) {
+        ui.formModal({ title: 'ตั้งรหัสผ่านใหม่ให้ ' + loginName(pw.dataset.pw), icon: 'key', size: 'sm',
+          fields: [{ name: 'password', label: 'รหัสผ่านใหม่', type: 'password', required: true, span: 2, help: 'อย่างน้อย 6 ตัวอักษร' }],
+          onSubmit: function (v) {
+            return staffUser({ action: 'password', username: loginName(pw.dataset.pw), password: v.password }).then(function (r) {
+              if (!r.ok) { ui.toast(r.missing ? 'ยังไม่ได้ติดตั้ง Edge Function "staff-user" ใน Supabase' : 'ตั้งรหัสไม่สำเร็จ: ' + r.message, 'error'); return true; }
+              ui.toast('ตั้งรหัสผ่านใหม่แล้ว', 'success');
+            });
+          } });
+        return;
+      }
       var b = e.target.closest('[data-del]');
       if (!b) return;
-      ui.confirm('ลบสิทธิ์ของ ' + b.dataset.del + ' ?', 'ลบ', 'danger').then(function (ok) {
+      ui.confirm('ลบบัญชี/สิทธิ์ของ ' + loginName(b.dataset.del) + ' ?', 'ลบ', 'danger').then(function (ok) {
         if (!ok) return;
-        sb.from('staff').delete().eq('email', b.dataset.del).then(check).then(load, function (err) { ui.toast(errText(err), 'error'); });
+        var isUser = loginName(b.dataset.del) !== b.dataset.del;
+        (isUser ? staffUser({ action: 'delete', username: loginName(b.dataset.del) }) : Promise.resolve({ ok: false, missing: true })).then(function (r) {
+          if (r.ok) return load();
+          // บัญชีอีเมล หรือยังไม่มี Edge Function: ลบสิทธิ์ออกจากรายชื่อ (เข้าใช้คลาวด์ไม่ได้อีก)
+          return sb.from('staff').delete().eq('email', b.dataset.del).then(check).then(load);
+        }).catch(function (err) { ui.toast(errText(err), 'error'); });
       });
     });
     function addStaff() {
       ui.formModal({
         title: 'เพิ่มเจ้าหน้าที่', icon: 'person_add', size: 'sm',
         fields: [
-          { name: 'email', label: 'อีเมล', type: 'email', required: true, span: 2 },
+          { name: 'username', label: 'ชื่อผู้ใช้ (ภาษาอังกฤษ/ตัวเลข)', required: true, span: 2, placeholder: 'เช่น somchai', help: 'ใช้ได้ a-z 0-9 . _ - ยาว 3-32 ตัว (หรือใส่อีเมลเพื่อให้สมัครเองแบบเดิม)' },
+          { name: 'password', label: 'รหัสผ่าน', type: 'password', span: 2, help: 'อย่างน้อย 6 ตัวอักษร (ไม่ต้องกรอกถ้าใส่อีเมล)' },
           { name: 'name', label: 'ชื่อ - ตำแหน่ง', span: 2 },
           { name: 'role', label: 'สิทธิ์', type: 'select', options: [['staff', 'เจ้าหน้าที่ (อ่าน/บันทึกข้อมูล)'], ['admin', 'ผู้ดูแลระบบ (+ จัดการรายชื่อ)']], span: 2 }
         ],
         onSubmit: function (v) {
-          return sb.from('staff').insert({ email: v.email.toLowerCase(), name: v.name, role: v.role }).then(function (r) {
-            if (r.error) { ui.toast('เพิ่มไม่สำเร็จ: ' + r.error.message, 'error'); return true; }
-            ui.toast('เพิ่ม ' + v.email + ' แล้ว', 'success'); load();
-          });
+          var login = String(v.username || '').trim().toLowerCase();
+          if (/@/.test(login)) {
+            return sb.from('staff').insert({ email: login, name: v.name, role: v.role }).then(function (r) {
+              if (r.error) { ui.toast('เพิ่มไม่สำเร็จ: ' + r.error.message, 'error'); return true; }
+              ui.toast('เพิ่ม ' + login + ' แล้ว — ให้เจ้าหน้าที่กด "สมัครใช้งาน" ด้วยอีเมลนี้', 'success'); load();
+            });
+          }
+          if (!/^[a-z0-9._-]{3,32}$/.test(login)) { ui.toast('ชื่อผู้ใช้ใช้ได้เฉพาะ a-z 0-9 . _ - ยาว 3-32 ตัว', 'error'); return true; }
+          if (String(v.password || '').length < 6) { ui.toast('รหัสผ่านอย่างน้อย 6 ตัวอักษร', 'error'); return true; }
+          return staffUser({ action: 'create', username: login, password: v.password, name: v.name, role: v.role }).then(function (r) {
+            if (r.ok) return r;
+            if (!r.missing) return r;
+            // ยังไม่มี Edge Function: เพิ่มรายชื่อแล้วสร้างบัญชีจากเบราว์เซอร์นี้
+            var email = toEmail(login);
+            return sb.from('staff').upsert({ email: email, name: v.name, role: v.role }).then(check).then(function () {
+              return signUpWithoutSession(email, v.password, { full_name: v.name, username: login });
+            });
+          }).then(function (r) {
+            if (!r.ok) { ui.toast('สร้างบัญชีไม่สำเร็จ: ' + r.message, 'error'); return true; }
+            if (r.needsConfirm) ui.toast('สร้างบัญชีแล้ว แต่ Supabase ยังเปิด "Confirm email" อยู่ — ปิดที่ Authentication › Sign In / Providers › Email ก่อน บัญชีนี้จึงเข้าใช้ได้', 'error');
+            else ui.toast('สร้างบัญชี ' + login + ' แล้ว — เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่านนี้ได้ทันที', 'success');
+            load();
+          }).catch(function (err) { ui.toast(errText(err), 'error'); return true; });
         }
       });
     }

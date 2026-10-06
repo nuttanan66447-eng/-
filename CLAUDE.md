@@ -15,10 +15,11 @@
 - หน้าหลัก 5 หน้า: `index.html`, `projects.html`, `progress.html` (งานก่อสร้างและเอกสาร = ติดตามความก้าวหน้า + ศูนย์จัดทำเอกสารช่าง ในหน้าเดียว ใช้ `assets/pages/progress.js` + `documents.js`), `project-docs.html` (เอกสารโครงการ: เลือกหมู่บ้าน/โครงการ → ปุ่มเอกสารทุกแบบ + ประวัติเอกสารของโครงการ, `assets/pages/project-docs.js`), `disbursement.html` + สคริปต์ใน `assets/` และ `assets/pages/`
   - `project.html?id=` = หน้าข้อมูลโครงการแบบละเอียด (กดโครงการที่ใดก็มาหน้านี้ แทนหน้าต่างลอย) `assets/pages/project.js`
   - `documents.html` เหลือแค่ redirect ไป `progress.html#docs-center` (ลิงก์เก่ายังใช้ได้)
-- `system.html` = ระบบ v184 เดิม ใช้เป็นตัวสร้างเอกสารเบื้องหลังเท่านั้น (`system.html?engine=1`) เปิดตรงจะกลับ `index.html`
+- `system.html` = ระบบเดิม (ปัจจุบัน v190) ใช้เป็นตัวสร้างเอกสารเบื้องหลังเท่านั้น (`system.html?engine=1`) เปิดตรงจะกลับ `index.html`
   - สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ
 - `assets/gas/` = ตัวจำลอง Apps Script (Web Worker + IndexedDB) แทน `google.script.run`
 - `assets/doc-engine.js` = ฟอร์ม/พรีวิว/พิมพ์เอกสารโครงการ (สั่งงาน v184 ใน iframe ที่ซ่อนอยู่)
+- เข้าสู่ระบบด้วยชื่อผู้ใช้ + รหัสผ่าน (ไม่ต้องใช้อีเมล): บัญชีเป็นอีเมลภายใน `<ชื่อผู้ใช้>@users.sikaew-kongchang.app` สร้าง/ตั้งรหัส/ลบโดยผู้ดูแลผ่าน Edge Function `supabase/functions/staff-user` (ถ้ายังไม่ deploy เว็บสร้างบัญชีจากเบราว์เซอร์ผู้ดูแล ซึ่งต้องปิด Confirm email)
 - `assets/cloud.js` = เข้าสู่ระบบ Supabase + ซิงก์ SK.db (ตาราง records), ชีท v184 (workbooks), ไฟล์แนบ (Storage `files`) — โครงสร้าง DB ใน `supabase/schema.sql` แก้ DB แล้วต้องอัปเดตไฟล์นี้ด้วย
 - `assets/config.js` = URL + publishable key ของ Supabase
 - `assets/personnel.js` = รายชื่อจริง (ผู้ควบคุมงาน บุคลากร ผู้บริหาร หมู่บ้าน) สร้างจาก `system/src` ด้วย `tools/build_system.py` — ห้ามแก้ด้วยมือ
@@ -28,8 +29,8 @@
 - ประวัติเอกสาร: ทุกเอกสารที่สร้างบันทึกสำเนา HTML ลงทะเบียนเอกสาร (`SK.db.data.documents`, format `html`, `docKey`, `variant` = สัปดาห์/งวด) เปิดซ้ำผ่าน `SK.docEngine.reopen` — สร้างซ้ำ (แบบ+โครงการ+สัปดาห์เดียวกัน) แทนที่ฉบับเดิม ไม่เพิ่มรายการซ้ำ; แสดงชื่อเอกสารภาษาไทย (`SK.flows.docName`) ไม่ใช่ชื่อไฟล์
 - `assets/doc-standard.js` = จัดรูปแบบ "บันทึกข้อความ" ทุกเอกสารตามมาตรฐานการพิมพ์หนังสือราชการ (ขอบ 3/2/2.5/2 ซม., TH Sarabun PSK 16pt, ครุฑ 1.5 ซม., หัว 29pt/35pt, ป้าย 20pt, ย่อหน้า 2.5 ซม., ลงชื่อกึ่งกลางหน้า) — ทำหลังระบบเดิมสร้างเอกสาร ไม่แก้ system/src
 - `assets/theme-v184.css` = ธีมตามระบบเดิม v184 (ผู้ใช้เลือก): ฟอนต์ Prompt, เมนูซ้ายพื้นน้ำเงินไล่สี + ไอคอนกล่องสีไล่เฉด + ลูกศร, การ์ดขาวขอบบาง, แท็บน้ำเงินไล่สี, การ์ดหัวหน้า (`.sk-page-head` ใส่โดย ui.js) มีแถบซ้าย 6px — โหลดหลัง styles.css ทุกหน้า
-- เมนูด้านซ้ายทุกหน้าสร้างจาก `tools/sidebar.py` (แก้เมนูที่ไฟล์นี้แล้วรัน `python3 tools/sidebar.py`) — แบบระบบเดิม: ไอคอน SVG ในกล่องสี, เมนูงานเอกสารช่าง (รายงานช่าง ตรวจสอบอาคาร ผลทดสอบ ร่าง TOR ราคากลาง ค่า K เบิกค่าตอบแทน ฯลฯ) ลิงก์ไป `project-docs.html?docs=คีย์&menu=ชื่อ` (กรองปุ่มเอกสาร), `?doc=คีย์` เปิดเอกสารทันที, `?tool=duration` เปิดเครื่องมือระบบเดิม (`SK.docEngine.openTool`)
-- หน้าแรก (`index.html` + `assets/pages/dashboard.js`) จัดตามหน้า Dashboard ของระบบเดิม: แท็บ ผู้ควบคุมงาน (โครงการ) / ธุรการกองช่าง (`getAllBuildingInspectionHistories`) / สายทางทางหลวงท้องถิ่น (`getAllLocalRoadEntries`, `?tab=localRoad`)
+- เมนูด้านซ้ายทุกหน้าสร้างจากเมนูของระบบเดิมใน `system/src/Dashboard.html` ด้วย `python3 tools/sidebar.py` (รันใหม่ทุกครั้งที่อัปเดตระบบเดิม) — แต่ละเมนูลิงก์ `index.html?page=<ฟังก์ชัน openXxx ของระบบเดิม>`
+- หน้าแรก/หน้าเมนู (`index.html` + `assets/pages/app.js`) = หน้าของระบบเดิมจริง (system.html ใน iframe ที่มองเห็น ซ่อนเมนูซ้าย/แถบบนของระบบเดิม) เปิดหน้าตามเมนูด้วยฟังก์ชันของระบบเดิม หน้าตาเหมือนโค้ดทุกหน้า; หน้าเสริมของเว็บ (projects/progress/project-docs/project/disbursement) ยังอยู่แต่ไม่มีในเมนู
 - `assets/thai-date.js` = ปฏิทินภาษาไทย แทน `<input type="date">` ทุกช่องอัตโนมัติ
 - ใช้ข้อมูลจริงเท่านั้น ห้ามใส่ข้อมูล/รายชื่อ/ตัวเลขสมมุติในหน้าเว็บ (โครงการมาจากชีท "ฐานข้อมูลโครงการ" ของระบบเอกสาร)
 - `assets/realdata.js` = ใช้ข้อมูลจริงที่นำเข้าจาก Google Sheet (.xlsx) หรือส่งโครงการตัวอย่างให้ตัวสร้างเอกสารถ้ายังไม่นำเข้า

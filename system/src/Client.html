@@ -2309,6 +2309,82 @@
       schedulePreviewOverflowFlow(area, page);
     }
 
+    function reducePreviewHeaderIndent(cell) {
+      if (!cell || !cell.parentElement) return false;
+      const line = cell.parentElement;
+      const label = line.firstElementChild;
+      if (cell === label || cell.tagName === 'B' || cell.classList.contains('cp-label')) return false;
+      const css = window.getComputedStyle(cell);
+      // ลดระยะในช่องก่อน แล้วค่อยลดช่องว่างระหว่าง label กับข้อความ
+      for (const property of ['text-indent','padding-left','margin-left']) {
+        const value = parseFloat(css.getPropertyValue(property)) || 0;
+        if (value > 0) {
+          cell.style.setProperty(property, Math.max(0,value-4)+'px','important');
+          return true;
+        }
+      }
+      if (cell !== line.children[1]) return false;
+      const lineCss = window.getComputedStyle(line);
+      const gap = Math.max(0,parseFloat(lineCss.columnGap)||0);
+      if (lineCss.display === 'grid') {
+        const columns = lineCss.gridTemplateColumns.split(/\s+/);
+        const firstWidth = parseFloat(columns[0]);
+        // วัดข้อความหัวข้อจริงเพื่อไม่ให้ข้อความที่ถอยซ้ายทับหัวข้อ
+        const labelRange = document.createRange(); labelRange.selectNodeContents(label);
+        const labelWidth = labelRange.getBoundingClientRect().width;
+        const minimum = Math.ceil(labelWidth)+2;
+        if (Number.isFinite(firstWidth) && firstWidth > minimum) {
+          columns[0] = Math.max(minimum,firstWidth-4)+'px';
+          if (columns.length === 2) columns[1] = 'minmax(0,1fr)';
+          line.style.setProperty('grid-template-columns',columns.join(' '),'important');
+          return true;
+        }
+      }
+      if (gap > 2) {
+        line.style.setProperty('column-gap',Math.max(2,gap-4)+'px','important');
+        return true;
+      }
+      return false;
+    }
+
+    // รักษาเซลล์ grid ของหัวบันทึก: ห้าม browser รวมข้อความกับ label เมื่อกดลบที่รอยต่อ
+    function guardPreviewMemoHeaderDeletion(event) {
+      if (!event || event.defaultPrevented || event.isComposing) return;
+      const backward = event.type === 'keydown' ? event.key === 'Backspace' : /^(deleteContentBackward|deleteHardLineBackward|deleteSoftLineBackward)$/.test(event.inputType || '');
+      const forward = event.type === 'keydown' ? event.key === 'Delete' : /^(deleteContentForward|deleteHardLineForward|deleteSoftLineForward)$/.test(event.inputType || '');
+      if (!backward && !forward) return;
+      const area = getCompensationEditingAreaFromEvent(event);
+      const selection = window.getSelection();
+      if (!area || !selection || !selection.rangeCount) return;
+      const range = selection.getRangeAt(0);
+      const cellFor = function(node) {
+        const el = node && (node.nodeType === 1 ? node : node.parentElement);
+        const line = el && el.closest ? el.closest('.wr-line,.memo-line,.memo-subject,.memo-inline-date-group,.fee-line,.test-line,.test-subject,.test-letter-row,.cp-row') : null;
+        if (!line || !area.contains(line)) return null;
+        let cell = el;
+        while (cell && cell.parentElement !== line) cell = cell.parentElement;
+        return cell && cell.parentElement === line ? cell : null;
+      };
+      const startCell = cellFor(range.startContainer);
+      const endCell = cellFor(range.endContainer);
+      // การเลือกข้ามช่องอาจลบโครง grid ด้วย ให้ลบภายในช่องทีละช่อง
+      if (!range.collapsed) {
+        if ((startCell || endCell) && startCell !== endCell) event.preventDefault();
+        return;
+      }
+      if (!startCell) return;
+      const fragment = document.createRange();
+      fragment.selectNodeContents(startCell);
+      if (backward) fragment.setEnd(range.startContainer, range.startOffset);
+      else fragment.setStart(range.endContainer, range.endOffset);
+      if (!fragment.toString().length && !fragment.cloneContents().querySelector('img,br,hr')) {
+        event.preventDefault();
+        if (backward) reducePreviewHeaderIndent(startCell);
+      }
+    }
+    document.addEventListener('keydown', guardPreviewMemoHeaderDeletion, true);
+    document.addEventListener('beforeinput', guardPreviewMemoHeaderDeletion, true);
+
     function handlePreviewBackspacePull(event) {
       if (event && event.defaultPrevented) return;
       const isBackspaceKey = event && event.type === 'keydown' && event.key === 'Backspace' && !event.isComposing && !event.ctrlKey && !event.metaKey && !event.altKey;
@@ -4426,6 +4502,7 @@
       if(!options.fromCache)saveDashboardSessionCache(payload);
 
       allRows = Array.isArray(payload.rows) ? payload.rows : [];
+      renderProjectNotifications();
       systemOptions = Array.isArray(payload.systemOptions) ? payload.systemOptions : [];
       applyManagedAutocompleteOptions();
       applyAllManagedSelectOptions();
@@ -7772,22 +7849,108 @@
         .deleteMapBoundary(entryPasswordCache || '223344', id, withAudit({ boundaryId: id }));
     }
 
+    const hiddenMapWorkTypes = new Set();
+    let projectNoticeItems = [];
+    let projectNoticeRead = new Set();
+    try { projectNoticeRead = new Set(JSON.parse(localStorage.getItem('srikeaw-project-notices-read') || '[]')); } catch (error) {}
+    function projectMapStatus(row) {
+      if (isCompleted(row.status) || String(row.acceptanceDate || '').trim()) return {key:'done', color:'#244398', label:'แล้วเสร็จ'};
+      if (/ล่าช้า|เกินกำหนด/.test(row.status || '')) return {key:'late', color:'#c51b26', label:'ล่าช้า / เกินกำหนด'};
+      const end = parseThaiOrIsoDate(getDetailFieldValue(row, ['สิ้นสุดสัญญา','วันสิ้นสุดสัญญา','วันกำหนดแล้วเสร็จ','ครบกำหนดสัญญา']));
+      if (end && end.getTime() < new Date(new Date().toLocaleDateString('en-US', {timeZone:'Asia/Bangkok'})).getTime()) return {key:'late', color:'#c51b26', label:'ล่าช้า / เกินกำหนด'};
+      return {key:'active', color:'#ff681d', label:'กำลังดำเนินการ / รอตรวจ'};
+    }
+    function projectWorkIcon(type) {
+      const paths = /ถนน|ทาง/.test(type) ? '<path d="M7 3v18M17 3v18M12 3v4m0 3v4m0 3v4"/>'
+        : /ท่อ|ระบาย/.test(type) ? '<path d="M4 4h16M4 20h16M8 4v5h8V4M8 20v-5h8v5M4 12h16"/>'
+        : /ไฟฟ้า/.test(type) ? '<path d="m13 2-8 12h6l-1 8 9-13h-6z"/>'
+        : /อาคาร/.test(type) ? '<path d="M5 21V4h14v17M9 8h1m4 0h1M9 12h1m4 0h1M10 21v-5h4v5"/>'
+        : /ประปา/.test(type) ? '<path d="M12 2C9 7 5 11 5 15a7 7 0 0 0 14 0c0-4-4-8-7-13z"/>'
+        : '<path d="m3 11 9-8 9 8M6 9v12h12V9M10 21v-7h4v7"/>';
+      return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+paths+'</svg>';
+    }
+    function toggleProjectMapType(type) {
+      if (hiddenMapWorkTypes.has(type)) hiddenMapWorkTypes.delete(type); else hiddenMapWorkTypes.add(type);
+      renderMap();
+    }
+    function renderProjectMapControls(rows, visibleRows) {
+      const host = document.getElementById('projectMapTypeButtons');
+      if (host) {
+        host.replaceChildren();
+        const counts = new Map();
+        rows.forEach(row => { const type = String(row.type || 'อื่น ๆ'); counts.set(type, (counts.get(type)||0)+1); });
+        counts.forEach((count,type) => {
+          const button = document.createElement('button'); button.type='button';
+          const active = !hiddenMapWorkTypes.has(type);
+          button.className='map-type-button'+(active?'':' disabled-type');
+          button.setAttribute('aria-pressed',String(active));
+          button.innerHTML=projectWorkIcon(type)+'<span>'+escapeHtml(type)+' ('+count+')</span>';
+          button.onclick=()=>toggleProjectMapType(type); host.appendChild(button);
+        });
+      }
+      const legend=document.getElementById('projectMapStatusLegend');
+      if (legend) legend.innerHTML='<strong>สีหมุดแสดงสถานะโครงการ</strong>'+[
+        {key:'done',color:'#244398',label:'แล้วเสร็จ'},
+        {key:'active',color:'#ff681d',label:'กำลังดำเนินการ / รอตรวจ'},
+        {key:'late',color:'#c51b26',label:'ล่าช้า / เกินกำหนด'}
+      ].map(status=>'<span><i style="background:'+status.color+'"></i>'+status.label+' ('+visibleRows.filter(row=>projectMapStatus(row).key===status.key).length+')</span>').join('');
+    }
+    function buildProjectNoticeItems(rows) {
+      const today=new Date(new Date().toLocaleDateString('en-US',{timeZone:'Asia/Bangkok'}));
+      const items=[];
+      rows.forEach(row=>{
+        if (isCompleted(row.status) || String(row.acceptanceDate||'').trim()) return;
+        const end=parseThaiOrIsoDate(getDetailFieldValue(row,['สิ้นสุดสัญญา','วันสิ้นสุดสัญญา','วันกำหนดแล้วเสร็จ','ครบกำหนดสัญญา']));
+        const days=end ? Math.round((end-today)/86400000) : null;
+        if (days!==null && days<=7) items.push({id:row.rowNumber+':contract:'+end.getTime(),rowNumber:row.rowNumber,projectName:row.projectName,title:days<0?'เกินกำหนดสัญญา '+Math.abs(days)+' วัน':days===0?'ครบกำหนดสัญญาวันนี้':'ครบกำหนดสัญญาใน '+days+' วัน',urgent:days<0});
+        if (/รอตรวจรับ/.test(row.status||'')) items.push({id:row.rowNumber+':inspection',rowNumber:row.rowNumber,projectName:row.projectName,title:'รอตรวจรับงาน — ยังไม่มีวันตรวจรับ',urgent:false});
+        if (/รอผลทดสอบ/.test(row.status||'')) items.push({id:row.rowNumber+':test',rowNumber:row.rowNumber,projectName:row.projectName,title:'รอผลทดสอบวัสดุ',urgent:false});
+      });
+      return items.sort((a,b)=>Number(b.urgent)-Number(a.urgent));
+    }
+    function renderProjectNotifications() {
+      projectNoticeItems=buildProjectNoticeItems(allRows);
+      const badge=document.getElementById('projectNoticeBadge');
+      const unread=projectNoticeItems.filter(item=>!projectNoticeRead.has(item.id)).length;
+      if(badge){badge.textContent=String(unread);badge.hidden=!unread;}
+      const host=document.getElementById('projectNoticeList'); if(!host)return;
+      host.replaceChildren();
+      if(!projectNoticeItems.length){host.textContent='ไม่มีรายการแจ้งเตือนจากข้อมูลโครงการปัจจุบัน';return;}
+      projectNoticeItems.forEach(item=>{
+        const button=document.createElement('button');button.type='button';button.className='project-notice-item'+(projectNoticeRead.has(item.id)?' read':'')+(item.urgent?' urgent':'');
+        button.innerHTML='<strong>'+escapeHtml(item.title)+'</strong><span>'+escapeHtml(item.projectName)+'</span>';
+        button.onclick=()=>{projectNoticeRead.add(item.id);saveProjectNoticeRead();renderProjectNotifications();document.getElementById('projectNoticePanel').hidden=true;document.getElementById('projectNoticeButton').setAttribute('aria-expanded','false');openDetails(item.rowNumber);};
+        host.appendChild(button);
+      });
+    }
+    function saveProjectNoticeRead(){try{localStorage.setItem('srikeaw-project-notices-read',JSON.stringify([...projectNoticeRead].slice(-1000)));}catch(error){}}
+    function toggleProjectNotifications(){const panel=document.getElementById('projectNoticePanel');panel.hidden=!panel.hidden;document.getElementById('projectNoticeButton').setAttribute('aria-expanded',String(!panel.hidden));renderProjectNotifications();}
+    function markAllProjectNotificationsRead(){projectNoticeItems.forEach(item=>projectNoticeRead.add(item.id));saveProjectNoticeRead();renderProjectNotifications();}
+    document.addEventListener('click',event=>{if(!event.target.closest('.project-notice-wrap')){const panel=document.getElementById('projectNoticePanel');if(panel)panel.hidden=true;document.getElementById('projectNoticeButton')?.setAttribute('aria-expanded','false');}});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'){const panel=document.getElementById('projectNoticePanel');if(panel)panel.hidden=true;document.getElementById('projectNoticeButton')?.setAttribute('aria-expanded','false');}});
+
     function renderMap() {
       if (currentDashboardPage !== 'supervisor') return;
       markerLayer.clearLayers();
       markerByRow.clear();
 
-      const points = filteredRows.filter(r =>
+      const locatedRows = filteredRows.filter(r =>
         r.hasLocation && Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng))
       );
 
+      const points = locatedRows.filter(row => !hiddenMapWorkTypes.has(String(row.type || 'อื่น ๆ')));
+      renderProjectMapControls(locatedRows, points);
+      renderProjectNotifications();
       points.forEach(row => {
-        const marker = L.marker([Number(row.lat), Number(row.lng)]);
+        const status = projectMapStatus(row);
+        const icon = L.divIcon({className:'project-work-marker', html:'<div style="background:'+status.color+'">'+projectWorkIcon(String(row.type || 'อื่น ๆ'))+'</div>',iconSize:[40,40],iconAnchor:[20,20],popupAnchor:[0,-20]});
+        const marker = L.marker([Number(row.lat), Number(row.lng)], {icon:icon, title:String(row.projectName || '')+' • '+String(row.type || 'อื่น ๆ')+' • '+status.label});
         marker.options.villageNo = String(row.villageNo || extractVillageNumber(row.villageLabel) || '').trim();
         marker.bindPopup(`
           <div style="min-width:220px">
             <div class="popup-title">${escapeHtml(row.projectName)}</div>
             <div class="popup-meta">${escapeHtml(row.villageLabel || '-')}</div>
+            <div class="popup-meta">ประเภท: ${escapeHtml(row.type || 'อื่น ๆ')} • สถานะ: ${escapeHtml(row.status || '-')}</div>
             <div class="popup-meta">ความก้าวหน้า: ${formatProjectProgressPercent(row.progress)}%</div>
             <div class="popup-meta">งบประเภท: ${escapeHtml(getBudgetText(row) || '-')}</div>
             <div class="popup-meta">งบประมาณประจำปี: ${isMeaningfulValue(row.year) ? escapeHtml(row.year) : '-'}</div>
@@ -24810,12 +24973,42 @@
       document.getElementById('memoPreviewWrap')?.classList.add('open','contractor-notice-preview-open');
     }
 
+    function refreshWorkReductionInlineDatePreview(area) {
+      const inline = !!document.getElementById('combinedMemoDateInline')?.checked;
+      area.querySelectorAll('.wr-memo-page').forEach(function(page) {
+        const line = Array.from(page.querySelectorAll('.wr-line')).find(function(node) {
+          return node.firstElementChild && node.firstElementChild.textContent.trim() === 'ที่';
+        });
+        if (!line) return;
+        const separate = page.querySelector('.wr-separated-date-line');
+        if (inline) {
+          if (separate) {
+            while (separate.firstChild) line.appendChild(separate.firstChild);
+            separate.remove();
+          }
+          line.style.setProperty('grid-template-columns','20mm minmax(0,1fr) 16mm minmax(0,1fr)','important');
+        } else {
+          if (!separate && line.children.length === 4) {
+            const dateLine = document.createElement('div');
+            dateLine.className = 'wr-line wr-separated-date-line';
+            dateLine.style.setProperty('grid-template-columns','16mm auto','important');
+            dateLine.style.setProperty('justify-content','end','important');
+            dateLine.appendChild(line.children[2]);
+            dateLine.appendChild(line.children[2]);
+            line.after(dateLine);
+          }
+          line.style.setProperty('grid-template-columns','20mm minmax(0,1fr)','important');
+        }
+      });
+    }
+
     function refreshMemoInlineDatePreview(){
       const area=document.getElementById('memoPrintArea');
       if(!area)return;
+      if(area.classList.contains('work-reduction-area')){refreshWorkReductionInlineDatePreview(area);return;}
       if(area.classList.contains('completion-report-area')){refreshCompletionReportInlineDatePreview();return;}
       if(area.classList.contains('contractor-notice-area')){refreshContractorNoticeInlineDatePreview();return;}
-      refreshEngineerCombinedPreview();
+      if(area.classList.contains('engineer-combined-area')) refreshEngineerCombinedPreview();
     }
 
     function collectEngineerCombinedDataFromForm(row){
@@ -25255,7 +25448,7 @@
       const form=document.getElementById('workReductionForm');
       const projectSelect=document.getElementById('workReductionProjectSelect');
       if(projectSelect) projectSelect.value=String(record.projectId||record.data?.projectRowNumber||'');
-      onWorkReductionProjectChange();
+      onWorkReductionProjectChange(true);
       updateWorkReductionSignerOptions(getSelectedWorkReductionProject());
       const data=record.data||{};
       Object.entries(data).forEach(([key,value])=>{
@@ -25272,6 +25465,19 @@
       renderWorkReductionRows(Array.isArray(data.rows)?data.rows:null);
       updateWorkReductionSummary();
       renderWorkReductionHistoryList(String(record.projectId||''));
+      const row=getSelectedWorkReductionProject();
+      const area=document.getElementById('memoPrintArea');
+      if(area && row){
+        area.className='work-reduction-area';
+        area.removeAttribute('style');
+        area.innerHTML=String(record.html||'').trim() || buildWorkReductionHtml(row,data);
+        convertElementDigitsToThai(area);
+        const wrap=document.getElementById('memoPreviewWrap');
+        if(wrap) wrap.classList.add('open');
+        const inline=document.getElementById('combinedMemoDateInline');
+        const numberLine=Array.from(area.querySelectorAll('.wr-line')).find(node=>node.firstElementChild?.textContent.trim()==='ที่');
+        if(inline) inline.checked=!!numberLine && numberLine.children.length===4;
+      }
       document.getElementById('workReductionMemoDate')?.focus({preventScroll:true});
     }
     async function deleteWorkReductionHistory(id){
@@ -25292,7 +25498,7 @@
       setWorkReductionHistoryStore(list);
       await loadWorkReductionHistories(projectId);
     }
-    function onWorkReductionProjectChange(){
+    function onWorkReductionProjectChange(restoringHistory=false){
       const row=getSelectedWorkReductionProject();
       const s1=document.getElementById('workReductionSupervisor'),s2=document.getElementById('workReductionSupervisor2');
       if(row&&s1){
@@ -25312,8 +25518,10 @@
         if(signerList)signerList.innerHTML='<div class="project-required-note">เลือกโครงการก่อน ระบบจึงจะโหลดรายชื่อผู้ลงนาม</div>';
       }
       fillWorkReductionProjectDefaults(row);
-      loadWorkReductionHistories(String(row?.rowNumber||''));
-      if(row&&(window.google&&google.script&&google.script.run)){
+      if(!restoringHistory) loadWorkReductionHistories(String(row?.rowNumber||''));
+      if(restoringHistory){
+        // ประวัติจะคืนตารางเอง ไม่โหลดตารางล่าสุดมาทับหลังเปิดแก้ไข
+      }else if(row&&(window.google&&google.script&&google.script.run)){
         refreshEngineerCombinedHistories(String(row.rowNumber||'')).then(()=>renderWorkReductionRows()).catch(()=>renderWorkReductionRows());
       }else{
         renderWorkReductionRows();
@@ -30758,7 +30966,7 @@
         .wr-page *{font-size:20px!important;line-height:1.08!important;}
         .wr-garuda-wrap{min-height:22mm!important;margin-bottom:0!important;text-align:left!important;}.wr-garuda-wrap .memo-garuda-real,.wr-garuda-wrap .memo-garuda-svg,.wr-garuda-wrap .memo-garuda{width:24mm!important;max-width:24mm!important;height:auto!important;display:block!important;}
         .wr-memo-title,.wr-memo-title *{text-align:center!important;font-weight:700!important;font-size:24px!important;margin:-6mm 0 1mm!important;line-height:1!important;}
-        .wr-line{display:grid!important;grid-template-columns:20mm 1fr 16mm 1fr!important;gap:1mm 2mm!important;margin:.35mm 0!important;align-items:start!important;}.wr-line.one{grid-template-columns:20mm 1fr!important;}.wr-line.dept{grid-template-columns:28mm 1fr!important;}.wr-line b{font-weight:700!important;white-space:nowrap!important;}.wr-subject{border-bottom:1px solid #111827!important;padding-bottom:1mm!important;margin:1mm 0 1.4mm!important;}
+        .wr-line{display:grid!important;grid-template-columns:20mm 1fr 16mm 1fr!important;gap:1mm 2mm!important;margin:.35mm 0!important;align-items:start!important;}.wr-line.one{grid-template-columns:20mm 1fr!important;}.wr-line.dept{grid-template-columns:20mm 1fr!important;}.wr-line b{font-weight:700!important;white-space:nowrap!important;}.wr-subject{border-bottom:1px solid #111827!important;padding-bottom:1mm!important;margin:1mm 0 1.4mm!important;}
         .wr-section{font-weight:700!important;margin:2mm 0 .6mm 12mm!important;}.wr-p{text-indent:12mm!important;text-align:justify!important;margin:.55mm 0!important;line-height:1.08!important;}.wr-p.no-indent{text-indent:0!important;}.wr-list{margin:.7mm 0 .7mm 17mm!important;}.wr-law-title{font-weight:700!important;margin:1.4mm 0 .5mm!important;}
         .wr-sign-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:3mm!important;text-align:center!important;align-items:start!important;margin-top:6mm!important;}.wr-sign-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4mm!important;}.wr-sign-grid.three .wr-sign-box:nth-child(3){grid-column:2 / 3!important;margin-top:4mm!important;}.wr-sign-box{min-height:18mm!important;text-align:center!important;line-height:1.12!important;min-width:0!important;}.wr-sign-line{display:flex!important;align-items:center!important;gap:1mm!important;white-space:nowrap!important;font-size:20px!important;line-height:1.03!important;overflow:visible!important;}.wr-sign-line *{font-size:20px!important;line-height:1.03!important;}.wr-sign-line .wr-sign-dots{flex:1 1 auto!important;min-width:8mm!important;border-bottom:0!important;height:.95em!important;line-height:.95em!important;overflow:hidden!important;white-space:nowrap!important;font-weight:400!important;}.wr-sign-line .wr-sign-dots::before{content:"................................................................................................"!important;}.wr-sign-name-row{display:grid!important;grid-template-columns:max-content minmax(8mm,1fr) max-content!important;gap:1mm!important;align-items:start!important;white-space:nowrap!important;}.wr-sign-name-row .wr-sign-name{text-align:center!important;}.wr-sign-name-row .wr-sign-spacer{visibility:hidden!important;}.wr-sign-position{text-align:center!important;}
         .wr-comment{margin-top:1.6mm!important;break-inside:avoid!important;page-break-inside:avoid!important;}.wr-comment-title{font-weight:400!important;margin-bottom:1mm!important;}.wr-dotted{height:5.2mm!important;line-height:5.2mm!important;border-bottom:0!important;margin-bottom:.5mm!important;overflow:hidden!important;white-space:nowrap!important;font-weight:400!important;}.wr-dotted::before{content:"................................................................................................................................................................................"!important;}.wr-approval-sign{width:82mm!important;margin:2mm 0 0 auto!important;text-align:center!important;line-height:1.12!important;}

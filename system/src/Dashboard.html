@@ -65,7 +65,7 @@
     <main>
       <section class="dashboard-commandbar">
         <div class="dashboard-commandbar-title"><span class="dashboard-commandbar-mark">▦</span><div><b>ระบบบริหารโครงการ กองช่าง เทศบาลตำบลสีแก้ว</b><small>ศูนย์ข้อมูลโครงการและเอกสารงานช่าง</small></div></div>
-        <div class="dashboard-commandbar-tools"><span class="dashboard-duty"><i></i> กำลังปฏิบัติราชการ</span><button type="button" data-permission="dashboard" onclick="loadData()">↻ ซิงก์ข้อมูล</button></div>
+        <div class="dashboard-commandbar-tools"><div class="project-notice-wrap"><button type="button" id="projectNoticeButton" aria-label="การแจ้งเตือนโครงการ" aria-expanded="false" aria-controls="projectNoticePanel" onclick="toggleProjectNotifications()">🔔<span id="projectNoticeBadge" hidden></span></button><div id="projectNoticePanel" hidden><div class="project-notice-heading"><strong>การแจ้งเตือนโครงการ</strong><button type="button" onclick="markAllProjectNotificationsRead()">อ่านทั้งหมดแล้ว</button></div><small>จากข้อมูลโครงการล่าสุด • กดรายการเพื่อดูรายละเอียด</small><div id="projectNoticeList"></div></div></div><span class="dashboard-duty"><i></i> กำลังปฏิบัติราชการ</span><button type="button" data-permission="dashboard" onclick="loadData()">↻ ซิงก์ข้อมูล</button></div>
       </section>
       <section class="dashboard-welcome">
         <div><span class="dashboard-welcome-eyebrow">ระบบบริหารโครงการกองช่าง</span><h2>ภาพรวมโครงการเทศบาลตำบลสีแก้ว</h2><p>ติดตามความก้าวหน้า จัดทำเอกสาร และบริหารข้อมูลโครงการในจุดเดียว</p></div>
@@ -440,7 +440,7 @@
             </div>
             <button type="button" class="supervisor-section-toggle-btn" id="supervisorMapToggleBtn" aria-expanded="true" aria-controls="supervisorMapBody" onclick="toggleSupervisorDashboardSection('map')">▾ ปิดแผนที่</button>
           </div>
-          <div class="supervisor-dashboard-toggle-body" id="supervisorMapBody">
+          <div class="supervisor-dashboard-toggle-body" id="supervisorMapBody"><div id="projectMapTypeButtons" class="project-map-type-buttons" aria-label="เปิด–ปิดประเภทงานบนแผนที่"></div><div id="projectMapStatusLegend" class="project-map-status-legend"></div>
           <div class="boundary-panel" id="mapBoundaryPanel">
             <div class="control">
               <label>ชนิดขอบเขต</label>

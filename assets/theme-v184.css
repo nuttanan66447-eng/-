@@ -51,8 +51,8 @@ main.bg-surface { background: #f3f6fc !important; }
 .sk-menu-icon.evaluation { background: linear-gradient(145deg, #e05bd9, #a83ab4); }
 .sk-menu-group[open] > summary .sk-menu-arrow { transform: rotate(180deg); }
 .sk-submenu { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 6px 50px; }
-.sk-submenu button { text-align: left; padding: 7px 10px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: #d9e6f3; }
-.sk-submenu button:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.sk-submenu button, .sk-submenu a { display: block; text-align: left; padding: 7px 10px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: #d9e6f3; }
+.sk-submenu button:hover, .sk-submenu a:hover, .sk-submenu a.is-active { background: rgba(255, 255, 255, .08); color: #fff; }
 .sk-side-user { margin-top: 10px; padding: 12px; border-radius: 16px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); display: flex; flex-direction: column; gap: 10px; }
 .sk-side-user-text { display: flex; flex-direction: column; min-width: 0; }
 .sk-side-user-text b { font-size: 13px; color: #fff; font-weight: 700; }
