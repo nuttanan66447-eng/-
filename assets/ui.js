@@ -414,37 +414,11 @@
     });
   }
 
-  function openProjectDetail(id, onChanged) {
-    var p = SK.db.project(id);
-    if (!p) return toast('ไม่พบโครงการ ' + id, 'error');
-    var row = function (k, v) { return '<div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface-variant">' + k + '</span><span class="font-semibold">' + v + '</span></div>'; };
-    var body =
-      '<div class="flex flex-wrap items-center gap-2 mb-3">' + statusBadge(p) +
-        '<span class="px-2 py-0.5 rounded bg-surface-variant text-primary font-code-sm text-code-sm font-semibold">' + esc(ref.CATEGORIES[p.category].short) + '</span>' +
-        '<span class="font-code-sm text-code-sm text-on-surface-variant">' + esc(p.contractNo) + ' • e-GP: ' + esc(p.egp || '-') + '</span></div>' +
-      '<p class="mb-4 text-on-surface-variant">' + esc(villageName(p.village)) + ' ต.สีแก้ว — ' + esc(p.location || '') + '</p>' +
-      '<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 rounded-lg bg-surface-container-low mb-4">' +
-        row('วงเงินตามสัญญา', money(p.budget) + ' บาท') +
-        row('เบิกจ่ายแล้ว', money(p.disbursed) + ' บาท (' + (p.budget ? Math.round(p.disbursed / p.budget * 100) : 0) + '%)') +
-        row('งวดงาน', p.installment + ' / ' + p.installments) +
-        row('ระยะเวลาสัญญา', dateShort(p.start) + ' – ' + dateShort(p.end)) +
-        row('แหล่งงบประมาณ', esc(ref.SOURCES[p.source])) +
-        row('ผู้รับจ้าง', esc(p.contractor || '-')) +
-      '</div>' +
-      '<div class="mb-1 flex justify-between font-label-md text-label-md"><span>ผลงานจริง ' + p.actual + '%</span><span class="text-on-surface-variant">แผน ' + p.plan + '%</span></div>' +
-      progressBar(p.actual, p.status) +
-      '<p class="mt-3 font-body-sm text-body-sm text-on-surface-variant">ผู้ควบคุมงาน: ' + esc(p.supervisor) + '</p>';
-    modal({
-      title: p.name, subtitle: 'รหัสโครงการ ' + p.id, icon: ref.CATEGORIES[p.category].icon, size: 'lg', body: body,
-      actions: [
-        SK.deleteProject && p.rowNumber ? { label: 'ลบโครงการ', icon: 'delete', kind: 'danger', onClick: function (m) { SK.deleteProject(p).then(function (ok) { if (ok) m.close(); }); } } : null,
-        { label: 'แก้ไขข้อมูล', icon: 'edit', onClick: function (m) { m.close(); SK.ui.openProjectForm(p, onChanged); } },
-        { label: 'เปิดใน Google Maps', icon: 'map', onClick: function () { window.open('https://www.google.com/maps?q=' + p.lat + ',' + p.lng, '_blank', 'noopener'); } },
-        { label: 'ติดตามความก้าวหน้า', kind: 'primary', icon: 'construction', onClick: function () { location.href = 'progress.html?id=' + encodeURIComponent(p.id); } }
-      ]
-    });
+  // กดโครงการ: ไปหน้าข้อมูลโครงการแบบละเอียด (project.html)
+  function openProjectDetail(id) {
+    if (!SK.db.project(id)) return toast('ไม่พบโครงการ ' + id, 'error');
+    location.href = 'project.html?id=' + encodeURIComponent(id);
   }
-
   function projectOptions(filter) {
     return SK.db.data.projects.filter(filter || function () { return true; }).map(function (p) { return [p.id, p.id + ' • ' + p.name]; });
   }

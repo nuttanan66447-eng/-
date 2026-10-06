@@ -478,6 +478,19 @@
     return /ตรวจรับ|ส่งมอบ|ผลทดสอบ/.test(t) ? 'inspection' : /ราคากลาง|ปร\.|TOR/.test(t) ? 'estimate' : 'order';
   }
   function userName() { var u = ui.currentUser ? ui.currentUser() : null; return (u && u.signedIn && u.name) || ''; }
+  // สัปดาห์/งวดของเอกสาร (อ่านจากเอกสารที่สร้าง) ใช้แยกฉบับในประวัติ
+  var TH_DIGITS = '๐๑๒๓๔๕๖๗๘๙';
+  function arabic(s) { return String(s).replace(/[๐-๙]/g, function (d) { return TH_DIGITS.indexOf(d); }); }
+  function variantOf(doc, html) {
+    var text = String(html).replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+    var m = /ประจำสัปดาห์(?:ที่)?\s*([0-9๐-๙]+)/.exec(text) || /สัปดาห์ที่\s*([0-9๐-๙]+)/.exec(text);
+    if (m) return 'สัปดาห์ที่ ' + arabic(m[1]);
+    if (/งวด|ตรวจรับ/.test(doc.title + ' ' + (doc.desc || ''))) {
+      m = /งวดที่\s*([0-9๐-๙]+)/.exec(text);
+      if (m) return 'งวดที่ ' + arabic(m[1]);
+    }
+    return '';
+  }
   function saveHistory(doc, project, html, entryP) {
     if (!SK.db.files || !SK.flows) return Promise.resolve(null);
     var now = new Date(), stamp = now.toISOString().slice(0, 16).replace(/[-:T]/g, '');
@@ -485,11 +498,21 @@
     return Promise.resolve(entryP).then(function (entry) {
       var file = new File([html], name, { type: 'text/html' });
       return SK.db.files.put(file).then(function (fileId) {
+        var variant = entry ? entry.variant : variantOf(doc, html);
+        // เอกสารเดิม (แบบเดียวกัน โครงการเดียวกัน สัปดาห์/งวดเดียวกัน) สร้างซ้ำ: แทนที่ฉบับเดิม ไม่เพิ่มรายการซ้ำ
+        if (!entry) entry = SK.db.data.documents.filter(function (d) {
+          return d.docKey === doc.key && (d.projectId || '') === (project ? project.id : '') && (d.variant || '') === variant;
+        })[0];
         if (entry) {
-          entry.fileId = fileId; entry.fileSize = file.size; entry.edited = true; entry.updatedAt = now.toISOString(); entry.updatedBy = userName();
+          var regenerated = !entryP;
+          entry.fileId = fileId; entry.fileSize = file.size; entry.fileName = name; entry.updatedAt = now.toISOString(); entry.updatedBy = userName();
+          entry.edited = !regenerated;
+          entry.date = now.toISOString().slice(0, 10);
+          var list = SK.db.data.documents, at = list.indexOf(entry);
+          if (at > 0) { list.splice(at, 1); list.unshift(entry); }
         } else {
           entry = {
-            id: 'DOC-' + stamp.slice(2), type: historyType(doc), title: doc.title + (project ? ' — ' + project.name : ''),
+            id: 'DOC-' + stamp.slice(2), type: historyType(doc), variant: variant, title: doc.title + (variant ? ' ' + variant : '') + (project ? ' — ' + project.name : ''),
             detail: doc.desc || '', projectId: project ? project.id : '', status: 'approved', format: 'html', fileId: fileId,
             docKey: doc.key, fileName: name, fileSize: file.size, owner: userName(), date: now.toISOString().slice(0, 10), createdAt: now.toISOString()
           };

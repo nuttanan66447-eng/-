@@ -106,6 +106,61 @@
     }
   }
 
+  // ---------- กราฟสถิติ (ตามตัวกรอง): หมู่บ้าน งบประมาณ สถานะ ปีงบประมาณ ----------
+  // แท่งแนวนอนสีเดียว ป้ายค่าที่ปลายแท่ง ชี้เพื่อดูรายละเอียด คลิกเพื่อกรองตามรายการนั้น
+  function barChart(title, icon, rows, opts) {
+    opts = opts || {};
+    var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+    return '<section class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-sm min-w-0">' +
+      '<h3 class="flex items-center gap-2 font-headline-sm text-headline-sm text-primary font-bold"><span class="material-symbols-outlined">' + icon + '</span>' + title + '</h3>' +
+      (opts.sub ? '<p class="-mt-1 font-body-sm text-body-sm text-on-surface-variant">' + opts.sub + '</p>' : '') +
+      (rows.length ? '<ul class="flex flex-col gap-1.5">' + rows.map(function (r) {
+        var w = r.value ? Math.max(2, r.value / max * 100) : 0;
+        var tip = r.label + ': ' + r.tip;
+        return '<li><button type="button" data-action="dash-chart-filter" data-key="' + opts.key + '" data-v="' + esc(r.key) + '" title="' + esc(tip) + '" aria-label="' + esc(tip) + '" class="group w-full grid grid-cols-[minmax(6rem,38%)_1fr] items-center gap-2 text-left rounded hover:bg-surface-container-low p-0.5' + (F[opts.key] === r.key ? ' bg-primary-fixed/50' : '') + '">' +
+          '<span class="font-body-sm text-body-sm text-on-surface truncate">' + esc(r.label) + '</span>' +
+          '<span class="flex items-center gap-2 min-w-0"><span class="h-3.5 rounded-r bg-primary-container group-hover:bg-primary transition-colors" style="width:' + w.toFixed(1) + '%"></span>' +
+          '<span class="shrink-0 font-code-sm text-code-sm text-on-surface-variant font-semibold">' + esc(r.text) + '</span></span></button></li>';
+      }).join('') + '</ul>' : '<p class="font-body-sm text-body-sm text-on-surface-variant">ไม่มีข้อมูลตามตัวกรอง</p>') + '</section>';
+  }
+  function tally(P, get) {
+    var m = {};
+    P.forEach(function (p) { var k = get(p) || ''; var x = m[k] || (m[k] = { key: k, count: 0, budget: 0 }); x.count++; x.budget += p.budget || 0; });
+    return Object.keys(m).map(function (k) { return m[k]; });
+  }
+  function renderCharts() {
+    var box = $('dash-charts');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'dash-charts';
+      box.className = 'grid grid-cols-1 lg:grid-cols-2 gap-space-lg';
+      var kpiGrid = $('kpi-budget') && $('kpi-budget').closest('main > div > *');
+      if (!kpiGrid) return;
+      kpiGrid.insertAdjacentElement('afterend', box);
+    }
+    var P = FP();
+    var vNo = function (k) { return parseInt(String(k).slice(1), 10) || 99; };
+    var villages = tally(P, function (p) { return p.village; }).sort(function (a, b) { return vNo(a.key) - vNo(b.key); });
+    var statuses = tally(P, function (p) { return p.status; }).sort(function (a, b) { return b.count - a.count; });
+    var years = tally(P, function (p) { return String(p.year || '').replace(/\D/g, ''); }).filter(function (x) { return x.key; }).sort(function (a, b) { return a.key < b.key ? -1 : 1; });
+    var mb = function (v) { return v >= 1e6 ? (v / 1e6).toFixed(2) + ' ล.' : money(v); };
+    var note = filtered() ? 'ตามตัวกรองที่เลือก • ' : '';
+    box.innerHTML =
+      barChart('จำนวนโครงการแยกตามหมู่บ้าน', 'home_pin', villages.map(function (x) {
+        return { key: x.key, label: ui.villageName(x.key), value: x.count, text: x.count + ' โครงการ', tip: x.count + ' โครงการ งบ ' + money(x.budget) + ' บาท' };
+      }), { key: 'village', sub: note + 'คลิกแท่งเพื่อกรองหมู่บ้าน' }) +
+      barChart('งบประมาณแยกตามหมู่บ้าน (บาท)', 'payments', villages.slice().sort(function (a, b) { return b.budget - a.budget; }).map(function (x) {
+        return { key: x.key, label: ui.villageName(x.key), value: x.budget, text: mb(x.budget), tip: money(x.budget) + ' บาท (' + x.count + ' โครงการ)' };
+      }), { key: 'village', sub: note + 'เรียงจากงบมากไปน้อย' }) +
+      barChart('สถานะโครงการ', 'flag', statuses.map(function (x) {
+        var st = ref.STATUSES[x.key] || {};
+        return { key: x.key, label: st.long || x.key, value: x.count, text: x.count + ' โครงการ', tip: x.count + ' โครงการ งบ ' + money(x.budget) + ' บาท' };
+      }), { key: 'status', sub: note + 'คลิกแท่งเพื่อกรองสถานะ' }) +
+      barChart('โครงการแยกตามปีงบประมาณ', 'event_note', years.map(function (x) {
+        return { key: x.key, label: 'ปีงบฯ ' + x.key, value: x.count, text: x.count + ' โครงการ • ' + mb(x.budget), tip: x.count + ' โครงการ งบ ' + money(x.budget) + ' บาท' };
+      }), { key: 'year', sub: note + 'จำนวนโครงการและงบประมาณรวม' });
+  }
+
   // ---------- งบประมาณตามประเภทงาน ----------
   function renderBudget() {
     var P = FP();
@@ -155,50 +210,75 @@
     renderMarkers();
     document.addEventListener('fullscreenchange', function () { setTimeout(function () { map.invalidateSize(); }, 100); });
   }
-  // พิมพ์แผนที่: แนวนอน A4 พร้อมชื่อแผนที่ คำอธิบายสัญลักษณ์ และวันที่พิมพ์
+  // พิมพ์แผนที่: หน้าเดียว A4 แนวนอน ไม่แสดงหมุดโครงการ — แผนที่ขอบเขตตำบล/หมู่บ้าน + คำอธิบายหมู่ที่ใต้แผนที่
   function printMap() {
     if (!map) return;
-    var card = $('map-card'), st = document.getElementById('sk-map-print-css');
+    var card = $('map-card'), home = { parent: card.parentNode, next: card.nextSibling }, oldStyle = card.getAttribute('style') || '';
+    var st = document.getElementById('sk-map-print-css');
     if (!st) {
       st = document.createElement('style'); st.id = 'sk-map-print-css';
-      st.textContent = '@media print{@page{size:A4 landscape;margin:10mm}' +
-        'body.sk-print-map *{visibility:hidden!important}' +
-        'body.sk-print-map #map-card,body.sk-print-map #map-card *{visibility:visible!important}' +
-        'body.sk-print-map #map-card{position:fixed!important;left:0!important;top:0!important;margin:0!important;box-shadow:none!important;border:1px solid #c5c5d3}' +
-        'body.sk-print-map #map-card [data-map-tools],body.sk-print-map #map-card .leaflet-control-zoom{display:none!important}' +
-        'body.sk-print-map .leaflet-popup{display:none!important}' +
-        '*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}' +
-        '#map-print-head{display:none}body.sk-print-map #map-print-head{display:flex}';
+      st.textContent =
+        '#map-print-wrap{position:fixed;inset:0;z-index:5000;overflow:auto;background:#fff;padding:16px;font-family:Sarabun,sans-serif;color:#0b1c30}' +
+        '#map-print-wrap .mp-page{width:281mm;margin:0 auto}' +
+        '#map-print-wrap #map-card{width:281mm!important;height:128mm!important;border:1px solid #c5c5d3;border-radius:0}' +
+        '#map-print-wrap #map-card [data-map-tools],#map-print-wrap #map-card .leaflet-control-zoom,#map-print-wrap #map-card > .absolute:not(#gis-map){display:none!important}' +
+        '#map-print-wrap .mp-legend{display:grid;grid-template-columns:repeat(8,1fr);gap:0.5mm 3mm;font-size:9.5pt;margin-top:1.5mm}' +
+        '#map-print-wrap .mp-legend b{color:#00236f}' +
+        '@media print{@page{size:A4 landscape;margin:8mm}' +
+          'html,body{height:auto!important;overflow:visible!important}' +
+          'body.sk-print-map>*:not(#map-print-wrap){display:none!important}' +
+          '#map-print-wrap{position:static;padding:0;overflow:visible}' +
+          '#map-print-wrap .mp-bar{display:none!important}' +
+          '#map-print-wrap .mp-page{break-inside:avoid;page-break-inside:avoid}' +
+          '*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}';
       document.head.appendChild(st);
     }
-    var head = document.createElement('div');
-    head.id = 'map-print-head';
-    head.className = 'absolute z-[500] top-3 left-3 right-3 justify-between items-start gap-4 bg-surface-container-lowest/95 rounded-lg shadow-md px-4 py-2';
-    head.innerHTML = '<div><div class="font-headline-sm text-headline-sm text-primary">แผนที่โครงการก่อสร้าง ตำบลสีแก้ว อำเภอเมืองร้อยเอ็ด จังหวัดร้อยเอ็ด</div>' +
-      '<div class="font-body-sm text-body-sm text-on-surface-variant">กองช่าง เทศบาลตำบลสีแก้ว • ปีงบประมาณ ' + esc(String(SK.fiscalYear())) + ' • โครงการ ' + markers.length + ' จุด</div></div>' +
-      '<div class="font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">พิมพ์เมื่อ ' + esc(ui.dateLong(new Date().toISOString().slice(0, 10))) + '</div>';
-    card.appendChild(head);
-    // ขนาดเท่าหน้ากระดาษ A4 แนวนอน (277 x 190 มม.) แล้วซูมให้พอดีตำบล
-    var old = card.getAttribute('style') || '';
-    card.style.width = '1047px'; card.style.height = '718px';
+    var villages = ((window.SK_PERSONNEL || {}).villages || []).slice().sort(function (x, y) { return x.no - y.no; });
+    var wrap = document.createElement('div');
+    wrap.id = 'map-print-wrap';
+    wrap.innerHTML =
+      '<div class="mp-bar" style="display:flex;justify-content:space-between;align-items:center;max-width:281mm;margin:0 auto 8px"><b>ตัวอย่างก่อนพิมพ์แผนที่</b><span>กำลังโหลดแผนที่...</span></div>' +
+      '<div class="mp-page">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2mm">' +
+          '<div><div style="font-size:16pt;font-weight:700;color:#00236f">แผนที่ตำบลสีแก้ว อำเภอเมืองร้อยเอ็ด จังหวัดร้อยเอ็ด</div>' +
+          '<div style="font-size:10pt;color:#444651">แสดงขอบเขตตำบลและขอบเขตหมู่บ้าน • กองช่าง เทศบาลตำบลสีแก้ว</div></div>' +
+          '<div style="font-size:10pt;color:#444651">พิมพ์เมื่อ ' + esc(ui.dateLong(ui.today())) + '</div></div>' +
+        '<div data-slot></div>' +
+        '<div style="display:flex;gap:6mm;align-items:center;font-size:10pt;margin-top:2mm">' +
+          '<span><span style="display:inline-block;width:14mm;border-top:2.5px dashed #00236f;vertical-align:middle"></span> ขอบเขตตำบลสีแก้ว</span>' +
+          '<span><span style="display:inline-block;width:14mm;border-top:2px solid #ea580c;vertical-align:middle"></span> ขอบเขตหมู่บ้าน (ม.= หมู่ที่)</span></div>' +
+        '<div style="font-size:11pt;font-weight:700;margin-top:2mm;color:#00236f">คำอธิบายหมู่บ้าน</div>' +
+        '<div class="mp-legend">' + villages.map(function (v) { return '<span><b>ม.' + v.no + '</b> ' + esc(v.name) + '</span>'; }).join('') + '</div>' +
+      '</div>';
+    document.body.appendChild(wrap);
+    wrap.querySelector('[data-slot]').appendChild(card);
+    card.setAttribute('style', '');
     document.body.classList.add('sk-print-map');
+    // ไม่แสดงหมุดโครงการ
     map.closePopup();
+    markers.forEach(function (m) { m.remove(); });
     map.invalidateSize();
-    if (tambon && tambon.bounds && tambon.bounds.isValid()) map.fitBounds(tambon.bounds, { padding: [70, 20], animate: false });
-    ui.toast('กำลังเตรียมแผนที่สำหรับพิมพ์...');
+    if (tambon && tambon.bounds && tambon.bounds.isValid()) map.fitBounds(tambon.bounds, { padding: [12, 12], animate: false });
+
     var done = false;
     function restore() {
       if (done) return; done = true;
       window.removeEventListener('afterprint', restore);
       document.body.classList.remove('sk-print-map');
-      head.remove();
-      card.setAttribute('style', old);
+      home.parent.insertBefore(card, home.next && home.next.parentNode === home.parent ? home.next : null);
+      card.setAttribute('style', oldStyle);
+      wrap.remove();
+      renderMarkers();
       map.invalidateSize();
       if (tambon) tambon.fit();
     }
-    // รอโหลดภาพแผนที่ให้ครบก่อนสั่งพิมพ์
-    var tiles = layers[layerIdx].layer, waited = false;
-    function go() { if (waited) return; waited = true; window.addEventListener('afterprint', restore); setTimeout(function () { window.print(); setTimeout(function () { document.addEventListener('mousemove', restore, { once: true }); }, 1000); }, 300); }
+    var tiles = layers[layerIdx].layer, started = false;
+    function go() {
+      if (started) return; started = true;
+      wrap.querySelector('.mp-bar span').textContent = 'กำลังเปิดหน้าต่างพิมพ์...';
+      window.addEventListener('afterprint', restore);
+      setTimeout(function () { window.print(); setTimeout(function () { document.addEventListener('mousemove', restore, { once: true }); document.addEventListener('keydown', restore, { once: true }); }, 800); }, 400);
+    }
     tiles.once('load', go);
     setTimeout(go, 4000);
   }
@@ -310,13 +390,14 @@
     }).join('') || '<p class="text-on-surface-variant font-body-sm text-body-sm">ไม่มีโครงการล่าช้าหรือใกล้สิ้นสุดสัญญาใน 30 วัน</p>';
   }
 
-  function refresh() { renderFilters(); renderKpis(); renderBudget(); renderMarkers(); renderFeed(); renderRecent(); renderAlerts(); }
+  function refresh() { renderFilters(); renderKpis(); renderCharts(); renderBudget(); renderMarkers(); renderFeed(); renderRecent(); renderAlerts(); }
 
   Object.assign(SK.actions, {
     'exec-report': function () {
       SK.docs.print('slaReport', 'รายงานสรุปผู้บริหาร', FP(), 'รายงานสรุปโครงการและงบประมาณสำหรับผู้บริหาร');
     },
     'new-project': function () { ui.openProjectForm(null, refresh); },
+    'dash-chart-filter': function (el) { setFilter(el.dataset.key, F[el.dataset.key] === el.dataset.v ? '' : el.dataset.v); },
     'dash-filter-reset': function () { F = {}; try { sessionStorage.removeItem(FKEY); } catch (e) {} page = 1; refresh(); if (tambon) tambon.fit(); },
     'map-layers': function () {
       if (!map) return;
