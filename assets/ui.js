@@ -602,6 +602,30 @@
   }
   onReady(function () { setTimeout(markPageHead, 0); });
 
+  // เมนูด้านซ้ายแบบระบบเดิม (tools/sidebar.py): ข้อมูลฐานข้อมูล ผู้ใช้ และเมนูที่เปิดอยู่
+  function renderSide() {
+    var sub = document.getElementById('sk-brand-sub');
+    if (sub) {
+      var ext = SK.db.external || {}, n = (SK.db.data.projects || []).length;
+      var t = ext.savedAt ? new Date(ext.savedAt) : null;
+      var pad = function (x) { return (x < 10 ? '0' : '') + x; };
+      sub.textContent = 'ฐานข้อมูลโครงการ • ' + n + ' โครงการ' + (t && !isNaN(t) ? ' • อัปเดต ' + pad(t.getDate()) + '/' + pad(t.getMonth() + 1) + '/' + (t.getFullYear() + 543) + ' ' + pad(t.getHours()) + ':' + pad(t.getMinutes()) : '');
+    }
+    var u = currentUser(), nm = document.getElementById('sk-side-user-name'), role = document.getElementById('sk-side-user-role'), btn = document.getElementById('sk-side-login');
+    if (nm) nm.textContent = u.signedIn ? u.name : 'ผู้เยี่ยมชม | ดูภาพรวมโครงการ';
+    if (role) role.textContent = u.signedIn ? u.position : 'เข้าสู่ระบบเพื่อบันทึกและซิงก์ข้อมูล';
+    if (btn) { btn.textContent = u.signedIn ? 'บัญชีผู้ใช้' : 'เข้าสู่ระบบ'; btn.classList.toggle('is-signed', !!u.signedIn); }
+    var menu = new URLSearchParams(location.search).get('menu') || (/[?&]tab=localRoad/.test(location.search) ? 'คุมสายทาง' : /tab=drawing/.test(location.search) ? 'เอกสารดาวน์โหลด' : '');
+    if (menu) {
+      document.querySelectorAll('#sidebar [data-menu]').forEach(function (a) { a.classList.toggle('is-active', a.dataset.menu === menu); });
+      var cur = document.querySelector('#sidebar [data-menu].is-active');
+      if (cur) document.querySelectorAll('#sidebar [aria-current="page"]').forEach(function (a) { a.removeAttribute('aria-current'); });
+    }
+  }
+  SK.actions = SK.actions || {};
+  SK.actions['sk-side-account'] = function () { var b = document.getElementById('profile-btn'); if (b) b.click(); };
+  onReady(function () { renderSide(); setTimeout(renderSide, 1500); });
+
   SK.ui = {
     esc: esc, money: money, dateShort: dateShort, dateLong: dateLong, dateFull: dateFull, today: today, nowTime: nowTime,
     bahtText: bahtText, toast: toast, modal: modal, confirm: confirmBox, formModal: formModal, btnClass: btnClass,

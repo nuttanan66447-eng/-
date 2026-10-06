@@ -1,215 +1,237 @@
-// หน้าภาพรวมโครงการ (แดชบอร์ด)
+// หน้าภาพรวมโครงการ (index.html) — จัดหน้าตามระบบเดิม v184
+// แท็บ: ผู้ควบคุมงาน (โครงการ) / ธุรการกองช่าง (ตรวจสอบอาคาร) / สายทางทางหลวงท้องถิ่น
 (function () {
   'use strict';
   var SK = window.SK, ui = SK.ui, ref = SK.ref, esc = ui.esc, money = ui.money;
   var $ = function (id) { return document.getElementById(id); };
-
-  var CENTER = SK.ref.CENTER;
-  function center() { return SK.tambon ? SK.tambon.center() : CENTER; }
-  var GROUP = function (p) {
-    if (p.status === 'completed') return 'done';
-    if (p.status === 'delayed') return 'late';
-    return 'active';
-  };
+  var TH_DIGITS = '๐๑๒๓๔๕๖๗๘๙';
+  var thaiNum = function (s) { return String(s).replace(/\d/g, function (d) { return TH_DIGITS[d]; }); };
+  var MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  var MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  function center() { return SK.tambon ? SK.tambon.center() : ref.CENTER; }
+  // วันที่แบบไทย "1 ตุลาคม 2569" / "01/10/2569" / ISO -> { y: ค.ศ., m: 0-11 }
+  function parseDate(v) {
+    var t = String(v || '').trim(), m;
+    if ((m = /^(\d{4})-(\d{2})-(\d{2})/.exec(t))) return { y: +m[1], m: +m[2] - 1, d: +m[3] };
+    t = t.replace(/[๐-๙]/g, function (d) { return TH_DIGITS.indexOf(d); });
+    if ((m = /(\d{1,2})\s+(\S+)\s+(\d{4})/.exec(t))) {
+      var mi = MONTHS.indexOf(m[2]); if (mi < 0) mi = MON.indexOf(m[2]);
+      if (mi >= 0) return { y: +m[3] > 2400 ? +m[3] - 543 : +m[3], m: mi, d: +m[1] };
+    }
+    if ((m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(t))) return { y: +m[3] > 2400 ? +m[3] - 543 : +m[3], m: +m[2] - 1, d: +m[1] };
+    return null;
+  }
+  var GROUP = function (p) { return p.status === 'completed' ? 'done' : p.status === 'delayed' ? 'late' : 'active'; };
   var GROUP_COLOR = { done: '#1e3a8a', active: '#fd651e', late: '#ba1a1a' };
-  var CAT_STYLE = {
-    road: { dot: 'bg-surface-tint', text: 'text-primary' },
-    drainage: { dot: 'bg-secondary-container', text: 'text-secondary' },
-    building: { dot: 'bg-tertiary', text: 'text-tertiary' },
-    electrical: { dot: 'bg-primary', text: 'text-primary' }
-  };
+  var BAR = ['#173b8e', '#264fa9', '#19a865', '#e56b1f', '#9b51e0', '#1673bd', '#c9314c', '#db7419'];
 
-  // ---------- ตัวกรอง (ปีงบประมาณ หมู่บ้าน ประเภทงาน แหล่งงบ สถานะ) ----------
-  var FKEY = 'sikaew-dashboard-filter';
+  // ---------- ส่วนประกอบแบบระบบเดิม ----------
+  function head(title, sub, extra) {
+    return '<div class="sk-card-head"><div><h3>' + title + '</h3>' + (sub ? '<p>' + sub + '</p>' : '') + '</div>' + (extra || '') + '</div>';
+  }
+  function toggle(target, label) { return '<button type="button" class="sk-toggle" data-action="dash-collapse" data-target="' + target + '">▾ ปิด' + (label || 'กราฟ') + '</button>'; }
+  // กราฟแท่งแนวตั้ง (มีเส้นแกนแบบระบบเดิม)
+  function columns(rows, opts) {
+    opts = opts || {};
+    if (!rows.length) return '<div class="sk-chart-empty">ไม่พบข้อมูล</div>';
+    var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+    return '<div class="sk-cols" style="--n:' + rows.length + '">' + rows.map(function (r, i) {
+      var h = r.value / max * 100;
+      return '<button type="button" class="sk-col"' + (opts.key ? ' data-action="dash-chart-filter" data-key="' + opts.key + '" data-v="' + esc(r.key) + '"' : '') + ' title="' + esc(r.label + ': ' + r.tip) + '">' +
+        '<span class="sk-col-val">' + esc(r.text) + '</span><span class="sk-col-bar" style="height:' + h.toFixed(1) + '%;background:' + (opts.color || BAR[i % BAR.length]) + '"></span>' +
+        '<span class="sk-col-label">' + esc(r.label) + '</span></button>';
+    }).join('') + '</div>';
+  }
+  // แท่งแนวนอน
+  function hbars(rows, opts) {
+    opts = opts || {};
+    if (!rows.length) return '<div class="sk-chart-empty">ไม่พบข้อมูล</div>';
+    var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+    return '<ul class="sk-hbars">' + rows.map(function (r) {
+      return '<li><button type="button"' + (opts.key ? ' data-action="dash-chart-filter" data-key="' + opts.key + '" data-v="' + esc(r.key) + '"' : '') + ' title="' + esc(r.label + ': ' + r.tip) + '" class="' + (F[opts.key] === r.key ? 'is-on' : '') + '">' +
+        '<span class="sk-hbar-label">' + esc(r.label) + '</span><span class="sk-hbar-track"><span style="width:' + Math.max(r.value ? 2 : 0, r.value / max * 100).toFixed(1) + '%"></span></span><b>' + esc(r.text) + '</b></button></li>';
+    }).join('') + '</ul>';
+  }
+  function donut(rows) {
+    var total = rows.reduce(function (s, r) { return s + r.value; }, 0);
+    if (!total) return '<div class="sk-chart-empty">ไม่พบข้อมูล</div>';
+    var C = 2 * Math.PI * 38, off = 0;
+    var svg = '<svg viewBox="0 0 100 100" class="w-40 h-40 -rotate-90"><circle cx="50" cy="50" r="38" fill="none" stroke="#e5eeff" stroke-width="14"/>' + rows.map(function (r) {
+      var len = r.value / total * C, x = '<circle cx="50" cy="50" r="38" fill="none" stroke="' + r.color + '" stroke-width="14" stroke-dasharray="' + Math.max(0, len - 1).toFixed(2) + ' ' + (C - len + 1).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '"><title>' + esc(r.label) + ' ' + r.value + ' โครงการ</title></circle>';
+      off += len; return x;
+    }).join('') + '</svg>';
+    return '<div class="flex flex-col sm:flex-row xl:flex-col items-center gap-4"><div class="relative">' + svg + '<div class="absolute inset-0 flex flex-col items-center justify-center"><b class="text-2xl text-[#14254d]">' + total + '</b><span class="text-xs text-on-surface-variant">โครงการ</span></div></div>' +
+      '<ul class="flex flex-col gap-1.5 w-full">' + rows.map(function (r) {
+        return '<li><button type="button" data-action="dash-chart-filter" data-key="status" data-v="' + esc(r.key) + '" class="w-full flex items-center gap-2 text-left text-sm rounded px-1 hover:bg-surface-container-low' + (F.status === r.key ? ' bg-primary-fixed/50' : '') + '"><i class="w-3 h-3 rounded-sm shrink-0" style="background:' + r.color + '"></i><span class="flex-1">' + esc(r.label) + '</span><b>' + r.value + '</b><span class="text-on-surface-variant w-10 text-right">' + Math.round(r.value / total * 100) + '%</span></button></li>';
+      }).join('') + '</ul></div>';
+  }
+  // กราฟรายเดือน (เส้น/แท่ง) แบบระบบเดิม
+  function monthly(counts, yearBE, mode) {
+    var W = 1000, H = 220, L = 40, R = 16, T = 16, B = 34, max = Math.max(3, Math.max.apply(null, counts));
+    var x = function (i) { return L + (W - L - R) * (i / 11); }, y = function (v) { return T + (H - T - B) * (1 - v / max); };
+    var grid = '', step = Math.max(1, Math.ceil(max / 3));
+    for (var g = 0; g <= max; g += step) grid += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="#e5ebf3"/><text x="' + (L - 8) + '" y="' + (y(g) + 4) + '" text-anchor="end" font-size="12" fill="#607169">' + g + '</text>';
+    var labels = MON.map(function (m, i) { return '<text x="' + x(i) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="12" fill="#607169">' + m + ' ' + thaiNum(String(yearBE).slice(-2)) + '</text>'; }).join('');
+    var marks;
+    if (mode === 'bar') {
+      var bw = (W - L - R) / 12 * 0.5;
+      marks = counts.map(function (c, i) { return '<rect x="' + (x(i) - bw / 2) + '" y="' + y(c) + '" width="' + bw + '" height="' + Math.max(0, y(0) - y(c)) + '" rx="4" fill="#19a865"><title>' + MONTHS[i] + ': ' + c + ' โครงการ</title></rect>'; }).join('');
+    } else {
+      marks = '<polyline fill="none" stroke="#16a34a" stroke-width="2.5" points="' + counts.map(function (c, i) { return x(i) + ',' + y(c); }).join(' ') + '"/>' +
+        counts.map(function (c, i) { return '<circle cx="' + x(i) + '" cy="' + y(c) + '" r="4.5" fill="#16a34a" stroke="#fff" stroke-width="2"><title>' + MONTHS[i] + ': ' + c + ' โครงการ</title></circle>' + (c ? '<text x="' + x(i) + '" y="' + (y(c) - 10) + '" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">' + c + '</text>' : ''); }).join('');
+    }
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" class="w-full h-auto" role="img" aria-label="จำนวนโครงการแล้วเสร็จรายเดือน">' + grid + labels + marks + '</svg>';
+  }
+
+  // ---------- ตัวกรอง ----------
+  var FKEY = 'sikaew-dashboard-filter-v2';
   var F = (function () { try { return JSON.parse(sessionStorage.getItem(FKEY)) || {}; } catch (e) { return {}; } })();
   var FIELDS = [
-    { key: 'year', label: 'ปีงบประมาณ', icon: 'event_note', get: function (p) { return String(p.year || '').replace(/\D/g, ''); }, name: function (v) { return 'ปีงบฯ ' + v; } },
-    { key: 'village', label: 'หมู่บ้าน', icon: 'home_pin', get: function (p) { return p.village; }, name: function (v) { return ui.villageName(v); }, sort: function (a, b) { return (parseInt(a.slice(1), 10) || 99) - (parseInt(b.slice(1), 10) || 99); } },
-    { key: 'category', label: 'ประเภทงาน', icon: 'category', get: function (p) { return p.category; }, name: function (v) { return (ref.CATEGORIES[v] || {}).label || v; } },
-    { key: 'source', label: 'แหล่งงบประมาณ', icon: 'account_balance_wallet', get: function (p) { return p.source; }, name: function (v) { return ref.SOURCES[v] || v; } },
-    { key: 'status', label: 'สถานะ', icon: 'flag', get: function (p) { return p.status; }, name: function (v) { return (ref.STATUSES[v] || {}).long || v; } }
+    { key: 'year', label: 'ปีงบประมาณ', get: function (p) { return String(p.year || '').replace(/\D/g, ''); }, name: function (v) { return v; } },
+    { key: 'village', label: 'หมู่บ้าน', get: function (p) { return p.village; }, name: function (v) { return ui.villageName(v); }, sort: function (a, b) { return (parseInt(a.slice(1), 10) || 99) - (parseInt(b.slice(1), 10) || 99); } },
+    { key: 'category', label: 'ประเภทงาน', get: function (p) { return p.category; }, name: function (v) { return (ref.CATEGORIES[v] || {}).label || v; } },
+    { key: 'status', label: 'สถานะ', get: function (p) { return p.status; }, name: function (v) { return (ref.STATUSES[v] || {}).long || v; } }
   ];
   function FP() {
+    var q = String(F.q || '').trim().toLowerCase();
     return SK.db.data.projects.filter(function (p) {
+      if (q && [p.id, p.name, p.contractor, ui.villageName(p.village), p.location].join(' ').toLowerCase().indexOf(q) < 0) return false;
       return FIELDS.every(function (f) { return !F[f.key] || f.get(p) === F[f.key]; });
     });
   }
-  function filtered() { return FIELDS.some(function (f) { return F[f.key]; }); }
+  function filtered() { return !!(F.q || FIELDS.some(function (f) { return F[f.key]; })); }
+  function saveF() { try { sessionStorage.setItem(FKEY, JSON.stringify(F)); } catch (e) {} }
   function renderFilters() {
-    var bar = $('dash-filters');
-    if (!bar) {
-      bar = document.createElement('section');
-      bar.id = 'dash-filters';
-      bar.className = 'no-print bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col gap-space-sm';
-      var h = document.querySelector('main h2'), top = (h && h.closest('main > div > div')) || document.querySelector('main > div > div');
-      top.insertAdjacentElement('afterend', bar);
-    }
-    var all = SK.db.data.projects, cls = 'w-full px-3 py-2 rounded-lg bg-surface-container-low font-body-md text-body-md';
-    bar.innerHTML = '<div class="flex flex-wrap items-center justify-between gap-2"><span class="flex items-center gap-2 font-headline-sm text-headline-sm text-primary"><span class="material-symbols-outlined">filter_alt</span>ตัวกรองข้อมูล</span>' +
-      '<span class="flex items-center gap-2 font-body-sm text-body-sm text-on-surface-variant">แสดง <b class="text-primary">' + FP().length + '</b> จาก ' + all.length + ' โครงการ' +
-      (filtered() ? '<button type="button" data-action="dash-filter-reset" class="' + ui.btnClass('ghost') + '"><span class="material-symbols-outlined text-[18px]">restart_alt</span>ล้างตัวกรอง</button>' : '') + '</span></div>' +
-      '<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-space-sm">' + FIELDS.map(function (f) {
+    var all = SK.db.data.projects;
+    var box = $('dash-filters');
+    var focused = document.activeElement && document.activeElement.id === 'dash-q';
+    box.innerHTML = '<div class="sk-filter-grid"><label class="sk-field sk-field-wide"><span>ค้นหาโครงการ</span><input id="dash-q" type="search" value="' + esc(F.q || '') + '" placeholder="ชื่อโครงการ หมู่บ้าน ผู้รับจ้าง..."/></label>' +
+      FIELDS.map(function (f) {
         var counts = {};
         all.forEach(function (p) { var v = f.get(p); if (v) counts[v] = (counts[v] || 0) + 1; });
         var keys = Object.keys(counts).sort(f.sort || function (a, b) { return a < b ? -1 : a > b ? 1 : 0; });
-        if (F[f.key] && !counts[F[f.key]]) keys.push(F[f.key]);
-        return '<label class="flex flex-col gap-1 min-w-0 font-label-md text-label-md text-on-surface-variant"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">' + f.icon + '</span>' + f.label + '</span>' +
-          '<select data-dash-filter="' + f.key + '" class="' + cls + (F[f.key] ? ' ring-2 ring-primary text-primary font-semibold' : '') + '"><option value="">ทั้งหมด</option>' +
-          keys.map(function (k) { return '<option value="' + esc(k) + '"' + (F[f.key] === k ? ' selected' : '') + '>' + esc(f.name(k)) + ' (' + (counts[k] || 0) + ')</option>'; }).join('') + '</select></label>';
-      }).join('') + '</div>';
+        return '<label class="sk-field"><span>' + f.label + '</span><select data-dash-filter="' + f.key + '"><option value="">ทั้งหมด</option>' +
+          keys.map(function (k) { return '<option value="' + esc(k) + '"' + (F[f.key] === k ? ' selected' : '') + '>' + esc(f.name(k)) + '</option>'; }).join('') + '</select></label>';
+      }).join('') +
+      '<button type="button" data-action="dash-filter-reset" class="sk-btn-clear">ล้างตัวกรอง</button></div>';
+    var q = $('dash-q');
+    q.addEventListener('input', function () { F.q = this.value; saveF(); refreshSupervisor(true); });
+    if (focused) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
   }
   function setFilter(key, value) {
     if (value) F[key] = value; else delete F[key];
-    try { sessionStorage.setItem(FKEY, JSON.stringify(F)); } catch (e) {}
-    page = 1;
-    refresh();
-    if (tambon && map && filtered() && markers.length) map.fitBounds(L.featureGroup(markers).getBounds(), { padding: [40, 40], maxZoom: 16 });
+    saveF(); refresh();
+    if (map && filtered() && markers.length) map.fitBounds(L.featureGroup(markers).getBounds(), { padding: [40, 40], maxZoom: 16 });
   }
   document.addEventListener('change', function (e) {
     var sel = e.target.closest && e.target.closest('[data-dash-filter]');
     if (sel) setFilter(sel.dataset.dashFilter, sel.value);
   });
 
-  // ---------- KPI ----------
-  function renderKpis() {
-    var P = FP();
-    var budget = P.reduce(function (s, p) { return s + p.budget; }, 0);
-    var disb = P.reduce(function (s, p) { return s + p.disbursed; }, 0);
-    var pct = budget ? disb / budget * 100 : 0;
-    var count = function (f) { return P.filter(f).length; };
-    $('kpi-budget').textContent = money(budget);
-    $('kpi-disb').textContent = money(disb) + ' บาท';
-    $('kpi-disb-pct').textContent = 'เบิกจ่ายแล้ว (' + pct.toFixed(2) + '%)';
-    $('kpi-disb-bar').style.width = pct.toFixed(2) + '%';
-    $('kpi-remain').textContent = 'คงเหลือ ' + money(budget - disb) + ' บาท';
-    $('kpi-count').textContent = P.length;
-    $('kpi-done').textContent = count(function (p) { return p.status === 'completed'; });
-    $('kpi-plan').textContent = count(function (p) { return p.status === 'on-schedule' || p.status === 'pending-inspection'; });
-    $('kpi-late').textContent = count(function (p) { return p.status === 'delayed'; });
-    $('kpi-sign').textContent = count(function (p) { return p.status === 'signing' || p.status === 'unknown'; });
-    var awaiting = count(function (p) { return p.status === 'pending-inspection'; });
-    var delayed = count(function (p) { return p.status === 'delayed'; });
-    $('kpi-urgent').textContent = delayed;
-    $('kpi-await').textContent = awaiting + ' โครงการ';
-    $('kpi-delayed').textContent = delayed + ' โครงการ';
-    if (SK.db.external) {
-      // การ์ดที่ 3 ในดีไซน์เป็นข้อมูลความปลอดภัยตัวอย่าง ซึ่งไม่มีในชีท: แสดงสัญญาที่จะสิ้นสุดใน 30 วันแทน
-      var today = ui.today(), soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-      var ending = P.filter(function (p) { return p.status !== 'completed' && p.end && p.end >= today && p.end <= soon; });
-      var withGps = P.filter(function (p) { return !p.approxLocation; }).length;
-      $('kpi3-title').textContent = 'สัญญาใกล้สิ้นสุด (30 วัน)';
-      $('kpi3-value').textContent = ending.length;
-      $('kpi3-unit').textContent = 'โครงการ';
-      $('kpi3-sub').textContent = 'โครงการที่มีพิกัด GPS';
-      $('kpi3-subval').textContent = withGps + ' / ' + P.length;
-      $('kpi3-note').textContent = 'คำนวณจากวันสิ้นสุดสัญญาในฐานข้อมูลโครงการ';
-    }
-  }
-
-  // ---------- กราฟสถิติ (ตามตัวกรอง): หมู่บ้าน งบประมาณ สถานะ ปีงบประมาณ ----------
-  // แท่งแนวนอนสีเดียว ป้ายค่าที่ปลายแท่ง ชี้เพื่อดูรายละเอียด คลิกเพื่อกรองตามรายการนั้น
-  function barChart(title, icon, rows, opts) {
-    opts = opts || {};
-    var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
-    return '<section class="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-space-sm min-w-0">' +
-      '<h3 class="flex items-center gap-2 font-headline-sm text-headline-sm text-primary font-bold"><span class="material-symbols-outlined">' + icon + '</span>' + title + '</h3>' +
-      (opts.sub ? '<p class="-mt-1 font-body-sm text-body-sm text-on-surface-variant">' + opts.sub + '</p>' : '') +
-      (rows.length ? '<ul class="flex flex-col gap-1.5">' + rows.map(function (r) {
-        var w = r.value ? Math.max(2, r.value / max * 100) : 0;
-        var tip = r.label + ': ' + r.tip;
-        return '<li><button type="button" data-action="dash-chart-filter" data-key="' + opts.key + '" data-v="' + esc(r.key) + '" title="' + esc(tip) + '" aria-label="' + esc(tip) + '" class="group w-full grid grid-cols-[minmax(6rem,38%)_1fr] items-center gap-2 text-left rounded hover:bg-surface-container-low p-0.5' + (F[opts.key] === r.key ? ' bg-primary-fixed/50' : '') + '">' +
-          '<span class="font-body-sm text-body-sm text-on-surface truncate">' + esc(r.label) + '</span>' +
-          '<span class="flex items-center gap-2 min-w-0"><span class="h-3.5 rounded-r bg-primary-container group-hover:bg-primary transition-colors" style="width:' + w.toFixed(1) + '%"></span>' +
-          '<span class="shrink-0 font-code-sm text-code-sm text-on-surface-variant font-semibold">' + esc(r.text) + '</span></span></button></li>';
-      }).join('') + '</ul>' : '<p class="font-body-sm text-body-sm text-on-surface-variant">ไม่มีข้อมูลตามตัวกรอง</p>') + '</section>';
-  }
+  // ---------- แท็บผู้ควบคุมงาน ----------
   function tally(P, get) {
     var m = {};
     P.forEach(function (p) { var k = get(p) || ''; var x = m[k] || (m[k] = { key: k, count: 0, budget: 0 }); x.count++; x.budget += p.budget || 0; });
     return Object.keys(m).map(function (k) { return m[k]; });
   }
-  function renderCharts() {
-    var box = $('dash-charts');
-    if (!box) {
-      box = document.createElement('div');
-      box.id = 'dash-charts';
-      box.className = 'grid grid-cols-1 lg:grid-cols-2 gap-space-lg';
-      var kpiGrid = $('kpi-budget') && $('kpi-budget').closest('main > div > *');
-      if (!kpiGrid) return;
-      kpiGrid.insertAdjacentElement('afterend', box);
-    }
-    var P = FP();
+  function acceptDate(p) {
+    var f = p.fields || {}, k = Object.keys(f).filter(function (x) { return /ตรวจรับ/.test(x) && /วัน/.test(x) && !/กรรมการ/.test(x); })[0];
+    return parseDate(k ? f[k] : '') || (p.status === 'completed' ? parseDate(p.end) : null);
+  }
+  var monthMode = 'line';
+  function renderKpis(P) {
+    var done = P.filter(function (p) { return p.status === 'completed'; }).length;
+    var bySource = tally(P, function (p) { return p.sourceLabel || ref.SOURCES[p.source] || 'ไม่ระบุ'; }).sort(function (a, b) { return b.count - a.count; });
+    var byCat = tally(P, function (p) { return p.category; }).sort(function (a, b) { return b.count - a.count; });
+    $('dash-kpis').innerHTML =
+      '<section class="sk-kpi sk-kpi-blue"><span class="sk-kpi-label">จำนวนโครงการ</span><b class="sk-kpi-num">' + P.length + '</b><span class="sk-kpi-sub">รายการตามตัวกรองปัจจุบัน</span></section>' +
+      '<section class="sk-kpi sk-kpi-orange">' + head('จำนวนโครงการตามงบประเภท', '', toggle('kpi-src')) + '<div id="kpi-src">' + columns(bySource.map(function (x) {
+        return { key: x.key, label: x.key, value: x.count, text: String(x.count), tip: x.count + ' โครงการ • ' + money(x.budget) + ' บาท' };
+      }), { color: '#e56b1f' }) + '</div></section>' +
+      '<section class="sk-kpi sk-kpi-red">' + head('จำนวนโครงการตามประเภทงาน', '', toggle('kpi-cat')) + '<div id="kpi-cat">' + columns(byCat.map(function (x) {
+        var c = ref.CATEGORIES[x.key] || {};
+        return { key: x.key, label: c.short || c.label || x.key, value: x.count, text: String(x.count), tip: x.count + ' โครงการ • ' + money(x.budget) + ' บาท' };
+      }), { key: 'category' }) + '</div></section>' +
+      '<section class="sk-kpi sk-kpi-blue"><span class="sk-kpi-label">ดำเนินการแล้วเสร็จ</span><b class="sk-kpi-num">' + done + '</b><span class="sk-kpi-sub">' + (P.length ? Math.round(done / P.length * 100) : 0) + '% ของโครงการ</span></section>';
+  }
+  function renderMonthly(P) {
+    var yearBE = new Date().getFullYear() + 543, counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total = 0;
+    P.forEach(function (p) {
+      if (p.status !== 'completed') return;
+      var d = acceptDate(p);
+      if (d && d.y + 543 === yearBE) { counts[d.m]++; total++; }
+    });
+    $('dash-monthly').innerHTML = head('โครงการแล้วเสร็จแต่ละเดือน', 'รวม ' + total + ' โครงการ • นับจากวันตรวจรับงาน • ตามตัวกรองปัจจุบัน',
+      '<div class="flex items-center gap-2"><div class="sk-seg"><button type="button" data-action="dash-month-mode" data-mode="line" class="' + (monthMode === 'line' ? 'is-on' : '') + '">📈 กราฟเส้น</button>' +
+      '<button type="button" data-action="dash-month-mode" data-mode="bar" class="' + (monthMode === 'bar' ? 'is-on' : '') + '">📊 กราฟแท่ง</button></div>' + toggle('month-body') + '</div>') +
+      '<div id="month-body" class="px-space-lg pb-space-md">' + monthly(counts, yearBE, monthMode) + '</div>';
+  }
+  var STATUS_COLOR = { completed: '#1e3a8a', 'on-schedule': '#19a865', 'pending-inspection': '#e56b1f', delayed: '#ba1a1a', signing: '#9b51e0', unknown: '#9aa5b1' };
+  function renderSide(P) {
+    var st = tally(P, function (p) { return p.status; }).sort(function (a, b) { return b.count - a.count; });
+    $('dash-status').innerHTML = head('โครงการแยกตามสถานะ', '', toggle('status-body', 'แผนภูมิ')) + '<div id="status-body" class="px-space-lg pb-space-lg">' + donut(st.map(function (x) {
+      return { key: x.key, label: (ref.STATUSES[x.key] || {}).long || x.key || 'ไม่ระบุ', value: x.count, color: STATUS_COLOR[x.key] || '#9aa5b1' };
+    })) + '</div>';
     var vNo = function (k) { return parseInt(String(k).slice(1), 10) || 99; };
-    var villages = tally(P, function (p) { return p.village; }).sort(function (a, b) { return vNo(a.key) - vNo(b.key); });
-    var statuses = tally(P, function (p) { return p.status; }).sort(function (a, b) { return b.count - a.count; });
-    var years = tally(P, function (p) { return String(p.year || '').replace(/\D/g, ''); }).filter(function (x) { return x.key; }).sort(function (a, b) { return a.key < b.key ? -1 : 1; });
-    var mb = function (v) { return v >= 1e6 ? (v / 1e6).toFixed(2) + ' ล.' : money(v); };
-    var note = filtered() ? 'ตามตัวกรองที่เลือก • ' : '';
-    box.innerHTML =
-      barChart('จำนวนโครงการแยกตามหมู่บ้าน', 'home_pin', villages.map(function (x) {
-        return { key: x.key, label: ui.villageName(x.key), value: x.count, text: x.count + ' โครงการ', tip: x.count + ' โครงการ งบ ' + money(x.budget) + ' บาท' };
-      }), { key: 'village', sub: note + 'คลิกแท่งเพื่อกรองหมู่บ้าน' }) +
-      barChart('งบประมาณแยกตามหมู่บ้าน (บาท)', 'payments', villages.slice().sort(function (a, b) { return b.budget - a.budget; }).map(function (x) {
-        return { key: x.key, label: ui.villageName(x.key), value: x.budget, text: mb(x.budget), tip: money(x.budget) + ' บาท (' + x.count + ' โครงการ)' };
-      }), { key: 'village', sub: note + 'เรียงจากงบมากไปน้อย' }) +
-      barChart('สถานะโครงการ', 'flag', statuses.map(function (x) {
-        var st = ref.STATUSES[x.key] || {};
-        return { key: x.key, label: st.long || x.key, value: x.count, text: x.count + ' โครงการ', tip: x.count + ' โครงการ งบ ' + money(x.budget) + ' บาท' };
-      }), { key: 'status', sub: note + 'คลิกแท่งเพื่อกรองสถานะ' }) +
-      barChart('โครงการแยกตามปีงบประมาณ', 'event_note', years.map(function (x) {
-        return { key: x.key, label: 'ปีงบฯ ' + x.key, value: x.count, text: x.count + ' โครงการ • ' + mb(x.budget), tip: x.count + ' โครงการ งบ ' + money(x.budget) + ' บาท' };
-      }), { key: 'year', sub: note + 'จำนวนโครงการและงบประมาณรวม' });
+    var vs = tally(P, function (p) { return p.village; }).sort(function (a, b) { return vNo(a.key) - vNo(b.key); });
+    $('dash-village').innerHTML = head('จำนวนโครงการแต่ละหมู่บ้าน', 'คลิกเพื่อกรองหมู่บ้าน', toggle('village-body')) + '<div id="village-body" class="px-space-lg pb-space-lg max-h-[26rem] overflow-y-auto">' + hbars(vs.map(function (x) {
+      return { key: x.key, label: ui.villageName(x.key), value: x.count, text: String(x.count), tip: x.count + ' โครงการ • งบ ' + money(x.budget) + ' บาท' };
+    }), { key: 'village' }) + '</div>';
   }
-
-  // ---------- งบประมาณตามประเภทงาน ----------
-  function renderBudget() {
+  function renderTable(P) {
+    var rows = P.slice().sort(function (a, b) { return (a.rowNumber || 0) - (b.rowNumber || 0); });
+    $('dash-table').innerHTML = head('รายการโครงการ', rows.length + ' รายการ') +
+      '<div class="overflow-x-auto"><table class="sk-table"><thead><tr><th>ลำดับ</th><th>ชื่อโครงการ</th><th>พื้นที่</th><th>ปีงบฯ</th><th>ประเภท</th><th>งบประเภท</th><th>สถานะ</th><th>ความก้าวหน้า</th><th>พิกัด</th></tr></thead><tbody>' +
+      (rows.length ? rows.map(function (p, i) {
+        var c = ref.CATEGORIES[p.category] || {};
+        return '<tr><td class="text-center">' + (i + 1) + '</td>' +
+          '<td class="min-w-[18rem]"><a href="project.html?id=' + encodeURIComponent(p.id) + '" class="font-semibold text-[#14254d] hover:underline">' + esc(p.name) + '</a><div class="text-xs text-on-surface-variant">' + esc(p.id) + ' • ' + esc(p.contractor || '-') + '</div></td>' +
+          '<td class="whitespace-nowrap">' + esc(ui.villageName(p.village)) + '</td><td class="text-center">' + esc(p.year || '-') + '</td><td class="whitespace-nowrap">' + esc(c.label || p.typeLabel || '-') + '</td>' +
+          '<td>' + esc(p.sourceLabel || ref.SOURCES[p.source] || '-') + '</td><td>' + ui.statusBadge(p) + '</td>' +
+          '<td class="min-w-[8rem]"><div class="flex items-center gap-2"><div class="flex-1">' + ui.progressBar(p.actual, p.status) + '</div><b class="text-xs">' + p.actual + '%</b></div></td>' +
+          '<td class="text-center">' + (p.lat && !p.approxLocation ? '<button type="button" data-action="dash-map-go" data-id="' + esc(p.id) + '" class="text-primary font-semibold hover:underline" title="ดูบนแผนที่">📍</button>' : '<span class="text-outline">-</span>') + '</td></tr>';
+      }).join('') : '<tr><td colspan="9" class="text-center py-10 text-on-surface-variant">ไม่พบข้อมูลตามตัวกรอง</td></tr>') + '</tbody></table></div>';
+  }
+  function refreshSupervisor(keepFilters) {
     var P = FP();
-    var total = P.reduce(function (s, p) { return s + p.budget; }, 0) || 1;
-    var colors = { road: '#00236f', drainage: '#a73a00', building: '#122c45', electrical: '#4059aa' };
-    var bars = { road: 'bg-primary', drainage: 'bg-secondary', building: 'bg-tertiary', electrical: 'bg-surface-tint' };
-    var C = 2 * Math.PI * 38, offset = 0, svg = '<circle cx="50" cy="50" r="38" fill="transparent" stroke="#d3e4fe" stroke-width="12"></circle>';
-    var list = Object.keys(ref.CATEGORIES).map(function (cat) {
-      var items = P.filter(function (p) { return p.category === cat; });
-      var b = items.reduce(function (s, p) { return s + p.budget; }, 0);
-      var dsb = items.reduce(function (s, p) { return s + p.disbursed; }, 0);
-      var share = b / total;
-      var len = share * C;
-      svg += '<circle cx="50" cy="50" r="38" fill="transparent" stroke="' + colors[cat] + '" stroke-width="12" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '"><title>' + ref.CATEGORIES[cat].label + ' ' + (share * 100).toFixed(0) + '%</title></circle>';
-      offset += len;
-      var done = items.filter(function (p) { return p.status === 'completed'; }).length;
-      var dp = b ? Math.round(dsb / b * 100) : 0;
-      return '<a href="projects.html?category=' + cat + '" class="p-space-sm bg-surface-container-low hover:bg-surface-container rounded-lg flex flex-col gap-space-2xs transition-colors">' +
-        '<div class="flex items-center justify-between gap-2 font-label-md text-label-md"><div class="flex items-center gap-space-xs"><span class="w-3 h-3 rounded shrink-0 ' + bars[cat] + '"></span>' +
-        '<span class="text-on-surface font-semibold">' + esc(ref.CATEGORIES[cat].label) + ' (' + (share * 100).toFixed(0) + '%)</span></div>' +
-        '<span class="font-code-sm text-code-sm text-primary font-bold whitespace-nowrap">' + money(b) + ' บ.</span></div>' +
-        '<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden"><div class="' + bars[cat] + ' h-full rounded-full" style="width:' + dp + '%"></div></div>' +
-        '<div class="flex justify-between font-body-sm text-body-sm text-on-surface-variant"><span>' + items.length + ' โครงการ (เสร็จแล้ว ' + done + ' โครงการ)</span><span class="font-medium">เบิกจ่ายแล้ว ' + dp + '%</span></div></a>';
-    }).join('');
-    $('donut').innerHTML = svg;
-    $('budget-breakdown').innerHTML = list;
-    $('donut-total').textContent = (total / 1e6).toFixed(2) + 'M';
-    $('budget-sub').textContent = 'การจัดสรรงบลงทุน ' + (total / 1e6).toFixed(2) + ' ล้านบาท ' + (F.year ? 'ปีงบประมาณ ' + F.year : 'ประจำปีงบประมาณ ' + SK.fiscalYear()) + (filtered() ? ' (ตามตัวกรอง)' : '') + ' (คลิกเพื่อดูรายการ)';
+    if (!keepFilters) renderFilters();
+    renderKpis(P); renderMonthly(P); renderSide(P); renderTable(P); renderMarkers();
   }
 
-  // ---------- แผนที่ GIS ----------
-  var map, layers, layerIdx = 0, markers = [], hiddenCats = {}, tambon = null;
+  // ---------- แผนที่ ----------
+  var map, layers, layerIdx = 0, markers = [], tambon = null;
   function initMap() {
-    if (!window.L) {
-      $('gis-map').innerHTML = '<div class="h-full flex items-center justify-center text-on-surface-variant">โหลดแผนที่ไม่สำเร็จ</div>';
-      return;
-    }
-    map = L.map('gis-map', { zoomControl: false, attributionControl: true, scrollWheelZoom: false }).setView(center(), 14);
+    if (!window.L) { $('gis-map').innerHTML = '<div class="h-full flex items-center justify-center text-on-surface-variant">โหลดแผนที่ไม่สำเร็จ</div>'; return; }
+    map = L.map('gis-map', { zoomControl: true, attributionControl: true, scrollWheelZoom: false }).setView(center(), 14);
     layers = [
-      { name: 'แผนที่ถนน (OSM)', layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }) },
-      { name: 'ภาพถ่ายดาวเทียม (Esri)', layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagery &copy; Esri' }) }
+      { name: 'แผนที่ถนน', layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }) },
+      { name: 'ภาพถ่ายดาวเทียม', layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagery &copy; Esri' }) }
     ];
     layers[0].layer.addTo(map);
-    // ขอบเขตตำบลสีแก้วและหมู่บ้าน (ซูมพอดีตำบล)
     if (SK.tambon) tambon = SK.tambon.attach(map, { fit: true });
     if (SK.cloud && SK.cloud.active) $('map-draw-btn').classList.remove('hidden');
-    renderMarkers();
     document.addEventListener('fullscreenchange', function () { setTimeout(function () { map.invalidateSize(); }, 100); });
   }
+  function renderMarkers() {
+    var P = FP(), counts = { done: 0, active: 0, late: 0 };
+    P.forEach(function (p) { counts[GROUP(p)]++; });
+    $('lg-done').textContent = counts.done; $('lg-active').textContent = counts.active; $('lg-late').textContent = counts.late;
+    if (!map) return;
+    markers.forEach(function (m) { m.remove(); });
+    var pts = P.filter(function (p) { return p.lat; });
+    $('map-sub').textContent = pts.length + ' จุด จาก ' + P.length + ' โครงการ';
+    markers = pts.map(function (p) {
+      var icon = L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12],
+        html: '<div style="background:' + GROUP_COLOR[GROUP(p)] + ';width:26px;height:26px;border-radius:999px;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.3)"></div>' });
+      var m = L.marker([p.lat, p.lng], { icon: icon, title: p.name, keyboard: true }).addTo(map);
+      m.__id = p.id;
+      m.bindPopup('<div style="min-width:220px;font-family:Prompt,Sarabun,sans-serif"><div style="display:flex;justify-content:space-between;gap:8px"><strong>' + esc(ui.villageName(p.village)) + '</strong>' + ui.statusBadge(p) + '</div>' +
+        '<div style="margin:4px 0;font-weight:600">' + esc(p.name) + '</div><div>งบ ' + money(p.budget) + ' บ. • ผลงาน ' + p.actual + '%</div>' +
+        '<a href="project.html?id=' + encodeURIComponent(p.id) + '" style="display:inline-block;margin-top:6px;color:#173b8e;font-weight:700">ดูข้อมูลโครงการ →</a></div>');
+      return m;
+    });
+  }
+
   // พิมพ์แผนที่: หน้าเดียว A4 แนวนอน ไม่แสดงหมุดโครงการ — แผนที่ขอบเขตตำบล/หมู่บ้าน + คำอธิบายหมู่ที่ใต้แผนที่
   function printMap() {
     if (!map) return;
@@ -218,7 +240,7 @@
     if (!st) {
       st = document.createElement('style'); st.id = 'sk-map-print-css';
       st.textContent =
-        '#map-print-wrap{position:fixed;inset:0;z-index:5000;overflow:auto;background:#fff;padding:16px;font-family:Sarabun,sans-serif;color:#0b1c30}' +
+        '#map-print-wrap{position:fixed;inset:0;z-index:5000;overflow:auto;background:#fff;padding:16px;color:#0b1c30}' +
         '#map-print-wrap .mp-page{width:281mm;margin:0 auto}' +
         '#map-print-wrap #map-card{width:281mm!important;height:134mm!important;border:1px solid #c5c5d3;border-radius:0}' +
         '#map-print-wrap #map-card [data-map-tools],#map-print-wrap #map-card .leaflet-control-zoom,#map-print-wrap #map-card > .absolute:not(#gis-map){display:none!important}' +
@@ -255,16 +277,13 @@
     wrap.querySelector('[data-slot]').appendChild(card);
     card.setAttribute('style', '');
     document.body.classList.add('sk-print-map');
-    // ไม่แสดงหมุดโครงการ
     map.closePopup();
     map.eachLayer(function (l) { if (l.closeTooltip) l.closeTooltip(); });
     markers.forEach(function (m) { m.remove(); });
     map.invalidateSize();
-    // ซูมแบบละเอียด (ไม่ปัดเป็นขั้น) ให้ตำบลเต็มกรอบแผนที่
     var snap = map.options.zoomSnap;
     map.options.zoomSnap = 0.05;
     if (tambon && tambon.bounds && tambon.bounds.isValid()) map.fitBounds(tambon.bounds, { padding: [6, 6], animate: false });
-
     var done = false;
     function restore() {
       if (done) return; done = true;
@@ -288,134 +307,164 @@
     tiles.once('load', go);
     setTimeout(go, 4000);
   }
-  function renderMarkers() {
-    var P = FP();
-    var counts = { done: 0, active: 0, late: 0 };
-    P.forEach(function (p) { counts[GROUP(p)]++; });
-    $('lg-done').textContent = counts.done;
-    $('lg-active').textContent = counts.active;
-    $('lg-late').textContent = counts.late;
-    $('map-filters').innerHTML = Object.keys(ref.CATEGORIES).map(function (cat) {
-      var n = P.filter(function (p) { return p.category === cat; }).length;
-      var off = hiddenCats[cat];
-      return '<button type="button" data-action="map-filter" data-cat="' + cat + '" aria-pressed="' + !off + '" class="px-space-xs py-0.5 rounded bg-surface font-code-sm text-code-sm flex items-center gap-1 ' + CAT_STYLE[cat].text + (off ? ' opacity-40 line-through' : '') + '">' +
-        '<span class="w-2 h-2 rounded-full ' + CAT_STYLE[cat].dot + '"></span>' + esc(ref.CATEGORIES[cat].short) + ' (' + n + ')</button>';
-    }).join('');
-    if (!map) return;
-    markers.forEach(function (m) { m.remove(); });
-    markers = P.filter(function (p) { return !hiddenCats[p.category] && p.lat; }).map(function (p) {
-      var g = GROUP(p);
-      var icon = L.divIcon({
-        className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -14],
-        html: '<div style="background:' + GROUP_COLOR[g] + '" class="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg ring-4 ring-white"><span class="material-symbols-outlined text-[18px]">' + ref.CATEGORIES[p.category].icon + '</span></div>'
-      });
-      var m = L.marker([p.lat, p.lng], { icon: icon, title: p.name, keyboard: true }).addTo(map);
-      m.bindPopup('<div style="min-width:220px;font-family:Sarabun,sans-serif"><div style="display:flex;justify-content:space-between;gap:8px"><strong>' + esc(ui.villageName(p.village)) + '</strong>' + ui.statusBadge(p) + '</div>' +
-        '<div style="margin:4px 0;font-weight:600">' + esc(p.name) + '</div><div>งบ ' + money(p.budget) + ' บ. • ผลงาน ' + p.actual + '%</div>' +
-        '<button type="button" data-action="view-project" data-id="' + p.id + '" style="margin-top:6px;color:#1e3a8a;font-weight:700">ดูรายละเอียดโครงการ →</button></div>');
-      return m;
+
+  // ---------- แท็บธุรการกองช่าง (ข้อมูลตรวจสอบสิ่งปลูกสร้างอาคาร) ----------
+  var building = null, bYear = new Date().getFullYear() + 543, bMonth = '', bQuery = '';
+  function loadBuilding(force) {
+    if (building && !force) return Promise.resolve(building);
+    var call = SK.docEngine ? SK.docEngine.call('getAllBuildingInspectionHistories') : window.SKGas ? SKGas.call('getAllBuildingInspectionHistories') : Promise.resolve({ inspections: [] });
+    return Promise.resolve(call).then(function (r) { building = (r && r.inspections) || []; return building; }, function () { building = []; return building; });
+  }
+  function kpiCard(tone, label, value, sub) { return '<section class="sk-kpi sk-kpi-' + tone + '"><span class="sk-kpi-label">' + label + '</span><b class="sk-kpi-num">' + value + '</b><span class="sk-kpi-sub">' + sub + '</span></section>'; }
+  function renderClerk() {
+    var box = $('page-clerk');
+    if (!building) { box.innerHTML = '<section class="sk-card p-space-lg text-on-surface-variant">กำลังโหลดข้อมูลตรวจสอบอาคาร...</section>'; loadBuilding().then(renderClerk); return; }
+    var dateOf = function (r) { return parseDate(r['วันที่ทำบันทึก']) || parseDate(r['วันที่สร้าง']); };
+    var now = new Date(), thisMonth = building.filter(function (r) { var d = dateOf(r); return d && d.y === now.getFullYear() && d.m === now.getMonth(); }).length;
+    var people = {};
+    building.forEach(function (r) { var n = String(r['ผู้ยื่นคำร้อง'] || '').trim(); if (n) people[n] = 1; });
+    var last = building.map(function (r) { return r['วันที่แก้ไข'] || r['วันที่สร้าง']; }).filter(Boolean).sort().pop();
+    var q = bQuery.trim().toLowerCase();
+    var rows = building.filter(function (r) {
+      var d = dateOf(r);
+      if (bYear && (!d || d.y + 543 !== +bYear)) return false;
+      if (bMonth !== '' && (!d || d.m !== +bMonth)) return false;
+      return !q || [r['เลขบันทึก'], r['ผู้ยื่นคำร้อง'], r['โฉนดที่ดินเลขที่'], r['ชื่อโครงการ']].join(' ').toLowerCase().indexOf(q) > -1;
     });
+    var counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    building.forEach(function (r) { var d = dateOf(r); if (d && d.y + 543 === +bYear) counts[d.m]++; });
+    var detail = function (r) {
+      try { var j = JSON.parse(r['ข้อมูลตรวจสอบอาคาร JSON'] || '{}'); return [j.buildingType || j.type || j.buildingKind, j.buildingDetail || j.detail || j.description].filter(Boolean).join(' • '); } catch (e) { return ''; }
+    };
+    box.innerHTML = '<div class="sk-kpi-grid sk-kpi-grid-4">' +
+        kpiCard('blue', 'บันทึกตรวจสอบอาคารทั้งหมด', building.length, 'จากชีทประวัติตรวจสอบสิ่งปลูกสร้างอาคาร') +
+        kpiCard('orange', 'บันทึกเดือนนี้', thisMonth, 'ตามวันที่ทำบันทึก/วันที่สร้าง') +
+        kpiCard('red', 'ผู้ยื่นคำร้อง', Object.keys(people).length, 'จำนวนรายชื่อไม่ซ้ำ') +
+        kpiCard('blue', 'อัปเดตล่าสุด', esc(last || '-'), 'ข้อมูลตรวจสอบอาคาร') + '</div>' +
+      '<section class="sk-card"><div class="sk-card-head flex-wrap"><div><h3>ข้อมูลตรวจสอบสิ่งปลูกสร้างอาคาร</h3><p>' + rows.length + ' รายการจากทั้งหมด ' + building.length + ' รายการ • ปี ' + thaiNum(bYear) + ' • ' + (bMonth === '' ? 'ทั้งปี' : MONTHS[+bMonth]) + '</p></div>' +
+        '<div class="flex flex-wrap items-center gap-2"><input id="b-q" type="search" value="' + esc(bQuery) + '" placeholder="ค้นหาเลขบันทึก ผู้ยื่นคำร้อง โฉนด..." class="sk-input w-64"/>' +
+        '<label class="sk-mini">ปี<input id="b-year" type="number" value="' + esc(bYear) + '" class="sk-input w-24"/></label>' +
+        '<label class="sk-mini">เดือน<select id="b-month" class="sk-input"><option value="">ทั้งปี</option>' + MONTHS.map(function (m, i) { return '<option value="' + i + '"' + (String(i) === String(bMonth) ? ' selected' : '') + '>' + m + '</option>'; }).join('') + '</select></label>' +
+        '<button type="button" data-action="b-reload" class="sk-btn-clear">↻ โหลดข้อมูลตรวจสอบอาคาร</button>' +
+        '<a href="project-docs.html?doc=building&docs=building&menu=ตรวจสอบอาคาร" class="sk-btn-hero !py-2">+ บันทึกตรวจสอบอาคาร</a></div></div>' +
+        '<div class="px-space-lg pb-space-md"><h4 class="font-semibold text-[#14532d] mb-1">กราฟจำนวนบันทึกตรวจสอบอาคารรายเดือน</h4><p class="text-xs text-on-surface-variant mb-2">ปี ' + thaiNum(bYear) + ' รวม ' + counts.reduce(function (a, b) { return a + b; }, 0) + ' รายการ</p>' + monthly(counts, bYear, 'line') + '</div>' +
+        '<div class="overflow-x-auto"><table class="sk-table"><thead><tr><th>ลำดับ</th><th>เลขบันทึก</th><th>วันที่ทำบันทึก</th><th>ผู้ยื่นคำร้อง</th><th>โฉนดที่ดิน</th><th>รายละเอียดอาคาร</th><th>สร้าง/แก้ไขโดย</th><th>ดำเนินการ</th></tr></thead><tbody>' +
+        (rows.length ? rows.map(function (r, i) {
+          var idx = building.indexOf(r);
+          return '<tr><td class="text-center">' + (i + 1) + '</td><td class="whitespace-nowrap font-semibold">' + esc(r['เลขบันทึก'] || '-') + '</td><td class="whitespace-nowrap">' + esc(r['วันที่ทำบันทึก'] || '-') + '</td>' +
+            '<td>' + esc(r['ผู้ยื่นคำร้อง'] || '-') + '</td><td>' + esc(r['โฉนดที่ดินเลขที่'] || '-') + '</td><td>' + esc(detail(r) || r['ชื่อโครงการ'] || '-') + '</td>' +
+            '<td class="text-xs">' + esc(r['สร้างโดย'] || '-') + (r['แก้ไขโดย'] && r['แก้ไขโดย'] !== r['สร้างโดย'] ? '<br>แก้ไข: ' + esc(r['แก้ไขโดย']) : '') + '</td>' +
+            '<td>' + (r['HTML ตรวจสอบอาคาร'] ? '<button type="button" data-action="b-view" data-i="' + idx + '" class="sk-btn-clear !py-1">ดูเอกสาร</button>' : '-') + '</td></tr>';
+        }).join('') : '<tr><td colspan="8" class="text-center py-10 text-on-surface-variant">ยังไม่มีข้อมูลตรวจสอบอาคารตามปี/เดือนที่เลือก</td></tr>') + '</tbody></table></div></section>';
+    $('b-q').addEventListener('input', function () { bQuery = this.value; var pos = this.selectionStart; renderClerk(); var e = $('b-q'); e.focus(); e.setSelectionRange(pos, pos); });
+    $('b-year').addEventListener('change', function () { bYear = this.value; renderClerk(); });
+    $('b-month').addEventListener('change', function () { bMonth = this.value; renderClerk(); });
   }
 
-  // ---------- บันทึกหน้างานล่าสุด ----------
-  function renderFeed() {
-    var ids = {};
-    FP().forEach(function (p) { ids[p.id] = 1; });
-    var rows = SK.flows.sortedDiary().filter(function (e) { return ids[e.projectId]; }).slice(0, 3);
-    $('diary-feed').innerHTML = rows.map(function (e) {
-      var p = SK.db.project(e.projectId) || {};
-      var photo = e.photos && e.photos[0];
-      return '<a href="progress.html?id=' + encodeURIComponent(e.projectId) + '" class="flex gap-space-sm rounded-lg hover:bg-surface-container-low -m-1 p-1 transition-colors">' +
-        '<div class="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-surface-container flex items-center justify-center text-outline">' +
-        (photo ? '<img class="w-full h-full object-cover" alt="' + esc(photo.caption) + '" src="' + esc(photo.src) + '"/>' : '<span class="material-symbols-outlined">edit_note</span>') + '</div>' +
-        '<div class="flex flex-col justify-between flex-1 min-w-0"><div class="flex items-start justify-between gap-1">' +
-        '<span class="font-label-sm text-label-sm text-primary font-bold truncate">' + esc(ui.villageName(p.village)) + '</span>' +
-        '<span class="font-code-sm text-code-sm text-outline shrink-0">' + ui.dateShort(e.date) + '</span></div>' +
-        '<p class="font-body-sm text-body-sm text-on-surface leading-snug line-clamp-2">' + esc(e.title) + '</p>' +
-        '<div class="flex items-center gap-space-xs text-outline font-label-sm text-label-sm"><span class="material-symbols-outlined text-space-md text-primary">person</span><span class="truncate">' + esc(e.reporter) + '</span></div></div></a>';
-    }).join('') || '<p class="text-on-surface-variant">ยังไม่มีบันทึก</p>';
+  // ---------- แท็บสายทางทางหลวงท้องถิ่น ----------
+  var roads = null, roadQuery = '', roadMap = null, roadLayer = null;
+  function loadRoads(force) {
+    if (roads && !force) return Promise.resolve(roads);
+    var call = SK.docEngine ? SK.docEngine.call('getAllLocalRoadEntries') : window.SKGas ? SKGas.call('getAllLocalRoadEntries') : Promise.resolve({ entries: [] });
+    return Promise.resolve(call).then(function (r) { roads = (r && r.entries) || []; roads.updatedAt = r && r.updatedAt; return roads; }, function () { roads = []; return roads; });
+  }
+  var ROAD_COLS = ['รหัสสายทาง', 'ชื่อสายทาง', 'ระยะทาง', 'ผิวจราจร', 'เขตทางกว้าง ม.', 'สถานะ', 'ลงทะเบียนเมื่อวันที่', 'ชั้นทางในเขตเมือง', 'ชั้นทางนอกเขตเมือง', 'กว้าง (ม.)', 'ไหล่ทาง/ทางเท้ากว้าง ม. (ซ้าย)', 'ไหล่ทาง/ทางเท้ากว้าง ม. (ขวา)', 'พิกัดเริ่มต้น', 'พิกัดสิ้นสุด'];
+  function latlng(v) { var m = /(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/.exec(String(v || '')); return m ? [+m[1], +m[2]] : null; }
+  function km(v) { var t = String(v || '').replace(/,/g, ''), n = parseFloat(t); if (isNaN(n)) return 0; return /เมตร|ม\.$|\bm\b/.test(t) && !/กม|กิโล|km/i.test(t) ? n / 1000 : n; }
+  function renderRoads() {
+    var box = $('page-localRoad');
+    if (!roads) { box.innerHTML = '<section class="sk-card p-space-lg text-on-surface-variant">กำลังโหลดข้อมูลสายทาง...</section>'; loadRoads().then(renderRoads); return; }
+    var total = roads.reduce(function (s, r) { return s + km(r['ระยะทาง']); }, 0);
+    var surf = {};
+    roads.forEach(function (r) { var k = String(r['ผิวจราจร'] || '').trim(); if (k) surf[k] = (surf[k] || 0) + 1; });
+    var topSurf = Object.keys(surf).sort(function (a, b) { return surf[b] - surf[a]; })[0];
+    var q = roadQuery.trim().toLowerCase();
+    var rows = roads.filter(function (r) { return !q || ROAD_COLS.map(function (c) { return r[c] || ''; }).join(' ').toLowerCase().indexOf(q) > -1; });
+    box.innerHTML = '<div class="sk-kpi-grid sk-kpi-grid-4">' +
+        kpiCard('blue', 'สายทางทั้งหมด', roads.length, 'จากชีททะเบียนคุมสายทางทางหลวงท้องถิ่น') +
+        kpiCard('orange', 'ระยะทางรวม', total ? total.toLocaleString('th-TH', { maximumFractionDigits: 3 }) : 0, 'กิโลเมตร ตามข้อมูลที่ลงทะเบียน') +
+        kpiCard('red', 'ผิวจราจร', esc(topSurf || '-'), 'ชนิดที่พบมากที่สุด') +
+        kpiCard('blue', 'อัปเดตล่าสุด', esc(roads.updatedAt || '-'), 'ข้อมูลสายทาง') + '</div>' +
+      '<section class="sk-card"><div class="sk-card-head flex-wrap"><div><h3>สายทางทางหลวงท้องถิ่น</h3><p>' + rows.length + ' รายการ • ข้อมูลแยกจากฐานข้อมูลโครงการ/ผู้ควบคุมงาน</p></div>' +
+        '<div class="flex flex-wrap items-center gap-2"><input id="r-q" type="search" value="' + esc(roadQuery) + '" placeholder="ค้นหารหัสสายทาง ชื่อสายทาง ผิวจราจร สถานะ" class="sk-input w-72"/>' +
+        '<button type="button" data-action="r-reload" class="sk-btn-clear">↻ โหลดข้อมูลสายทาง</button>' +
+        '<button type="button" data-action="r-add" class="sk-btn-hero !py-2">+ ลงทะเบียนสายทาง</button></div></div>' +
+        '<div class="px-space-lg pb-space-md"><div class="flex flex-wrap items-center justify-between gap-2 mb-2"><div><h4 class="font-semibold text-[#14532d]">แผนที่สายทางทางหลวงท้องถิ่น</h4>' +
+          '<p class="text-xs text-on-surface-variant">' + (rows.some(function (r) { return latlng(r['พิกัดเริ่มต้น']); }) ? 'เส้นเชื่อมพิกัดเริ่มต้น–สิ้นสุดของแต่ละสายทาง' : 'ยังไม่มีข้อมูลพิกัดเริ่มต้น/สิ้นสุดสำหรับแสดงบนแผนที่') + '</p></div>' +
+          '<button type="button" data-action="r-fit" class="sk-map-btn">ดูทั้งหมด</button></div>' +
+          '<div id="road-map" class="h-[30rem] rounded-xl overflow-hidden bg-surface-container"></div></div>' +
+        '<div class="overflow-x-auto"><table class="sk-table"><thead><tr><th>ลำดับ</th>' + ROAD_COLS.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        (rows.length ? rows.map(function (r, i) {
+          return '<tr><td class="text-center">' + (i + 1) + '</td>' + ROAD_COLS.map(function (c) { return '<td class="whitespace-nowrap">' + esc(r[c] || '-') + '</td>'; }).join('') + '</tr>';
+        }).join('') : '<tr><td colspan="' + (ROAD_COLS.length + 1) + '" class="text-center py-10 text-on-surface-variant">ยังไม่มีข้อมูลสายทางทางหลวงท้องถิ่น</td></tr>') + '</tbody></table></div></section>';
+    $('r-q').addEventListener('input', function () { roadQuery = this.value; var pos = this.selectionStart; renderRoads(); var e = $('r-q'); e.focus(); e.setSelectionRange(pos, pos); });
+    drawRoads(rows);
+  }
+  function drawRoads(rows) {
+    if (!window.L) return;
+    if (roadMap) { roadMap.remove(); roadMap = null; }
+    roadMap = L.map('road-map', { scrollWheelZoom: false }).setView(center(), 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(roadMap);
+    if (SK.tambon) SK.tambon.attach(roadMap, { fit: true });
+    roadLayer = L.featureGroup().addTo(roadMap);
+    rows.forEach(function (r, i) {
+      var a = latlng(r['พิกัดเริ่มต้น']), b = latlng(r['พิกัดสิ้นสุด']);
+      var tip = esc((r['รหัสสายทาง'] || '') + ' ' + (r['ชื่อสายทาง'] || '')) + '<br>' + esc(r['ระยะทาง'] || '') + ' • ' + esc(r['ผิวจราจร'] || '');
+      var color = BAR[i % BAR.length];
+      if (a && b) L.polyline([a, b], { color: color, weight: 5, opacity: .85 }).bindTooltip(tip, { sticky: true }).addTo(roadLayer);
+      if (a) L.circleMarker(a, { radius: 6, color: '#fff', weight: 2, fillColor: '#19a865', fillOpacity: 1 }).bindTooltip('จุดเริ่มต้น: ' + tip).addTo(roadLayer);
+      if (b) L.circleMarker(b, { radius: 6, color: '#fff', weight: 2, fillColor: '#ba1a1a', fillOpacity: 1 }).bindTooltip('จุดสิ้นสุด: ' + tip).addTo(roadLayer);
+    });
+    setTimeout(function () { roadMap.invalidateSize(); if (roadLayer.getLayers().length) roadMap.fitBounds(roadLayer.getBounds(), { padding: [30, 30], maxZoom: 16 }); }, 60);
   }
 
-  // ---------- ตารางสัญญาล่าสุด ----------
-  var PAGE = 3, page = 1, statusFilter = '';
-  function recentRows() {
-    var q = $('recent-search').value.trim().toLowerCase();
-    return FP().sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); })
-      .filter(function (p) {
-        if (statusFilter && p.status !== statusFilter) return false;
-        if (!q) return true;
-        return [p.id, p.contractNo, p.name, p.contractor, p.egp].join(' ').toLowerCase().indexOf(q) > -1;
-      });
-  }
-  function renderRecent() {
-    var rows = recentRows();
-    var pages = Math.max(1, Math.ceil(rows.length / PAGE));
-    page = Math.min(Math.max(1, page), pages);
-    var slice = rows.slice((page - 1) * PAGE, page * PAGE);
-    $('recent-body').innerHTML = slice.map(function (p, i) {
-      return '<tr class="hover:bg-surface-container-low/50 transition-colors ' + (i % 2 ? 'bg-surface-container-low/20' : 'bg-surface-container-lowest') + '">' +
-        '<td class="py-space-sm px-space-base font-code-sm text-code-sm text-primary font-bold whitespace-nowrap">' + esc(p.id) + '<div class="font-normal text-outline">' + esc(p.contractNo) + '</div></td>' +
-        '<td class="py-space-sm px-space-base"><button type="button" data-action="view-project" data-id="' + p.id + '" class="font-semibold text-on-surface block text-left hover:text-primary hover:underline">' + esc(p.name) + '</button>' +
-        '<span class="text-outline text-label-sm">ผู้รับจ้าง: ' + esc(p.contractor) + '</span></td>' +
-        '<td class="py-space-sm px-space-base whitespace-nowrap">' + esc(ui.villageName(p.village)) + '</td>' +
-        '<td class="py-space-sm px-space-base text-right font-code-sm text-code-sm font-semibold">' + money(p.budget, 2) + '</td>' +
-        '<td class="py-space-sm px-space-base text-center"><div class="flex items-center justify-center gap-2"><div class="w-16">' + ui.progressBar(p.actual, p.status) + '</div><span class="font-code-sm text-code-sm font-bold text-primary">' + p.actual + '%</span></div></td>' +
-        '<td class="py-space-sm px-space-base text-center">' + ui.statusBadge(p) + '</td>' +
-        '<td class="py-space-sm px-space-base text-center"><button type="button" data-action="view-project" data-id="' + p.id + '" aria-label="ดูรายละเอียด ' + esc(p.id) + '" class="p-1 rounded text-outline hover:text-primary hover:bg-surface-container"><span class="material-symbols-outlined text-space-md">visibility</span></button></td></tr>';
-    }).join('') || '<tr><td colspan="7" class="py-6 text-center text-on-surface-variant">ไม่พบสัญญาที่ตรงกับเงื่อนไข</td></tr>';
-    $('recent-summary').textContent = 'แสดง ' + slice.length + ' จาก ' + rows.length + ' รายการ' + (rows.length !== SK.db.data.projects.length ? ' (ทั้งหมด ' + SK.db.data.projects.length + ')' : ' สัญญาในรอบปี 2567');
-    $('recent-page').textContent = page + ' / ' + pages;
-    document.querySelector('[data-action=recent-prev]').disabled = page <= 1;
-    document.querySelector('[data-action=recent-next]').disabled = page >= pages;
-    $('recent-filter').classList.toggle('ring-2', !!statusFilter);
+  // ---------- แท็บ ----------
+  var page = (/[?&]tab=(\w+)/.exec(location.search) || [])[1] || 'supervisor';
+  if (['supervisor', 'clerk', 'localRoad'].indexOf(page) < 0) page = 'supervisor';
+  function showPage(p) {
+    page = p;
+    document.querySelectorAll('[data-action="dash-page"]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.page === p)); });
+    document.querySelectorAll('[data-dash-page]').forEach(function (el) { var on = el.dataset.dashPage === p; el.classList.toggle('hidden', !on); el.classList.toggle('flex', on); });
+    if (p === 'supervisor' && map) setTimeout(function () { map.invalidateSize(); }, 60);
+    if (p === 'clerk') renderClerk();
+    if (p === 'localRoad') renderRoads();
   }
 
-  // งานเร่งด่วนจากข้อมูลจริง: โครงการล่าช้า และโครงการที่สัญญาจะสิ้นสุดภายใน 30 วัน
-  function renderAlerts() {
-    if (!SK.db.external) return; // ข้อมูลตัวอย่างใช้การ์ดตัวอย่างใน HTML
-    var today = ui.today();
-    var soon = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-    var P = FP();
-    var items = P.filter(function (p) { return p.status === 'delayed'; }).map(function (p) { return { p: p, kind: 'late' }; })
-      .concat(P.filter(function (p) { return p.status === 'on-schedule' && p.end && p.end >= today && p.end <= soon; }).map(function (p) { return { p: p, kind: 'soon' }; }));
-    $('alerts-count').textContent = items.length + ' รายการ';
-    $('alerts-list').innerHTML = items.slice(0, 5).map(function (it) {
-      var p = it.p, late = it.kind === 'late';
-      var days = p.end ? Math.round((Date.parse(p.end) - Date.parse(today)) / 86400000) : null;
-      return '<div class="p-space-sm ' + (late ? 'bg-error-container/30' : 'bg-surface-container-low') + ' rounded-lg relative overflow-hidden flex flex-col gap-space-xs">' +
-        '<div class="absolute top-0 left-0 bottom-0 w-1 ' + (late ? 'bg-error' : 'bg-secondary') + '"></div>' +
-        '<div class="flex items-center justify-between gap-2 pl-space-xs"><span class="font-label-sm text-label-sm ' + (late ? 'text-error' : 'text-secondary') + ' font-bold flex items-center gap-1">' +
-        '<span class="material-symbols-outlined text-space-md">' + (late ? 'warning' : 'schedule') + '</span>' + (late ? 'ล่าช้ากว่าแผน' : 'สัญญาสิ้นสุดใน ' + days + ' วัน') + '</span>' +
-        '<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-code-sm text-code-sm">' + esc(ui.villageName(p.village)) + '</span></div>' +
-        '<h4 class="font-headline-sm text-headline-sm text-on-surface leading-tight pl-space-xs">' + esc(p.name) + '</h4>' +
-        '<p class="font-body-sm text-body-sm text-on-surface-variant pl-space-xs">' + esc(p.contractor) + (p.end ? ' • สิ้นสุดสัญญา ' + ui.dateShort(p.end) : '') + ' • ผลงาน ' + p.actual + '%</p>' +
-        '<div class="mt-space-xs pl-space-xs flex flex-wrap gap-space-xs">' +
-        (late ? '<button type="button" data-action="urge" data-project="' + p.id + '" class="px-space-sm py-1 bg-error text-on-error rounded font-label-sm text-label-sm font-semibold">ออกหนังสือเร่งรัดสัญญา (ว.119)</button>' : '') +
-        '<button type="button" data-action="view-project" data-id="' + p.id + '" class="px-space-sm py-1 bg-surface-container text-on-surface rounded font-label-sm text-label-sm">ดูรายละเอียด</button>' +
-        '<a href="project-docs.html?id=' + encodeURIComponent(p.id) + '" class="px-space-sm py-1 bg-surface-container text-primary rounded font-label-sm text-label-sm">พิมพ์เอกสาร</a></div></div>';
-    }).join('') || '<p class="text-on-surface-variant font-body-sm text-body-sm">ไม่มีโครงการล่าช้าหรือใกล้สิ้นสุดสัญญาใน 30 วัน</p>';
-  }
-
-  function refresh() { renderFilters(); renderKpis(); renderCharts(); renderBudget(); renderMarkers(); renderFeed(); renderRecent(); renderAlerts(); }
+  function refresh() { refreshSupervisor(false); }
 
   Object.assign(SK.actions, {
-    'exec-report': function () {
-      SK.docs.print('slaReport', 'รายงานสรุปผู้บริหาร', FP(), 'รายงานสรุปโครงการและงบประมาณสำหรับผู้บริหาร');
+    'dash-page': function (el) {
+      showPage(el.dataset.page);
+      var q = new URLSearchParams(location.search);
+      if (el.dataset.page === 'supervisor') q.delete('tab'); else q.set('tab', el.dataset.page);
+      try { history.replaceState(null, '', 'index.html' + (q.toString() ? '?' + q : '')); } catch (e) {}
     },
-    'new-project': function () { ui.openProjectForm(null, refresh); },
+    'dash-collapse': function (el) {
+      var t = $(el.dataset.target); if (!t) return;
+      var hide = !t.classList.contains('hidden');
+      t.classList.toggle('hidden', hide);
+      el.textContent = el.textContent.replace(/^[▾▸]\s*(ปิด|เปิด)/, hide ? '▸ เปิด' : '▾ ปิด');
+      if (!hide && el.dataset.target === 'map-body' && map) setTimeout(function () { map.invalidateSize(); }, 60);
+    },
+    'dash-month-mode': function (el) { monthMode = el.dataset.mode; renderMonthly(FP()); },
     'dash-chart-filter': function (el) { setFilter(el.dataset.key, F[el.dataset.key] === el.dataset.v ? '' : el.dataset.v); },
-    'dash-filter-reset': function () { F = {}; try { sessionStorage.removeItem(FKEY); } catch (e) {} page = 1; refresh(); if (tambon) tambon.fit(); },
+    'dash-filter-reset': function () { F = {}; saveF(); refresh(); if (tambon) tambon.fit(); },
+    'dash-map-go': function (el) {
+      var m = markers.filter(function (x) { return x.__id === el.dataset.id; })[0];
+      if (!m) return;
+      $('map-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      map.flyTo(m.getLatLng(), 17); setTimeout(function () { m.openPopup(); }, 700);
+    },
+    'exec-report': function () { SK.docs.print('slaReport', 'รายงานสรุปผู้บริหาร', FP(), 'รายงานสรุปโครงการและงบประมาณสำหรับผู้บริหาร'); },
+    'new-project': function () { ui.openProjectForm(null, refresh); },
     'map-layers': function () {
       if (!map) return;
       map.removeLayer(layers[layerIdx].layer);
       layerIdx = (layerIdx + 1) % layers.length;
       layers[layerIdx].layer.addTo(map);
       $('map-layer-name').textContent = layers[layerIdx].name;
-      ui.toast('เปลี่ยนเป็น ' + layers[layerIdx].name);
     },
-    'map-zoom-in': function () { if (map) map.zoomIn(); },
-    'map-zoom-out': function () { if (map) map.zoomOut(); },
-    'map-locate': function () { if (!map) return; if (tambon) tambon.fit(); else map.flyTo(center(), 14); ui.toast('กลับสู่ตำบลสีแก้ว'); },
+    'map-locate': function () { if (!map) return; if (tambon) tambon.fit(); else map.flyTo(center(), 14); },
     'map-draw': function () {
       if (!map || !SK.tambon) return;
       ui.toast('คลิกบนแผนที่ทีละจุดตามแนวเขตหมู่บ้าน แล้วกด "เสร็จสิ้น"');
@@ -425,41 +474,22 @@
       var card = $('map-card');
       if (document.fullscreenElement) document.exitFullscreen();
       else if (card.requestFullscreen) card.requestFullscreen();
-      else window.open('https://www.google.com/maps/@' + center()[0] + ',' + center()[1] + ',14z', '_blank', 'noopener');
     },
     'map-print': function () { printMap(); },
-    'map-filter': function (el) {
-      hiddenCats[el.dataset.cat] = !hiddenCats[el.dataset.cat];
-      renderMarkers();
+    'b-reload': function () { building = null; loadBuilding(true).then(renderClerk); renderClerk(); },
+    'b-view': function (el) {
+      var r = building[Number(el.dataset.i)];
+      if (r && SK.docEngine && SK.docEngine.preview) SK.docEngine.preview('บันทึกตรวจสอบสิ่งปลูกสร้างอาคาร ' + (r['เลขบันทึก'] || ''), r['HTML ตรวจสอบอาคาร']);
     },
-    'recent-prev': function () { page--; renderRecent(); },
-    'recent-next': function () { page++; renderRecent(); },
-    'recent-filter': function (el) {
-      var opts = [['', 'ทุกสถานะ']].concat(Object.keys(ref.STATUSES).map(function (k) { return [k, ref.STATUSES[k].long]; }));
-      var box = document.createElement('div');
-      box.className = 'sk-dropdown fixed z-[1050] bg-surface-container-lowest rounded-xl shadow-2xl ring-1 ring-surface-container py-1';
-      box.innerHTML = opts.map(function (o) {
-        return '<button type="button" data-v="' + o[0] + '" class="w-full text-left px-4 py-2 hover:bg-surface-container-low ' + (o[0] === statusFilter ? 'font-bold text-primary' : '') + '">' + esc(o[1]) + '</button>';
-      }).join('');
-      document.body.appendChild(box);
-      var r = el.getBoundingClientRect();
-      box.style.top = (r.bottom + 6) + 'px';
-      box.style.left = Math.max(12, r.right - box.offsetWidth) + 'px';
-      var close = function (e) { if (!box.contains(e.target)) { box.remove(); document.removeEventListener('click', close); } };
-      setTimeout(function () { document.addEventListener('click', close); }, 0);
-      box.addEventListener('click', function (e) {
-        var b = e.target.closest('[data-v]');
-        if (!b) return;
-        statusFilter = b.dataset.v; page = 1; renderRecent();
-        box.remove(); document.removeEventListener('click', close);
-      });
-    }
+    'r-reload': function () { roads = null; renderRoads(); },
+    'r-add': function () { if (SK.docEngine) SK.docEngine.openTool('localRoad', function () { roads = null; renderRoads(); }); },
+    'r-fit': function () { if (roadMap && roadLayer && roadLayer.getLayers().length) roadMap.fitBounds(roadLayer.getBounds(), { padding: [30, 30], maxZoom: 16 }); else if (roadMap) roadMap.setView(center(), 14); }
   });
 
   SK.page = { refresh: refresh };
   ui.onReady(function () {
-    $('recent-search').addEventListener('input', function () { page = 1; renderRecent(); });
     initMap();
     refresh();
+    showPage(page);
   });
 })();
