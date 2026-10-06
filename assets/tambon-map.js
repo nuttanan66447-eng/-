@@ -42,11 +42,42 @@
     return SKGas.call('getMapBoundaries').then(function (r) { return (r && r.boundaries) || []; }, function () { return []; });
   }
 
-  // จุดกึ่งกลางของรูปหลายเหลี่ยม (สำหรับวางชื่อหมู่)
+  // จุดกลางของพื้นที่หมู่บ้าน (สำหรับวางป้าย ม.): จุดในรูปที่ห่างจากเส้นขอบมากที่สุด
+  // (ค่าเฉลี่ยของจุดยอดเบี้ยวไปทางด้านที่มีจุดถี่ และอาจตกนอกรูปเมื่อรูปเว้า)
+  function inside(x, y, ring) {
+    var c = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  }
+  function edgeDist(x, y, ring, k) {
+    var best = Infinity;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      var ax = ring[j][0] * k, ay = ring[j][1], bx = ring[i][0] * k, by = ring[i][1], px = x * k;
+      var dx = bx - ax, dy = by - ay, t = dx || dy ? Math.max(0, Math.min(1, ((px - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy))) : 0;
+      var ex = ax + t * dx - px, ey = ay + t * dy - y;
+      best = Math.min(best, ex * ex + ey * ey);
+    }
+    return Math.sqrt(best);
+  }
   function ringCenter(ring) {
-    var lat = 0, lng = 0;
-    ring.forEach(function (p) { lat += p[1]; lng += p[0]; });
-    return [lat / ring.length, lng / ring.length];
+    var xs = ring.map(function (p) { return p[0]; }), ys = ring.map(function (p) { return p[1]; });
+    var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+    var k = Math.cos((y0 + y1) / 2 * Math.PI / 180), best = null, bestD = -1, N = 24;
+    var scan = function (ax, bx, ay, by) {
+      for (var i = 0; i <= N; i++) for (var j = 0; j <= N; j++) {
+        var x = ax + (bx - ax) * i / N, y = ay + (by - ay) * j / N;
+        if (!inside(x, y, ring)) continue;
+        var d = edgeDist(x, y, ring, k);
+        if (d > bestD) { bestD = d; best = [x, y]; }
+      }
+    };
+    scan(x0, x1, y0, y1);
+    if (best) { var sx = (x1 - x0) / N, sy = (y1 - y0) / N; scan(best[0] - sx, best[0] + sx, best[1] - sy, best[1] + sy); }
+    if (!best) { var lat = 0, lng = 0; ring.forEach(function (p) { lat += p[1]; lng += p[0]; }); return [lat / ring.length, lng / ring.length]; }
+    return [best[1], best[0]];
   }
   function villageLabel(no) {
     var v = SK.ref.VILLAGES['m' + no];

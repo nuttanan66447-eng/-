@@ -220,10 +220,11 @@
       st.textContent =
         '#map-print-wrap{position:fixed;inset:0;z-index:5000;overflow:auto;background:#fff;padding:16px;font-family:Sarabun,sans-serif;color:#0b1c30}' +
         '#map-print-wrap .mp-page{width:281mm;margin:0 auto}' +
-        '#map-print-wrap #map-card{width:281mm!important;height:128mm!important;border:1px solid #c5c5d3;border-radius:0}' +
+        '#map-print-wrap #map-card{width:281mm!important;height:134mm!important;border:1px solid #c5c5d3;border-radius:0}' +
         '#map-print-wrap #map-card [data-map-tools],#map-print-wrap #map-card .leaflet-control-zoom,#map-print-wrap #map-card > .absolute:not(#gis-map){display:none!important}' +
         '#map-print-wrap .mp-legend{display:grid;grid-template-columns:repeat(8,1fr);gap:0.5mm 3mm;font-size:9.5pt;margin-top:1.5mm}' +
         '#map-print-wrap .mp-legend b{color:#00236f}' +
+        '#map-print-wrap .leaflet-tooltip,#map-print-wrap .leaflet-popup{display:none!important}' +
         '@media print{@page{size:A4 landscape;margin:8mm}' +
           'html,body{height:auto!important;overflow:visible!important}' +
           'body.sk-print-map>*:not(#map-print-wrap){display:none!important}' +
@@ -256,9 +257,13 @@
     document.body.classList.add('sk-print-map');
     // ไม่แสดงหมุดโครงการ
     map.closePopup();
+    map.eachLayer(function (l) { if (l.closeTooltip) l.closeTooltip(); });
     markers.forEach(function (m) { m.remove(); });
     map.invalidateSize();
-    if (tambon && tambon.bounds && tambon.bounds.isValid()) map.fitBounds(tambon.bounds, { padding: [12, 12], animate: false });
+    // ซูมแบบละเอียด (ไม่ปัดเป็นขั้น) ให้ตำบลเต็มกรอบแผนที่
+    var snap = map.options.zoomSnap;
+    map.options.zoomSnap = 0.05;
+    if (tambon && tambon.bounds && tambon.bounds.isValid()) map.fitBounds(tambon.bounds, { padding: [6, 6], animate: false });
 
     var done = false;
     function restore() {
@@ -267,6 +272,7 @@
       document.body.classList.remove('sk-print-map');
       home.parent.insertBefore(card, home.next && home.next.parentNode === home.parent ? home.next : null);
       card.setAttribute('style', oldStyle);
+      map.options.zoomSnap = snap;
       wrap.remove();
       renderMarkers();
       map.invalidateSize();
