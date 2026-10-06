@@ -8,6 +8,7 @@
   var TABS = [
     { key: 'overview', icon: 'dashboard', label: 'ภาพรวม' },
     { key: 'details', icon: 'list_alt', label: 'ข้อมูลโครงการ' },
+    { key: 'photos', icon: 'photo_library', label: 'รูปภาพโครงการ' },
     { key: 'people', icon: 'groups', label: 'คณะกรรมการและผู้ควบคุมงาน' },
     { key: 'estimate', icon: 'calculate', label: 'แบบ ปร.4 / ปร.5 / ปร.6 ประมาณราคา' },
     { key: 'order', icon: 'assignment', label: 'บันทึกข้อความและคำสั่งแต่งตั้ง' },
@@ -171,6 +172,9 @@
       '<div class="xl:col-span-4 flex flex-col gap-space-lg">' +
         card('<div class="p-space-md flex items-center justify-between"><h2 class="flex items-center gap-2 font-headline-sm text-headline-sm text-primary font-bold"><span class="material-symbols-outlined">location_on</span>ที่ตั้ง</h2>' +
           '<button type="button" data-action="pj-tab" data-tab="map" class="font-label-md text-label-md text-primary font-semibold hover:underline">ดูแผนที่ใหญ่</button></div><div id="pj-map-small" class="h-56 bg-surface-container"></div>', 'overflow-hidden') +
+        card(head('photo_library', 'รูปภาพโครงการ', '<button type="button" data-action="pj-tab" data-tab="photos" class="font-label-md text-label-md text-primary font-semibold hover:underline">' + (ctx.photos.length ? 'ทั้งหมด (' + ctx.photos.length + ')' : 'เพิ่มรูป') + '</button>') +
+          (ctx.photos.length ? '<div class="grid grid-cols-2 gap-space-xs">' + ctx.photos.slice(0, 4).map(function (ph) { return SK.photos.thumb(ph); }).join('') + '</div>'
+            : '<button type="button" data-action="pj-photo-add" class="w-full p-space-md rounded-lg border-2 border-dashed border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary flex flex-col items-center gap-1"><span class="material-symbols-outlined">add_photo_alternate</span>เพิ่มรูปภาพโครงการ</button>')) +
         card(head('history', 'เอกสารล่าสุด', '<button type="button" data-action="pj-tab" data-tab="docs" class="font-label-md text-label-md text-primary font-semibold hover:underline">ทั้งหมด (' + ctx.docs.length + ')</button>') + docList(ctx.docs.slice(0, 4), p)) +
       '</div></div>';
   }
@@ -208,6 +212,14 @@
   }
   function paneDocs(p, ctx) {
     return card(head('history', 'ประวัติเอกสาร (' + ctx.docs.length + ')', '<a href="project-docs.html?id=' + encodeURIComponent(p.id) + '" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">add</span>สร้างเอกสาร</a>') + docList(ctx.docs, p));
+  }
+  function panePhotos(p, ctx) {
+    return card(head('photo_library', 'รูปภาพโครงการ (' + ctx.photos.length + ')',
+      '<span class="flex flex-wrap gap-2"><a href="index.html?page=openEngineerReportHome" class="' + ui.btnClass('ghost') + '" title="ปริ้นรูปภาพโครงการในระบบหลัก (รายงานช่าง)"><span class="material-symbols-outlined text-[18px]">print</span>ปริ้นรูปภาพโครงการ</a>' +
+      '<button type="button" data-action="pj-photo-add" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>เพิ่มรูป</button></span>') +
+      (ctx.photos.length ? '<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-space-sm">' + ctx.photos.map(function (ph) { return SK.photos.thumb(ph); }).join('') + '</div>'
+        : '<button type="button" data-action="pj-photo-add" class="w-full p-space-xl rounded-lg border-2 border-dashed border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary flex flex-col items-center gap-2"><span class="material-symbols-outlined text-[40px]">add_photo_alternate</span>' +
+          '<span class="font-headline-sm text-headline-sm">ยังไม่มีรูปภาพของโครงการนี้</span><span class="font-body-sm text-body-sm">กดเพื่อเลือกรูป (เลือกได้หลายรูป) — ภาพก่อน ระหว่าง และหลังดำเนินการ</span></button>'));
   }
   function paneDiary(p, ctx) {
     return card(head('edit_note', 'บันทึกหน้างาน (' + ctx.diary.length + ')', '<a href="progress.html?id=' + encodeURIComponent(p.id) + '&new=diary" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">add_a_photo</span>บันทึกหน้างาน</a>') +
@@ -305,7 +317,8 @@
     ctx = {
       people: committees(p),
       docs: SK.db.data.documents.filter(function (d) { return d.projectId === p.id; }),
-      diary: SK.flows.sortedDiary().filter(function (e) { return e.projectId === p.id; })
+      diary: SK.flows.sortedDiary().filter(function (e) { return e.projectId === p.id; }),
+      photos: SK.photos.of(p.id)
     };
     var cat = ref.CATEGORIES[p.category] || {}, tone = STATUS_TONE[p.status] || '#1e3a8a';
     var dpct = p.budget ? Math.round(p.disbursed / p.budget * 100) : 0;
@@ -345,7 +358,7 @@
       // แถบเครื่องมือ
       '<div class="sticky top-16 z-30 flex flex-col md:flex-row md:items-center justify-between gap-space-sm bg-surface-container-lowest/95 backdrop-blur p-space-sm rounded-xl shadow-sm">' +
         '<div class="flex items-center gap-space-2xs overflow-x-auto pb-space-2xs md:pb-0" role="tablist">' + TABS.map(function (t) {
-          var n = t.key === 'docs' ? ctx.docs.length : t.key === 'diary' ? ctx.diary.length : null;
+          var n = t.key === 'docs' ? ctx.docs.length : t.key === 'diary' ? ctx.diary.length : t.key === 'photos' ? ctx.photos.length : null;
           return '<button type="button" data-action="pj-tab" data-tab="' + t.key + '" role="tab" aria-selected="' + (t.key === tab) + '" class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg font-headline-sm text-headline-sm transition-all shrink-0 ' +
             (t.key === tab ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container hover:text-primary') + '"><span class="material-symbols-outlined text-space-lg">' + t.icon + '</span><span>' + t.label + '</span>' +
             (n ? '<span class="px-1.5 rounded-full text-label-sm font-label-sm ' + (t.key === tab ? 'bg-on-primary/20' : 'bg-surface-container-high') + '">' + n + '</span>' : '') + '</button>';
@@ -362,9 +375,10 @@
   }
   function showPane(p) {
     var pane = $('pj-pane');
-    pane.innerHTML = DOC_TABS[tab] ? paneDocType(p, tab) : tab === 'details' ? paneDetails(p) : tab === 'people' ? panePeople(ctx) : tab === 'docs' ? paneDocs(p, ctx) : tab === 'diary' ? paneDiary(p, ctx) : tab === 'map' ? paneMap(p) : paneOverview(p, ctx);
+    pane.innerHTML = DOC_TABS[tab] ? paneDocType(p, tab) : tab === 'details' ? paneDetails(p) : tab === 'photos' ? panePhotos(p, ctx) : tab === 'people' ? panePeople(ctx) : tab === 'docs' ? paneDocs(p, ctx) : tab === 'diary' ? paneDiary(p, ctx) : tab === 'map' ? paneMap(p) : paneOverview(p, ctx);
     if (tab === 'overview') drawMap('pj-map-small', p, false);
     if (tab === 'map') drawMap('pj-map-big', p, true);
+    SK.photos.hydrate(pane);
     filter();
   }
   // ค้นหา: ซ่อนแถว/รายการที่ไม่ตรง และหมวดที่ไม่มีแถวเหลือ
@@ -402,6 +416,8 @@
       if (d) SK.docEngine.openDocument(d, project());
     },
     'pj-upload': function (el) { SK.flows.uploadNew({ projectId: projectId, type: el.dataset.type }, render); },
+    'pj-photo-add': function () { SK.photos.add(projectId, render); },
+    'photo-view': function (el) { SK.photos.view(el.dataset.id, render); },
     'pj-inspect': function () { SK.flows.inspection(projectId, render); },
     'pj-open-doc': function (el) { var d = SK.db.data.documents[Number(el.dataset.i)]; if (d) SK.flows.openDocument(d, render); }
   });
