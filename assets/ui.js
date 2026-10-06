@@ -591,6 +591,17 @@
     else run();
   }
 
+  // ธีมระบบเดิม: การ์ดหัวหน้าแรกของหน้า (ไม่ใช่แถบสถานะข้อมูล) มีแถบซ้ายน้ำเงิน (assets/theme-v184.css)
+  function markPageHead() {
+    var wrap = document.querySelector('main > div');
+    if (!wrap) return;
+    var head = Array.prototype.filter.call(wrap.children, function (el) {
+      return /bg-surface-container-lowest/.test(el.className) && !el.classList.contains('no-print') && el.tagName !== 'NAV';
+    })[0];
+    if (head) head.classList.add('sk-page-head');
+  }
+  onReady(function () { setTimeout(markPageHead, 0); });
+
   SK.ui = {
     esc: esc, money: money, dateShort: dateShort, dateLong: dateLong, dateFull: dateFull, today: today, nowTime: nowTime,
     bahtText: bahtText, toast: toast, modal: modal, confirm: confirmBox, formModal: formModal, btnClass: btnClass,

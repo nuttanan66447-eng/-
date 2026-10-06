@@ -1,0 +1,90 @@
+/* ธีมของระบบเดิม (v184) ใช้กับทุกหน้า: ฟอนต์ Prompt, เมนูซ้ายพื้นน้ำเงินไล่สี + ไอคอนกล่องสีไล่เฉด,
+   การ์ดขาวมีเส้นขอบบาง, แท็บ/ปุ่มหลักน้ำเงินไล่สี, หัวหน้ามีแถบซ้าย 6px — โหลดหลัง styles.css */
+
+/* ---------- ฟอนต์และพื้นหลัง ---------- */
+body, body *:not(.material-symbols-outlined):not(svg):not(svg *):not(.leaflet-container *) {
+  font-family: 'Prompt', 'Sarabun', sans-serif !important;
+}
+body { background: #f3f6fc !important; color: #12231a; }
+main.bg-surface { background: #f3f6fc !important; }
+
+/* ---------- เมนูด้านซ้าย ---------- */
+#sidebar {
+  background: linear-gradient(180deg, #173653 0%, #102f49 58%, #0d273e 100%) !important;
+  box-shadow: 8px 0 28px rgba(11, 37, 64, .12) !important;
+}
+#sidebar > div > a:first-child { background: transparent !important; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+#sidebar > div > a:first-child span:first-child + div span:first-child, #sidebar .text-surface.truncate { color: #fff !important; font-weight: 700 !important; }
+#sidebar nav { gap: 6px !important; }
+#sidebar nav a {
+  position: relative; align-items: center !important; gap: 10px !important;
+  padding: 7px 30px 7px 9px !important; border-radius: 12px !important; border: 1px solid transparent;
+  color: #d9e6f3 !important; background: transparent !important; font-weight: 500;
+  transition: background .15s, border-color .15s;
+}
+#sidebar nav a:hover { background: rgba(255, 255, 255, .07) !important; color: #fff !important; }
+#sidebar nav a[aria-current="page"] {
+  background: rgba(255, 255, 255, .12) !important; border-color: rgba(255, 255, 255, .14);
+  color: #fff !important; font-weight: 700 !important; box-shadow: 0 6px 16px rgba(0, 0, 0, .14);
+}
+#sidebar nav a::after {
+  content: '\203A'; position: absolute; right: 12px; top: 50%; transform: translateY(-52%);
+  font-size: 20px; line-height: 1; color: #9eb2c9;
+}
+#sidebar nav a[target="_blank"]::after { content: none; }
+#sidebar nav a > .material-symbols-outlined:first-child {
+  display: grid; place-items: center; flex: 0 0 31px; width: 31px; height: 31px; border-radius: 10px;
+  font-size: 18px !important; color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .13), 0 5px 12px rgba(0, 0, 0, .16);
+  background: linear-gradient(145deg, #5b78e8, #304bb5);
+}
+#sidebar nav a[data-path="dashboard"] > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #19a865, #087f73); }
+#sidebar nav a[data-path="projects"] > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #24a8c8, #2762c8); }
+#sidebar nav a[data-path="progress"] > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #ffae35, #e56b1f); }
+#sidebar nav a[data-path="project-docs"] > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #ef5da8, #9b51e0); }
+#sidebar nav a[data-path="disbursement"] > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #26b875, #07865c); }
+#sidebar nav[aria-label] a:nth-child(1) > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #25b8d8, #1673bd); }
+#sidebar nav[aria-label] a:nth-child(2) > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #f6b83f, #db7419); }
+#sidebar nav[aria-label] a:nth-child(3) > .material-symbols-outlined:first-child { background: linear-gradient(145deg, #8b5cf6, #5b36b5); }
+#sidebar nav a .text-\[14px\] { color: #9eb2c9 !important; }
+#sidebar .uppercase.tracking-wider { color: #8fa6bf !important; letter-spacing: .04em; }
+#sidebar > a:last-child { background: rgba(255, 255, 255, .06) !important; border: 1px solid rgba(255, 255, 255, .08); border-radius: 14px !important; }
+
+/* ---------- แถบบน ---------- */
+header.fixed { background: rgba(255, 255, 255, .96) !important; border-bottom: 1px solid #e0e7f1; box-shadow: 0 4px 14px rgba(20, 43, 87, .05) !important; }
+header.fixed .text-headline-sm.text-primary { color: #102760 !important; font-weight: 700 !important; }
+
+/* ---------- การ์ด ---------- */
+main .bg-surface-container-lowest.rounded-xl,
+main section.bg-surface-container-lowest,
+.sk-modal .bg-surface-container-lowest.rounded-xl {
+  border-radius: 14px !important; border: 1px solid #e0e7f1;
+  box-shadow: 0 5px 16px rgba(20, 43, 87, .055) !important;
+}
+/* หัวหน้าแต่ละหน้า (การ์ดแรกของหน้า) แบบ dashboard-welcome ของระบบเดิม */
+.sk-page-head, #pj-root > section:first-child {
+  border-left: 6px solid #173b8e !important;
+  background: linear-gradient(135deg, #fff, #f8faff) !important;
+  box-shadow: 0 8px 24px rgba(22, 49, 106, .06) !important;
+}
+main h1, main h2 { color: #14254d; }
+
+/* ---------- แท็บ / ปุ่ม ---------- */
+[role="tab"].bg-primary, [role="tab"][aria-selected="true"], #docTabs .bg-primary {
+  background: linear-gradient(135deg, #173b8e, #264fa9) !important; color: #fff !important;
+  border-radius: 14px !important; font-weight: 800 !important; box-shadow: 0 8px 18px rgba(23, 59, 142, .22) !important;
+}
+[role="tab"]:not(.bg-primary):not([aria-selected="true"]) { color: #14532d !important; font-weight: 700 !important; border-radius: 14px !important; }
+[role="tab"]:not(.bg-primary):not([aria-selected="true"]):hover { background: #edf8f1 !important; }
+.bg-primary:not([role="tab"]):not(#sidebar *) { background-color: #153984 !important; }
+button.bg-primary, a.bg-primary { border-radius: 10px !important; }
+
+/* ---------- ช่องกรอก ---------- */
+main input:not([type=checkbox]):not([type=radio]):not([type=range]), main select, main textarea,
+.sk-modal input:not([type=checkbox]):not([type=radio]), .sk-modal select, .sk-modal textarea {
+  border-radius: 12px !important; border: 1px solid #d7e5dd !important; background-color: rgba(255, 255, 255, .96) !important;
+  box-shadow: 0 1px 2px rgba(16, 62, 39, .024);
+}
+main input:focus, main select:focus, main textarea:focus { border-color: #264fa9 !important; outline: 2px solid rgba(38, 79, 169, .15) !important; }
+
+@media print { #sidebar, header.fixed { display: none !important; } }
