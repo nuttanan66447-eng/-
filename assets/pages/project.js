@@ -9,6 +9,10 @@
     { key: 'overview', icon: 'dashboard', label: 'ภาพรวม' },
     { key: 'details', icon: 'list_alt', label: 'ข้อมูลโครงการ' },
     { key: 'people', icon: 'groups', label: 'คณะกรรมการและผู้ควบคุมงาน' },
+    { key: 'estimate', icon: 'calculate', label: 'แบบ ปร.4 / ปร.5 / ปร.6 ประมาณราคา' },
+    { key: 'order', icon: 'assignment', label: 'บันทึกข้อความและคำสั่งแต่งตั้ง' },
+    { key: 'inspection', icon: 'fact_check', label: 'รายงานตรวจรับพัสดุและงวดงาน' },
+    { key: 'drawing', icon: 'layers', label: 'คลังแบบแปลนและมาตรฐานงานทาง' },
     { key: 'docs', icon: 'history', label: 'ประวัติเอกสาร' },
     { key: 'diary', icon: 'edit_note', label: 'บันทึกหน้างาน' },
     { key: 'map', icon: 'map', label: 'แผนที่' }
@@ -215,6 +219,71 @@
           '<span class="block font-body-md text-body-md text-on-surface font-semibold">' + esc(e.title || '') + '</span>' + (e.note ? '<span class="block font-body-sm text-body-sm text-on-surface-variant">' + esc(e.note) + '</span>' : '') + '</div></div></li>';
       }).join('') + '</ol>' : '<p class="font-body-sm text-body-sm text-on-surface-variant">ยังไม่มีบันทึกหน้างาน</p>'));
   }
+  // ---------- แท็บเอกสารตามประเภท (เหมือนศูนย์จัดทำเอกสาร แต่เฉพาะโครงการนี้) ----------
+  var DOC_TABS = {
+    estimate: { type: 'estimate', icon: 'calculate', title: 'แบบ ปร.4 / ปร.5 / ปร.6 ประมาณราคา', note: 'ราคากลาง ค่า K และค่าตอบแทนกรรมการ — ข้อมูลโครงการและรายชื่อกรรมการเติมให้อัตโนมัติ',
+      keys: ['centralPrice', 'lowBid', 'kValue', 'kInvite', 'kMeeting', 'compTor'] },
+    order: { type: 'order', icon: 'assignment', title: 'บันทึกข้อความและคำสั่งแต่งตั้ง', note: 'บันทึกข้อความรายงานผล หนังสือแจ้งผู้รับจ้าง ร่าง TOR และเบิกค่าตอบแทนผู้ควบคุมงาน',
+      keys: ['combined', 'memo', 'weeklyWork', 'contractorNotice', 'workReduction', 'torSpecific', 'torEbidding', 'compSupervisor'] },
+    inspection: { type: 'inspection', icon: 'fact_check', title: 'รายงานตรวจรับพัสดุและงวดงาน', note: 'ผลการดำเนินงาน S-Curve รายงานแล้วเสร็จ ผลทดสอบวัสดุ และเบิกค่าตอบแทนกรรมการตรวจรับ',
+      keys: ['weeklyPerformance', 'sCurve', 'completion', 'testResult', 'compInspection'] },
+    drawing: { type: 'drawing', icon: 'layers', title: 'คลังแบบแปลนและมาตรฐานงานทาง', note: 'แบบแปลน แบบมาตรฐาน รูปภาพและป้ายโครงการ — แนบไฟล์ PDF / DWG / รูปภาพ ได้',
+      keys: ['photo', 'sign'] }
+  };
+  function docButtons(keys) {
+    if (!SK.docEngine) return '';
+    var docs = keys.map(function (k) { return SK.docEngine.DOCS.filter(function (d) { return d.key === k; })[0]; }).filter(Boolean);
+    return '<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">' + docs.map(function (d) {
+      return '<button type="button" data-action="pj-make-doc" data-doc="' + d.key + '" data-search="' + esc((d.title + ' ' + d.desc).toLowerCase()) + '" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors flex items-start gap-space-sm">' +
+        '<span class="w-9 h-9 shrink-0 rounded-lg bg-surface-container-lowest text-primary flex items-center justify-center"><span class="material-symbols-outlined">' + d.icon + '</span></span>' +
+        '<span class="min-w-0"><span class="block font-headline-sm text-headline-sm text-on-surface font-semibold">' + esc(d.title) + '</span>' +
+        '<span class="block font-body-sm text-body-sm text-on-surface-variant">' + esc(d.desc) + '</span></span></button>';
+    }).join('') + '</div>';
+  }
+  function estimateBox(p) {
+    var e = SK.db.data.estimate || {};
+    var link = '<a href="progress.html?id=' + encodeURIComponent(p.id) + '&tab=estimate#docs-center" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">calculate</span>เปิดตารางคำนวณ ปร.4 / ปร.5 / ปร.6</a>';
+    if (e.projectId !== p.id || !(e.rows || []).length) {
+      return '<div class="p-space-md rounded-lg bg-primary-fixed/40 flex flex-wrap items-center justify-between gap-2"><span class="font-body-sm text-body-sm text-on-surface">ยังไม่มีการประมาณราคาของโครงการนี้ในตารางคำนวณ</span>' + link + '</div>';
+    }
+    var direct = e.rows.reduce(function (sum, r) { return sum + (Number(r.cost) || 0); }, 0);
+    var total = Math.round(direct * (Number(e.factor) || 1) * 100) / 100;
+    return '<div class="p-space-md rounded-lg bg-primary-fixed/40 flex flex-wrap items-center justify-between gap-3">' +
+      '<span class="flex flex-col"><span class="font-label-md text-label-md text-on-surface-variant">ราคากลางตามตารางคำนวณ (Factor F ' + esc(String(e.factor || '-')) + ')</span>' +
+      '<span class="font-headline-md text-headline-md text-primary font-bold">' + money(total, 2) + ' บาท</span>' +
+      '<span class="font-body-sm text-body-sm text-on-surface-variant">ค่างานต้นทุน ' + money(direct, 2) + ' บาท • ' + e.rows.length + ' รายการ • ประเมินเมื่อ ' + ui.dateShort(e.date) + '</span></span>' + link + '</div>';
+  }
+  function inspectionList(p) {
+    var list = SK.db.data.inspections.filter(function (x) { return x.projectId === p.id; }).sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+    return '<div class="mt-space-md">' +
+      '<div class="flex flex-wrap items-center justify-between gap-2 mb-space-sm"><h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">ผลการตรวจรับงวดงาน (งวด ' + p.installment + '/' + p.installments + ')</h3>' +
+      '<button type="button" data-action="pj-inspect" class="' + ui.btnClass('ghost') + '"><span class="material-symbols-outlined text-[18px]">fact_check</span>บันทึกผลตรวจรับ</button></div>' +
+      (list.length ? '<ul class="flex flex-col gap-space-xs">' + list.map(function (x) {
+        var pass = x.result === 'pass';
+        return '<li class="p-space-sm rounded-lg bg-surface-container-low flex items-start gap-space-sm" data-search="' + esc(('งวดที่ ' + x.installment + ' ' + (x.committee || '') + ' ' + (x.note || '')).toLowerCase()) + '">' +
+          '<span class="material-symbols-outlined ' + (pass ? 'text-emerald-700' : 'text-error') + '">' + (pass ? 'verified' : 'report') + '</span>' +
+          '<span class="min-w-0"><span class="block font-label-md text-label-md font-semibold text-on-surface">งวดที่ ' + esc(x.installment) + ' — ' + (pass ? 'ตรวจรับครบถ้วน' : 'ให้ผู้รับจ้างแก้ไข') + '</span>' +
+          '<span class="block font-body-sm text-body-sm text-on-surface-variant">' + ui.dateLong(x.date) + (x.committee ? ' • ประธาน ' + esc(x.committee) : '') + (x.note ? ' • ' + esc(x.note) : '') + '</span></span></li>';
+      }).join('') + '</ul>' : '<p class="font-body-sm text-body-sm text-on-surface-variant p-space-sm rounded-lg bg-surface-container-low">ยังไม่มีการบันทึกผลตรวจรับ</p>') + '</div>';
+  }
+  function paneDocType(p, key) {
+    var cfg = DOC_TABS[key];
+    var docs = SK.db.data.documents.filter(function (d) { return d.projectId === p.id && d.type === cfg.type; });
+    var make = docButtons(cfg.keys);
+    return '<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">' +
+      '<div class="xl:col-span-7 flex flex-col gap-space-lg">' +
+        card(head(cfg.icon, cfg.title) + '<p class="-mt-2 mb-space-md font-body-sm text-body-sm text-on-surface-variant">' + esc(cfg.note) + '</p>' +
+          (key === 'estimate' ? estimateBox(p) + '<div class="mt-space-md"></div>' : '') +
+          (p.rowNumber ? make : '<p class="text-on-surface-variant">การสร้างเอกสารต้องใช้ข้อมูลโครงการจริงจาก Google Sheet</p>') +
+          (key === 'inspection' ? inspectionList(p) : '')) +
+      '</div>' +
+      '<div class="xl:col-span-5">' +
+        card(head('folder_open', 'เอกสารของโครงการ (' + docs.length + ')',
+          '<button type="button" data-action="pj-upload" data-type="' + cfg.type + '" class="' + ui.btnClass('ghost') + '"><span class="material-symbols-outlined text-[18px]">attach_file</span>แนบไฟล์</button>') +
+          (docs.length ? docList(docs, p) : '<p class="font-body-sm text-body-sm text-on-surface-variant p-space-sm rounded-lg bg-surface-container-low">ยังไม่มีเอกสารประเภทนี้ — สร้างจากปุ่มด้านซ้าย หรือแนบไฟล์</p>')) +
+      '</div></div>';
+  }
+
   function paneMap(p) {
     return card('<div class="p-space-md flex flex-wrap items-center justify-between gap-2"><h2 class="flex items-center gap-2 font-headline-md text-headline-md text-primary font-bold"><span class="material-symbols-outlined">map</span>ที่ตั้งโครงการ</h2>' +
       '<span class="font-code-sm text-code-sm text-on-surface-variant">' + (p.lat ? p.lat.toFixed(6) + ', ' + p.lng.toFixed(6) : 'ยังไม่ระบุพิกัด') + '</span></div>' +
@@ -286,11 +355,14 @@
       '</div>' +
       '<div id="pj-pane"></div>';
     $('pj-search').addEventListener('input', function () { query = this.value; if (query && tab === 'overview') setTab('details', true); else filter(); });
+    // แท็บที่เลือกอยู่ให้เห็นในแถบ (แถบเลื่อนแนวนอนได้)
+    var bar = root.querySelector('[role=tablist]'), act = bar && bar.querySelector('[aria-selected=true]');
+    if (act && (act.offsetLeft < bar.scrollLeft || act.offsetLeft + act.offsetWidth > bar.scrollLeft + bar.clientWidth)) bar.scrollLeft = act.offsetLeft - 16;
     showPane(p);
   }
   function showPane(p) {
     var pane = $('pj-pane');
-    pane.innerHTML = tab === 'details' ? paneDetails(p) : tab === 'people' ? panePeople(ctx) : tab === 'docs' ? paneDocs(p, ctx) : tab === 'diary' ? paneDiary(p, ctx) : tab === 'map' ? paneMap(p) : paneOverview(p, ctx);
+    pane.innerHTML = DOC_TABS[tab] ? paneDocType(p, tab) : tab === 'details' ? paneDetails(p) : tab === 'people' ? panePeople(ctx) : tab === 'docs' ? paneDocs(p, ctx) : tab === 'diary' ? paneDiary(p, ctx) : tab === 'map' ? paneMap(p) : paneOverview(p, ctx);
     if (tab === 'overview') drawMap('pj-map-small', p, false);
     if (tab === 'map') drawMap('pj-map-big', p, true);
     filter();
@@ -325,6 +397,12 @@
 
   Object.assign(SK.actions, {
     'pj-tab': function (el) { setTab(el.dataset.tab); window.scrollTo({ top: Math.min(window.scrollY, $('pj-root').offsetTop + 300), behavior: 'smooth' }); },
+    'pj-make-doc': function (el) {
+      var d = SK.docEngine.DOCS.filter(function (x) { return x.key === el.dataset.doc; })[0];
+      if (d) SK.docEngine.openDocument(d, project());
+    },
+    'pj-upload': function (el) { SK.flows.uploadNew({ projectId: projectId, type: el.dataset.type }, render); },
+    'pj-inspect': function () { SK.flows.inspection(projectId, render); },
     'pj-open-doc': function (el) { var d = SK.db.data.documents[Number(el.dataset.i)]; if (d) SK.flows.openDocument(d, render); }
   });
   SK.page = { refresh: render };
