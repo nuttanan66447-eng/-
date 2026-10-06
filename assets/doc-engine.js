@@ -362,7 +362,7 @@
       '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:auto!important;margin:0!important;' +
       'padding:12px 18px 48px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;' +
       'background:#fff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}' +
-      '[data-sk-native] .form-actions{display:none!important}' + NATIVE_THEME;
+      (doc.keepActions ? '' : '[data-sk-native] .form-actions{display:none!important}') + NATIVE_THEME;
     var timer = null, shown = false;
     function place() {
       var r = holder.getBoundingClientRect();
@@ -889,11 +889,36 @@
     }
   }
 
+  // ---------- เครื่องมือของระบบเดิมที่ไม่ใช่เอกสาร (คำนวณงวดงาน, ลงทะเบียนสายทาง) ----------
+  // แสดงหน้าของระบบเดิมในหน้าต่างของเว็บเรา (ธีมเดียวกับฟอร์มเดิม) ปุ่มคำนวณ/บันทึกของระบบเดิมใช้ได้ตามปกติ
+  var TOOLS = {
+    duration: { key: 'duration', title: 'คำนวณงวดงาน', desc: 'คำนวณระยะเวลาก่อสร้างงานถนน สะพาน และอาคาร', icon: 'timer', open: 'openConstructionDurationPage()', root: 'constructionDurationBackdrop' },
+    localRoad: { key: 'localRoad', title: 'คุมสายทาง', desc: 'ลงทะเบียน/แก้ไขสายทางหลวงท้องถิ่น', icon: 'road', open: 'openLocalRoadEntryGate()', root: 'localRoadEntryBackdrop' }
+  };
+  function openTool(name, onClose) {
+    var tool = Object.assign({ general: true, keepActions: true }, TOOLS[name] || name);
+    var box = document.createElement('div'), native = null;
+    box.innerHTML = '<div class="py-10 text-center text-on-surface-variant"><span class="material-symbols-outlined animate-spin">progress_activity</span><p>กำลังเปิด' + esc(tool.title) + '...</p></div>';
+    ui.modal({
+      title: tool.title, subtitle: tool.desc, icon: tool.icon, size: 'xl', body: box,
+      actions: [{ label: 'ปิด', kind: 'primary', onClick: function (mm) { mm.close(); } }],
+      onClose: function () { if (native) native.hide(); closeAll(); if (onClose) onClose(); }
+    });
+    openDoc(tool, null).then(function () {
+      box.innerHTML = '<div data-native-holder style="height:calc(92vh - 200px);min-height:360px" class="rounded-lg bg-surface-container-low"></div>';
+      native = nativeView(tool, box.firstChild);
+      native.show();
+    }).catch(function (err) {
+      box.innerHTML = '<div class="p-4 rounded-lg bg-error-container text-on-error-container">' + esc(err.message || err) + '</div>';
+    });
+  }
+
   // เรียกฟังก์ชันฝั่งเซิร์ฟเวอร์ของระบบเดิมผ่านตัวสร้างเอกสาร (ข้อมูลชุดเดียวกับที่ฟอร์มเพิ่งบันทึก)
   function call(fn) {
     var args = Array.prototype.slice.call(arguments);
     return load().then(function (w) { return w.SKGas.call.apply(null, args); });
   }
 
-  SK.docEngine = { DOCS: DOCS, load: load, openDocument: openDocument, openEntry: openEntry, call: call, reopen: reopen };
+  SK.docEngine = { DOCS: DOCS, load: load, openDocument: openDocument, openEntry: openEntry, call: call, reopen: reopen, openTool: openTool, TOOLS: TOOLS,
+    preview: function (title, html) { showPreview({ key: 'doc', title: title }, null, html, null, null); } };
 })();

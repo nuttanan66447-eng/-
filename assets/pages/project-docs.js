@@ -7,6 +7,8 @@
   var params = new URLSearchParams(location.search);
   var VKEY = 'sikaew-progress-village', PKEY = 'sikaew-docs-project';
   var projectId = params.get('id') || store(PKEY) || '';
+  // เมนูด้านซ้ายแบบระบบเดิม: ?docs=k1,k2&menu=ชื่อเมนู แสดงเฉพาะเอกสารของเมนูนั้น, ?doc=k เปิดเอกสารทันที, ?tool=ชื่อ เปิดเครื่องมือ
+  var only = (params.get('docs') || params.get('doc') || '').split(',').filter(Boolean), menu = params.get('menu') || '';
 
   function store(k, v) {
     try { if (v === undefined) return sessionStorage.getItem(k) || ''; sessionStorage.setItem(k, v); } catch (e) { return ''; }
@@ -51,7 +53,8 @@
   // ---------- ปุ่มเอกสาร (จัดกลุ่มตามระบบเอกสารเดิม) ----------
   function renderDocs(p) {
     var box = $('project-docs');
-    if (!p.rowNumber || !SK.docEngine) {
+    var allGeneral = only.length && SK.docEngine && only.every(function (k) { return (SK.docEngine.DOCS.filter(function (d) { return d.key === k; })[0] || {}).general; });
+    if ((!p || !p.rowNumber) && !allGeneral || !SK.docEngine) {
       box.innerHTML = '<div class="p-space-md rounded-lg bg-secondary-fixed text-on-secondary-fixed-variant flex flex-wrap items-center justify-between gap-2">' +
         '<span>การพิมพ์เอกสารโครงการต้องใช้ข้อมูลจริงจาก Google Sheet</span>' +
         '<button type="button" data-action="data-panel" class="' + ui.btnClass('primary') + '">นำเข้าข้อมูลจริง</button></div>';
@@ -59,12 +62,14 @@
     }
     var groups = [];
     SK.docEngine.DOCS.forEach(function (d) {
+      if (only.length && only.indexOf(d.key) < 0) return;
       var name = d.general ? 'เอกสารทั่วไป (ไม่ผูกกับโครงการ)' : d.group;
       var g = groups.filter(function (x) { return x.name === name; })[0];
       if (!g) groups.push(g = { name: name, docs: [] });
       g.docs.push(d);
     });
-    box.innerHTML = groups.map(function (g) {
+    box.innerHTML = (only.length ? '<div class="mb-space-md p-space-sm rounded-lg bg-primary-fixed/40 flex flex-wrap items-center justify-between gap-2 font-body-sm text-body-sm"><span>แสดงเฉพาะเอกสารเมนู <b>' + esc(menu || 'ที่เลือก') + '</b></span>' +
+      '<a href="project-docs.html' + (p ? '?id=' + encodeURIComponent(p.id) : '') + '" class="text-primary font-semibold hover:underline">แสดงเอกสารทั้งหมด</a></div>' : '') + groups.map(function (g) {
       return '<div class="mb-space-md last:mb-0"><h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-space-xs">' + esc(g.name) + '</h4>' +
         '<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">' + g.docs.map(function (d) {
           return '<button type="button" data-action="pd-doc" data-doc="' + d.key + '" class="text-left p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors flex items-start gap-space-sm">' +
@@ -96,7 +101,23 @@
   }
 
   function refresh() {
+    var tool = params.get('tool'), T = tool && SK.docEngine && SK.docEngine.TOOLS[tool];
+    if (T) {
+      // เครื่องมือของระบบเดิม (เช่น คำนวณงวดงาน) ไม่ต้องเลือกโครงการ
+      $('pd-village').closest('label').parentElement.classList.add('hidden');
+      $('pd-summary').innerHTML = ''; $('pd-history').innerHTML = '<p class="font-body-sm text-body-sm text-on-surface-variant">เครื่องมือนี้ไม่ผูกกับโครงการ</p>';
+      $('project-docs').innerHTML = '<div class="py-8 flex flex-col items-center gap-3 text-center"><span class="material-symbols-outlined text-[48px] text-primary">' + T.icon + '</span>' +
+        '<p class="font-headline-md text-headline-md text-primary font-bold">' + esc(T.title) + '</p><p class="text-on-surface-variant">' + esc(T.desc) + '</p>' +
+        '<button type="button" data-action="pd-tool" data-tool="' + esc(tool) + '" class="' + ui.btnClass('primary') + '"><span class="material-symbols-outlined text-[18px]">open_in_new</span>เปิด' + esc(T.title) + '</button></div>';
+      return;
+    }
     var p = project();
+    if (!p && only.length) {
+      // เอกสารทั่วไป (ตรวจสอบอาคาร แบบประเมิน) ใช้ได้แม้ยังไม่มีโครงการ
+      $('pd-village').innerHTML = ''; $('pd-project').innerHTML = ''; $('pd-summary').innerHTML = ''; $('pd-history').innerHTML = '';
+      renderDocs(null);
+      return;
+    }
     if (!p) {
       $('pd-village').innerHTML = ''; $('pd-project').innerHTML = '';
       $('pd-summary').innerHTML = '';
@@ -116,7 +137,8 @@
   }
   function select(id) {
     projectId = id;
-    try { history.replaceState(null, '', 'project-docs.html?id=' + encodeURIComponent(id)); } catch (e) {}
+    var q = new URLSearchParams(location.search); q.set('id', id); q.delete('doc'); q.delete('tool');
+    try { history.replaceState(null, '', 'project-docs.html?' + q.toString()); } catch (e) {}
     refresh();
   }
 
@@ -125,6 +147,7 @@
       var d = SK.docEngine.DOCS.filter(function (x) { return x.key === el.dataset.doc; })[0];
       SK.docEngine.openDocument(d, d.general ? null : project());
     },
+    'pd-tool': function (el) { SK.docEngine.openTool(el.dataset.tool); },
     'pd-open': function (el) {
       var d = docHistory(project())[Number(el.dataset.i)];
       if (d) SK.flows.openDocument(d, refresh);
@@ -143,5 +166,12 @@
     });
     refresh();
     if (project() && project().rowNumber && SK.docEngine) setTimeout(function () { SK.docEngine.load().catch(function () {}); }, 800);
+    // เปิดเอกสาร/เครื่องมือจากเมนูด้านซ้ายทันที
+    var auto = params.get('doc'), tool = params.get('tool');
+    if (tool && SK.docEngine) setTimeout(function () { SK.docEngine.openTool(tool); }, 300);
+    else if (auto && SK.docEngine) {
+      var d = SK.docEngine.DOCS.filter(function (x) { return x.key === auto; })[0], p = project();
+      if (d && (d.general || (p && p.rowNumber))) setTimeout(function () { SK.docEngine.openDocument(d, d.general ? null : p); }, 300);
+    }
   });
 })();
