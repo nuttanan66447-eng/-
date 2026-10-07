@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ระบบกองช่าง เทศบาลตำบลสีแก้ว — Civic Architectural Glass (design/DESIGN.md) */
+@layer base {
+  html, body { margin: 0; padding: 0; font-family: 'Hanken Grotesk', 'Sarabun', sans-serif; }
+  body { overscroll-behavior: none; background: #f8f9ff; color: #0b1c30; }
+  [hidden] { display: none !important; }
+  .grid > * { min-width: 0; }
+  .overflow-x-auto, .overflow-auto, .overflow-y-auto { position: relative; }
+  :focus-visible { outline: 2px solid #007bb9; outline-offset: 2px; }
+  input, select, textarea, button { font: inherit; }
+}
+
+@layer components {
+  .glass { background: rgba(255, 255, 255, .80); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); }
+  .card { @apply relative rounded-2xl bg-surface-container-lowest/85 glass shadow-sm ring-1 ring-[rgba(15,23,42,0.04)]; }
+  .card-pad { @apply p-5 md:p-space-lg; }
+  .card-title { @apply flex items-center gap-2.5 font-headline-sm text-headline-sm text-on-surface font-semibold; }
+  .card-title .material-symbols-outlined { @apply text-primary text-[22px]; }
+  .muted { @apply text-on-surface-variant; }
+
+  .btn { @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full font-label-lg text-label-lg transition-all duration-150 active:scale-95 disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap; }
+  .btn .material-symbols-outlined { @apply text-[18px]; }
+  .btn-primary { @apply btn bg-primary text-on-primary shadow-[0_8px_20px_-4px_rgba(0,97,148,0.35)] hover:bg-primary-container; }
+  .btn-glass { @apply btn bg-surface-container-low text-on-surface shadow-sm hover:bg-surface-container; }
+  .btn-ghost { @apply btn text-on-surface-variant hover:bg-primary/10 hover:text-primary; }
+  .btn-danger { @apply btn bg-error-container/70 text-error hover:bg-error-container; }
+  .icon-btn { @apply inline-flex items-center justify-center w-9 h-9 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors; }
+
+  .chip { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm font-semibold whitespace-nowrap; }
+  .chip-blue { @apply chip bg-primary/10 text-primary; }
+  .chip-green { @apply chip bg-[rgba(39,201,63,0.12)] text-[#15803d]; }
+  .chip-amber { @apply chip bg-[rgba(255,189,46,0.18)] text-[#b45309]; }
+  .chip-red { @apply chip bg-error-container/70 text-error; }
+  .chip-gray { @apply chip bg-surface-container text-secondary; }
+
+  .field { @apply flex flex-col gap-1.5; }
+  .field > span { @apply font-label-md text-label-md text-on-surface-variant; }
+  .input { @apply w-full px-4 py-2.5 rounded-2xl bg-[rgba(241,245,249,0.7)] border border-[rgba(100,116,139,0.15)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] text-on-surface font-body-md text-body-md outline-none transition focus:bg-white focus:border-primary-container focus:ring-2 focus:ring-primary-container/40; }
+
+  .tabs { @apply inline-flex items-center gap-1 p-1 rounded-full bg-surface-container-low overflow-x-auto max-w-full; }
+  .tab { @apply px-3.5 py-1.5 rounded-full font-label-lg text-label-lg text-on-surface-variant whitespace-nowrap hover:text-on-surface transition-all; }
+  .tab.is-active { @apply bg-surface-container-lowest text-primary font-semibold shadow-sm; }
+
+  .nav-link { @apply flex items-center gap-3 px-3.5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150; }
+  .nav-link .material-symbols-outlined { @apply text-[20px]; }
+  .nav-link.is-active { @apply bg-primary-container text-on-primary-container font-semibold shadow-[0_8px_20px_-4px_rgba(0,97,148,0.25)]; }
+  .nav-group { @apply px-3 pb-1 pt-4 font-label-sm text-label-sm text-outline tracking-wider; }
+
+  .table-clean { @apply w-full text-left; }
+  .table-clean th { @apply px-3 py-2.5 font-label-md text-label-md text-outline font-medium whitespace-nowrap; }
+  .table-clean td { @apply px-3 py-3.5 align-top border-t border-[rgba(100,116,139,0.10)]; }
+  .table-clean tbody tr { @apply hover:bg-surface-container-low/60 transition-colors; }
+
+  .bar { @apply h-1.5 rounded-full bg-surface-container-high overflow-hidden; }
+  .bar > i { @apply block h-full rounded-full bg-primary; }
+
+  .skeleton { @apply animate-pulse rounded-xl bg-surface-container; }
+}
+
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; line-height: 1; }
+.leaflet-container { font-family: 'Hanken Grotesk', 'Sarabun', sans-serif; border-radius: inherit; }
+.sk-village-label span { display: inline-block; transform: translate(-50%, -50%); padding: 1px 8px; border-radius: 999px; background: rgba(255,255,255,.9); color: #004b73; font: 700 12px 'Sarabun', sans-serif; box-shadow: 0 1px 4px rgba(0,0,0,.15); white-space: nowrap; }
+.sk-pin { width: 14px; height: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(100,116,139,.25); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+
+@media print {
+  #sidebar, #topbar, .no-print { display: none !important; }
+  #main { padding: 0 !important; margin: 0 !important; }
+  body { background: #fff !important; }
+}

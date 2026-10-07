@@ -10,37 +10,28 @@
 - ตอบผู้ใช้เป็นภาษาไทย
 - ชื่อไฟล์ดาวน์โหลดใช้ตัวอักษรภาษาอังกฤษ (ชื่อภาษาไทยบางเบราว์เซอร์ทิ้ง)
 
-## โครงสร้าง
+## โครงสร้าง (เว็บรุ่นใหม่ — เขียนใหม่ทั้งหมดตามแบบใน `design/`)
 
-- หน้าหลัก 5 หน้า: `index.html`, `projects.html`, `progress.html` (งานก่อสร้างและเอกสาร = ติดตามความก้าวหน้า + ศูนย์จัดทำเอกสารช่าง ในหน้าเดียว ใช้ `assets/pages/progress.js` + `documents.js`), `project-docs.html` (เอกสารโครงการ: เลือกหมู่บ้าน/โครงการ → ปุ่มเอกสารทุกแบบ + ประวัติเอกสารของโครงการ, `assets/pages/project-docs.js`), `disbursement.html` + สคริปต์ใน `assets/` และ `assets/pages/`
-  - `project.html?id=` = หน้าข้อมูลโครงการแบบละเอียด (กดโครงการที่ใดก็มาหน้านี้ แทนหน้าต่างลอย) `assets/pages/project.js`
-  - `documents.html` เหลือแค่ redirect ไป `progress.html#docs-center` (ลิงก์เก่ายังใช้ได้)
-- `system.html` = ระบบเดิม (ปัจจุบัน v190) ใช้เป็นตัวสร้างเอกสารเบื้องหลังเท่านั้น (`system.html?engine=1`) เปิดตรงจะกลับ `index.html`
-  - สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ
-- `assets/gas/` = ตัวจำลอง Apps Script (Web Worker + IndexedDB) แทน `google.script.run`
-- `assets/doc-engine.js` = ฟอร์ม/พรีวิว/พิมพ์เอกสารโครงการ (สั่งงาน v184 ใน iframe ที่ซ่อนอยู่)
-- เข้าสู่ระบบด้วยชื่อผู้ใช้ + รหัสผ่าน (ไม่ต้องใช้อีเมล): บัญชีเป็นอีเมลภายใน `<ชื่อผู้ใช้>@users.sikaew-kongchang.app` สร้าง/ตั้งรหัส/ลบโดยผู้ดูแลผ่าน Edge Function `supabase/functions/staff-user` (ถ้ายังไม่ deploy เว็บสร้างบัญชีจากเบราว์เซอร์ผู้ดูแล ซึ่งต้องปิด Confirm email)
-- `assets/cloud.js` = เข้าสู่ระบบ Supabase + ซิงก์ SK.db (ตาราง records), ชีท v184 (workbooks), ไฟล์แนบ (Storage `files`) — โครงสร้าง DB ใน `supabase/schema.sql` แก้ DB แล้วต้องอัปเดตไฟล์นี้ด้วย
-- `assets/config.js` = URL + publishable key ของ Supabase
-- `assets/personnel.js` = รายชื่อจริง (ผู้ควบคุมงาน บุคลากร ผู้บริหาร หมู่บ้าน) สร้างจาก `system/src` ด้วย `tools/build_system.py` — ห้ามแก้ด้วยมือ
-- `assets/tambon-map.js` = ขอบเขตตำบล (ชีท "ขอบเขตแผนที่" หรือ OpenStreetMap) + เส้นแบ่งหมู่บ้านจากชีท + เครื่องมือวาดขอบเขต (เจ้าหน้าที่) — ทุกแผนที่ปิดซูมด้วยลูกกลิ้งเมาส์
-- `assets/news.js` (หน้าแรกไม่แสดงกล่องข่าวแล้ว ตามที่ผู้ใช้ขอ) = ข่าวจากเพจ Facebook กองช่าง (ตาราง news_posts, Edge Function `supabase/functions/facebook-sync` ต้องตั้ง secret FB_PAGE_TOKEN; เจ้าหน้าที่ลงข่าวเองได้ id `manual-*` รูปใน bucket `news`) + รูปเข้าโครงการที่ตรงกัน
-- `assets/word-export.js` = บันทึกพรีวิวเป็น .docx (สร้าง WordprocessingML เอง วัดตำแหน่งจากพรีวิว: แถวหัวหนังสือใช้แท็บ+เส้นประ, แถวหลายช่องเป็นตารางไร้เส้น, ครุฑวางตายตัว) — ตรวจผลด้วย LibreOffice (`apt-get install libreoffice-writer`) แปลงเป็น PDF
-- ประวัติเอกสาร: ทุกเอกสารที่สร้างบันทึกสำเนา HTML ลงทะเบียนเอกสาร (`SK.db.data.documents`, format `html`, `docKey`, `variant` = สัปดาห์/งวด) เปิดซ้ำผ่าน `SK.docEngine.reopen` — สร้างซ้ำ (แบบ+โครงการ+สัปดาห์เดียวกัน) แทนที่ฉบับเดิม ไม่เพิ่มรายการซ้ำ; แสดงชื่อเอกสารภาษาไทย (`SK.flows.docName`) ไม่ใช่ชื่อไฟล์
-- หนังสือราชการทุกหน้าใช้รูปแบบเดียวกับระบบหลัก (ตามที่ system.html สร้าง ไม่จัดรูปแบบทับ — เลิกใช้ doc-standard.js แล้ว ตามที่ผู้ใช้ขอ)
-- กรอก/แก้ไขโครงการ = หน้า "กรอกข้อมูลโครงการ" ของระบบหลัก (`index.html?page=openEntryGate`, แก้ไขเพิ่ม `&row=แถว&name=ชื่อ`, `&back=หน้าเดิม` กลับเมื่อปิดฟอร์ม) — `SK.ui.openProjectForm`/`SK.entryUrl` ใน realdata.js พาไปหน้านี้ทุกปุ่ม; เป็นเมนูแรกด้านซ้าย (เพิ่มใน tools/sidebar.py)
-- `assets/photos.js` = รูปภาพโครงการ (`SK.db.data.photos`: projectId, fileId, caption) ไฟล์ย่อ ≤1600px เก็บผ่าน `SK.db.files` (IndexedDB + Storage `files`) — แท็บ "รูปภาพโครงการ" ใน project.html + การ์ดในภาพรวม + แกลเลอรีหน้า projects
-- `assets/theme-v184.css` = ธีมตามระบบเดิม v184 (ผู้ใช้เลือก): ฟอนต์ Prompt, เมนูซ้ายพื้นน้ำเงินไล่สี + ไอคอนกล่องสีไล่เฉด + ลูกศร, การ์ดขาวขอบบาง, แท็บน้ำเงินไล่สี, การ์ดหัวหน้า (`.sk-page-head` ใส่โดย ui.js) มีแถบซ้าย 6px — โหลดหลัง styles.css ทุกหน้า
-- เมนูด้านซ้ายทุกหน้าสร้างจากเมนูของระบบเดิมใน `system/src/Dashboard.html` ด้วย `python3 tools/sidebar.py` (รันใหม่ทุกครั้งที่อัปเดตระบบเดิม) — แต่ละเมนูลิงก์ `index.html?page=<ฟังก์ชัน openXxx ของระบบเดิม>`
-- หน้าแรก/หน้าเมนู (`index.html` + `assets/pages/app.js`) = หน้าของระบบเดิมจริง (system.html ใน iframe ที่มองเห็น ซ่อนเมนูซ้าย/แถบบนของระบบเดิม) เปิดหน้าตามเมนูด้วยฟังก์ชันของระบบเดิม หน้าตาเหมือนโค้ดทุกหน้า; หน้าเสริมของเว็บ (projects/progress/project-docs/project/disbursement) ยังอยู่แต่ไม่มีในเมนู
-- `assets/thai-date.js` = ปฏิทินภาษาไทย แทน `<input type="date">` ทุกช่องอัตโนมัติ
-- ใช้ข้อมูลจริงเท่านั้น ห้ามใส่ข้อมูล/รายชื่อ/ตัวเลขสมมุติในหน้าเว็บ (โครงการมาจากชีท "ฐานข้อมูลโครงการ" ของระบบเอกสาร)
-- `assets/realdata.js` = ใช้ข้อมูลจริงที่นำเข้าจาก Google Sheet (.xlsx) หรือส่งโครงการตัวอย่างให้ตัวสร้างเอกสารถ้ายังไม่นำเข้า
+- หน้าเดียว `index.html` (SPA, ที่อยู่ `#/...`) ธีม Civic Architectural Glass จาก `design/DESIGN.md` (ภาพตัวอย่าง `design/dashboard.png`, `design/document-editor.png`) — Tailwind `assets/css/tailwind.css` → `assets/css/app.css`
+- `assets/js/core.js` = ตัวช่วย (esc, วันที่ไทย, เงิน), toast/modal/formModal/confirm, ตัวเปลี่ยนหน้า `SK.route(name,{render,refresh,leave})`
+- `assets/js/store.js` = `SK.store` ข้อมูลเว็บ (documents, diary, photos, meta) key เดิม `sikaew-kongchang-db-v2` + `SK.store.files` (IndexedDB `sikaew-kongchang-files` + Storage)
+- `assets/js/cloud.js` = Supabase: ซิงก์ records/workbooks/files แบบเดิม, เข้าสู่ระบบชื่อผู้ใช้ (`<ชื่อ>@users.sikaew-kongchang.app`), จัดการ staff (Edge Function `staff-user` หรือสร้างจากเบราว์เซอร์ถ้ายังไม่ deploy)
+- `assets/js/projects.js` = `SK.projects` อ่านชีท "ฐานข้อมูลโครงการ" ผ่าน `SKGas.call('getDashboardDataFast')` รหัส `P-<แถว>` โหลดใหม่เมื่อ worker แจ้ง `saved`
+- `assets/js/engine.js` = `SK.engine` ระบบหลัก (system.html?engine=1) ใน iframe เดียว: DOCS (แบบเอกสาร), TOOLS (หน้าของระบบหลัก), `openDoc`/`generate` (เก็บ HTML ที่ระบบหลักส่งพิมพ์), `dock(holder)` วาง iframe ทับกล่องในหน้า (ฟอร์มเอกสาร/หน้ากรอกข้อมูลโครงการ/เครื่องมือ)
+- `assets/js/docs.js` = Smart Editor (`SK.docs.editor`) แก้ไขข้อความ พิมพ์ Word + ประวัติเอกสาร (แทนที่ฉบับเดิมเมื่อแบบ+โครงการ+สัปดาห์/งวดเดียวกัน) — หนังสือราชการใช้รูปแบบของระบบหลัก ไม่จัดรูปแบบทับ
+- `assets/js/photos.js` (รูปโครงการ ก่อน/ระหว่าง/หลัง), `map.js` (Leaflet + ขอบเขตจากชีท/OSM), `word-export.js` (.docx จากพรีวิว)
+- `assets/js/views/*.js` = หน้าต่าง ๆ: overview, projects, project, documents, tracking, map, system (entry/tools), users (+data), common (ส่วนประกอบร่วม); `assets/js/app.js` = เมนู/แถบบน/บัญชี
+- `assets/gas/` = ตัวจำลอง Apps Script (worker แต่ละหน้า/iframe โหลดชีทใหม่เมื่อ worker อื่นบันทึก), `data-panel.js` ใช้เฉพาะ importFile/exportFile
+- `system.html` = ระบบหลัก v190 สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ; `assets/personnel.js` สร้างด้วยสคริปต์เดียวกัน ห้ามแก้ด้วยมือ
+- `assets/config.js` = URL + publishable key ของ Supabase; โครงสร้าง DB ใน `supabase/schema.sql` (แก้ DB แล้วต้องอัปเดต)
+- `tools/build-dist.js` สร้าง dist/ + หน้า redirect ของลิงก์เก่า (projects.html, project.html?id=, progress.html, project-docs.html, documents.html, disbursement.html, index.html?page=openXxx)
+- ใช้ข้อมูลจริงเท่านั้น ห้ามใส่ข้อมูล/รายชื่อ/ตัวเลขสมมุติในหน้าเว็บ
+- ทดสอบ Word ด้วย LibreOffice (`apt-get install libreoffice-writer`) แปลงเป็น PDF
 
 ## คำสั่ง
 
 ```bash
-npm run build              # สร้าง assets/styles.css ใหม่ (Tailwind) ทุกครั้งที่เพิ่มคลาสใหม่
+npm run build              # สร้าง assets/css/app.css ใหม่ (Tailwind) ทุกครั้งที่เพิ่มคลาสใหม่
 python3 tools/build_system.py
 python3 -m http.server 8765   # ทดสอบในเครื่อง (ต้องเปิดผ่าน http ไม่ใช่ file://)
 node tools/build-dist.js      # สร้าง dist/ แบบที่ Vercel ใช้
