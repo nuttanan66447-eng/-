@@ -33,16 +33,29 @@ function idb(mode, fn) {
 var saveTimer = null, savePending = Promise.resolve();
 // แจ้งหน้าเว็บทุกแท็บ (รวมตัวสร้างเอกสารใน iframe) ว่าชีทเปลี่ยน เพื่อซิงก์ขึ้นคลาวด์ (assets/cloud.js)
 var channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('sikaew-gas') : null;
+// หลายหน้าที่/iframe มี worker ของตัวเอง: worker อื่นบันทึกชีทแล้ว ให้โหลดชีทล่าสุดจาก IndexedDB (ไม่ทับงานที่ยังไม่บันทึกของตัวเอง)
+var WORKER_ID = Math.random().toString(36).slice(2), lastSavedAt = null;
+if (channel) channel.addEventListener('message', function (e) {
+  var m = e.data || {};
+  if (m.type !== 'saved' || m.src === WORKER_ID || m.savedAt === lastSavedAt || saveTimer) return;
+  ready = ready.then(function () {
+    return idb('readonly', function (s) { return s.get(KEY); }).then(function (wb) {
+      if (wb && !saveTimer && wb.savedAt !== lastSavedAt) { GasEmu.setWorkbook(wb); lastSavedAt = wb.savedAt; }
+    }).catch(function () {});
+  });
+});
 function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveNow, 250);
 }
 function saveNow(savedAt) {
   clearTimeout(saveTimer);
+  saveTimer = null;
   var wb = GasEmu.getWorkbook();
   wb.savedAt = savedAt || new Date().toISOString();
   savePending = idb('readwrite', function (s) { return s.put(wb, KEY); }).then(function () {
-    if (channel) channel.postMessage({ type: 'saved', savedAt: wb.savedAt });
+    lastSavedAt = wb.savedAt;
+    if (channel) channel.postMessage({ type: 'saved', savedAt: wb.savedAt, src: WORKER_ID });
   }, function (e) {
     self.postMessage({ type: 'storage-error', error: String(e && e.message || e) });
   });
@@ -117,6 +130,7 @@ function syncSample(projects) {
 function summary() {
   var wb = GasEmu.getWorkbook();
   return {
+    worker: WORKER_ID,
     sample: isSample(),
     savedAt: wb.savedAt || null,
     title: wb.title || '',
@@ -130,6 +144,7 @@ function summary() {
 
 var ready = idb('readonly', function (s) { return s.get(KEY); }).catch(function () { return null; }).then(function (wb) {
   GasEmu.setWorkbook(wb || { title: 'ข้อมูลกองช่าง (เริ่มต้น)' });
+  lastSavedAt = wb ? wb.savedAt : null;
   runSetup();
   if (!wb) return saveNow();
   if (normalizeWorkbookDates()) return saveNow();

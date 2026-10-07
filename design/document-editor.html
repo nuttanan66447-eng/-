@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+<html lang="th"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,300..900;1,300..900&amp;family=Manrope:wght@300..800&amp;family=Sarabun:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;font-family:'Hanken Grotesk','Sarabun',sans-serif;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.mac-frosted{backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"surface-container-lowest":"#ffffff","surface-container-high":"#dce9ff","secondary-fixed-dim":"#bec6e0","surface-container":"#e5eeff","secondary-fixed":"#dae2fd","primary":"#006194","on-tertiary-fixed":"#001e2c","primary-fixed":"#cce5ff","inverse-surface":"#213145","on-secondary-container":"#5c647a","on-primary-container":"#fdfcff","on-background":"#0b1c30","tertiary-container":"#007da9","tertiary-fixed":"#c4e7ff","on-tertiary":"#ffffff","inverse-on-surface":"#eaf1ff","outline-variant":"#bfc7d2","on-secondary-fixed":"#131b2e","on-error":"#ffffff","inverse-primary":"#93ccff","on-primary-fixed-variant":"#004b73","tertiary-fixed-dim":"#7bd0ff","on-surface":"#0b1c30","surface-variant":"#d3e4fe","surface-container-low":"#eff4ff","on-primary":"#ffffff","error-container":"#ffdad6","outline":"#707881","background":"#f8f9ff","primary-fixed-dim":"#93ccff","error":"#ba1a1a","secondary":"#565e74","primary-container":"#007bb9","on-secondary":"#ffffff","surface-container-highest":"#d3e4fe","on-primary-fixed":"#001d31","on-secondary-fixed-variant":"#3f465c","surface-dim":"#cbdbf5","on-tertiary-container":"#fcfcff","surface":"#f8f9ff","tertiary":"#006387","surface-tint":"#006398","on-tertiary-fixed-variant":"#004c69","on-surface-variant":"#3f4850","on-error-container":"#93000a","surface-bright":"#f8f9ff","secondary-container":"#dae2fd"},"borderRadius":{"DEFAULT":"1rem","lg":"2rem","xl":"3rem","full":"9999px"},"spacing":{"gutter-mobile":"1rem","space-md":"1rem","space-xl":"2.5rem","margin":"2.5rem","margin-mobile":"1rem","gutter":"1.5rem","space-xs":"0.25rem","space-sm":"0.5rem","space-lg":"1.5rem"},"fontFamily":{"label-sm":["Hanken Grotesk"],"body-xl":["Hanken Grotesk"],"headline-sm":["Manrope"],"headline-lg":["Manrope"],"body-md":["Hanken Grotesk"],"label-md":["Hanken Grotesk"],"headline-xl-mobile":["Manrope"],"body-sm":["Hanken Grotesk"],"display-lg":["Manrope"],"headline-lg-mobile":["Manrope"],"display-lg-mobile":["Manrope"],"headline-md":["Manrope"],"label-lg":["Hanken Grotesk"],"headline-xl":["Manrope"],"body-lg":["Hanken Grotesk"]},"fontSize":{"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"600"}],"body-xl":["18px",{"lineHeight":"28px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-sm":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"500"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0.005em","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"500"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"display-lg":["56px",{"lineHeight":"64px","letterSpacing":"-0.03em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"display-lg-mobile":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"500"}],"headline-xl":["40px",{"lineHeight":"48px","letterSpacing":"-0.025em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0em","fontWeight":"400"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 z-50 flex flex-col bg-surface-container-lowest/80 mac-frosted shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="pt-5 px-6 pb-4 flex items-center justify-between"><div class="flex items-center space-x-2"><div class="w-3 h-3 rounded-full bg-[#ff5f56] transition-opacity hover:opacity-80 cursor-pointer"></div><div class="w-3 h-3 rounded-full bg-[#ffbd2e] transition-opacity hover:opacity-80 cursor-pointer"></div><div class="w-3 h-3 rounded-full bg-[#27c93f] transition-opacity hover:opacity-80 cursor-pointer"></div></div><span class="font-label-sm text-label-sm text-outline tracking-wider uppercase">Civil Core</span></div><div class="px-6 py-3 flex items-center gap-3"><div class="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[20px]">account_balance</span></div><div><div class="font-headline-sm text-label-lg font-semibold text-on-surface leading-tight">เทศบาลเมืองพัฒนา</div><div class="font-body-sm text-body-sm text-on-surface-variant">สำนักการช่าง (Engineering)</div></div></div><div class="px-4 py-2"><div class="px-3 py-1.5 rounded-full bg-surface-container-low text-secondary flex items-center justify-between text-label-sm font-label-sm"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>ระบบเครือข่ายออนไลน์</span><span class="text-outline font-mono text-[10px]">v4.2</span></div></div><nav class="flex-1 px-3 py-3 space-y-1.5 overflow-y-auto" data-active-classes="bg-primary-container text-on-primary-container font-semibold shadow-[0_8px_20px_-4px_rgba(0,97,148,0.25)]"><div class="px-3 pb-1 pt-2 font-label-sm text-label-sm text-outline tracking-wider uppercase">ส่วนบริหารงานช่าง</div><a class="group flex items-center gap-3 px-3.5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-hover:scale-105">dashboard</span><span class="font-body-md text-body-md">ภาพรวมโครงการ</span></a><a class="group flex items-center gap-3 px-3.5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="documents" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-hover:scale-105">description</span><span class="font-body-md text-body-md">พิมพ์เอกสารราชการ</span></a><a class="group flex items-center gap-3 px-3.5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="maintenance" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-hover:scale-105">engineering</span><span class="font-body-md text-body-md">ศูนย์รับเรื่องซ่อมบำรุง</span></a><div class="px-3 pb-1 pt-4 font-label-sm text-label-sm text-outline tracking-wider uppercase">วิศวกรรม &amp; ผังเมือง</div><a class="group flex items-center gap-3 px-3.5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="cost-boq" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-hover:scale-105">calculate</span><span class="font-body-md text-body-md">ประมาณราคา &amp; BOQ</span></a><a class="group flex items-center gap-3 px-3.5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-150" data-path="cadastral-gis" href="#"><span class="material-symbols-outlined text-[20px] transition-transform group-hover:scale-105">map</span><span class="font-body-md text-body-md">แผนที่ GIS &amp; ผังเมือง</span></a></nav><div class="p-4 mx-3 mb-4 rounded-xl bg-surface-container-low/70 mac-frosted"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">verified</span></div><div class="flex-1 min-w-0"><div class="font-label-md text-label-md text-on-surface truncate">ใบอนุญาตก่อสร้าง อ.1</div><div class="font-body-sm text-body-sm text-secondary truncate">รอบการประเมิน 28 รายการ</div></div></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 z-40 bg-surface-container-lowest/75 mac-frosted shadow-[0_1px_8px_rgba(0,0,0,0.03)] px-gutter flex items-center justify-between"><div class="flex items-center gap-3 flex-1 max-w-md"><div class="w-full flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus-within:bg-surface-container-lowest focus-within:shadow-[0_0_0_2px_#007bb9] transition-all"><span class="material-symbols-outlined text-outline text-[18px]">search</span><input class="bg-transparent border-0 outline-none w-full font-body-sm text-body-sm text-on-surface placeholder:text-outline" placeholder="ค้นหาแฟ้มงาน, สัญญาจ้าง, พิกัด GIS..." type="text"/><kbd class="font-label-sm text-[11px] px-2 py-0.5 rounded-md bg-surface-container-highest text-on-surface-variant font-mono">⌘K</kbd></div></div><div class="flex items-center gap-4"><div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface text-label-md font-label-md"><span class="material-symbols-outlined text-primary text-[18px]">event_available</span><span>ปีงบประมาณ ๒๕๖๗</span></div><div class="w-px h-6 bg-surface-container-highest"></div><button class="relative p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center gap-3 pl-2 py-1 pr-1.5 rounded-full bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer"><div class="text-right hidden sm:block"><div class="font-label-md text-label-md font-semibold text-on-surface leading-tight">วิศวกรชำนาญการ</div><div class="font-body-sm text-[11px] text-outline">ระดับ ภย. ๔๒๙๑๐</div></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 min-h-screen bg-gradient-to-b from-surface to-background w-full px-gutter py-space-lg"><div class="flex flex-col w-full">
+<!-- Top Context Header Bar (Apple Pages Canvas Style) -->
+<div class="flex flex-col gap-4 pb-6">
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[22px]">description</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Smart Editor • ระบบหนังสือราชการอิเล็กทรอนิกส์</h1>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm">ระเบียบงานสารบรรณ พ.ศ. ๒๕๒๖</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary">แฟ้มงาน: บันทึกข้อความสายงานวิศวกรรมโยธา • โครงการพัฒนาผิวจราจร ๒๕๖๗</p>
+</div>
+</div>
+<!-- Quick Actions Capsule (macOS Utility Bar) -->
+<div class="flex items-center gap-2 p-1.5 rounded-full bg-surface-container-lowest/80 mac-frosted shadow-sm">
+<div class="flex items-center gap-2 px-3 py-1 text-secondary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span>คลาวด์บันทึกอัตโนมัติ (๒ นาทีที่แล้ว)</span>
+</div>
+<div class="w-px h-5 bg-surface-container-highest"></div>
+<button class="group flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-all text-label-md font-label-md" id="btn-print" onclick="window.print()">
+<span class="material-symbols-outlined text-[18px] text-primary">print</span>
+<span>พิมพ์ (⌘P)</span>
+</button>
+<button class="group flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container-high transition-all text-label-md font-label-md" id="btn-export">
+<span class="material-symbols-outlined text-[18px] text-tertiary">picture_as_pdf</span>
+<span>ส่งออก PDF ทางการ</span>
+</button>
+<button class="group flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-on-primary shadow-sm hover:bg-primary-container transition-all text-label-md font-label-md" id="btn-route">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>ส่งเกษียณหนังสือ</span>
+</button>
+</div>
+</div>
+<!-- Floating Formatting Ribbon (macOS Sonoma Frosted Glass Dock) -->
+<div class="w-full rounded-2xl bg-surface-container-lowest/90 mac-frosted shadow-md p-2.5 flex flex-wrap items-center justify-between gap-3">
+<!-- Section Tabs -->
+<div class="flex items-center gap-1 p-1 bg-surface-container-low rounded-full">
+<button class="px-3.5 py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md shadow-xs">แบบฟอร์ม</button>
+<button class="px-3.5 py-1.5 rounded-full text-secondary hover:text-on-surface hover:bg-surface-container font-label-md text-label-md transition-colors">เค้าโครง</button>
+<button class="px-3.5 py-1.5 rounded-full text-secondary hover:text-on-surface hover:bg-surface-container font-label-md text-label-md transition-colors">แทรกตาราง</button>
+<button class="px-3.5 py-1.5 rounded-full text-secondary hover:text-on-surface hover:bg-surface-container font-label-md text-label-md transition-colors">ตรวจทาน &amp; กฎหมาย</button>
+</div>
+<!-- Typography Controls -->
+<div class="flex items-center gap-2">
+<!-- Font Selection -->
+<div class="relative flex items-center px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface text-label-md font-label-md cursor-pointer hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-[16px] text-outline mr-1.5">text_fields</span>
+<span class="font-medium mr-2">TH Sarabun PSK (สารบรรณ)</span>
+<span class="material-symbols-outlined text-[16px] text-outline">expand_more</span>
+</div>
+<!-- Font Size Stepper -->
+<div class="flex items-center bg-surface-container-low rounded-full p-0.5">
+<button class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant font-bold text-label-sm">-</button>
+<span class="px-2.5 font-label-md text-label-md font-semibold text-on-surface">16 pt</span>
+<button class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-container text-on-surface-variant font-bold text-label-sm">+</button>
+</div>
+<div class="w-px h-6 bg-surface-container-highest"></div>
+<!-- Font Styling Buttons -->
+<div class="flex items-center bg-surface-container-low rounded-full p-1 gap-1">
+<button class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-label-md text-on-surface hover:bg-surface-container-high transition-colors" title="ตัวหนา">B</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center italic text-label-md text-on-surface hover:bg-surface-container-high transition-colors" title="ตัวเอียง">I</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center underline text-label-md text-on-surface hover:bg-surface-container-high transition-colors" title="ขีดเส้นใต้">U</button>
+<div class="w-3.5 h-3.5 rounded-full bg-on-surface ml-1 cursor-pointer" title="สีข้อความ"></div>
+</div>
+<div class="w-px h-6 bg-surface-container-highest"></div>
+<!-- Thai Justify & Alignment -->
+<div class="flex items-center bg-surface-container-low rounded-full p-1 gap-0.5">
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high" title="ชิดซ้าย">
+<span class="material-symbols-outlined text-[18px]">format_align_left</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high" title="กึ่งกลาง">
+<span class="material-symbols-outlined text-[18px]">format_align_center</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high" title="ชิดขวา">
+<span class="material-symbols-outlined text-[18px]">format_align_right</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center bg-primary-fixed text-on-primary-fixed shadow-xs" title="กระจายแบบไทย (Thai Justify)">
+<span class="material-symbols-outlined text-[18px]">format_align_justify</span>
+</button>
+</div>
+<!-- Spacing & Lists -->
+<div class="flex items-center bg-surface-container-low rounded-full p-1 gap-0.5">
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high" title="ระยะบรรทัด ๑.๐">
+<span class="material-symbols-outlined text-[18px]">format_line_spacing</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high" title="แทรกตราครุฑ">
+<span class="material-symbols-outlined text-[18px]">stars</span>
+</button>
+</div>
+</div>
+<!-- Live Zoom Controller -->
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">fit_screen</span>
+<span>100% (A4)</span>
+</div>
+</div>
+</div>
+<!-- Primary Interactive Canvas (A4 Paper + Pages Inspector Split) -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start pb-16">
+<!-- Center: A4 Paper Workspace (8 Cols on xl) -->
+<div class="xl:col-span-8 flex flex-col items-center">
+<!-- High-Precision macOS A4 Horizontal Ruler -->
+<div class="w-full max-w-[820px] mb-3 px-10 py-1.5 rounded-xl bg-surface-container-lowest/80 mac-frosted shadow-xs flex flex-col">
+<div class="flex items-center justify-between text-[10px] text-outline font-mono">
+<span>0 cm (กั้นหน้า 3 ซม.)</span>
+<span>5</span>
+<span>10</span>
+<span>15</span>
+<span>20 cm (กั้นหลัง 2 ซม.)</span>
+</div>
+<div class="relative w-full h-3 mt-1 flex items-center">
+<div class="w-full h-1 bg-surface-container-highest rounded-full"></div>
+<!-- Left Margin Stop (3cm standard for Thai Memo) -->
+<div class="absolute left-[14%] -top-1 flex flex-col items-center cursor-ew-resize group" title="กั้นหน้า ๓.๐ ซม.">
+<div class="w-2.5 h-2.5 bg-primary rounded-xs rotate-45 group-hover:scale-125 transition-transform"></div>
+<span class="text-[9px] font-mono text-primary font-bold mt-0.5">3.0</span>
+</div>
+<!-- Right Margin Stop (2cm standard) -->
+<div class="absolute right-[9%] -top-1 flex flex-col items-center cursor-ew-resize group" title="กั้นหลัง ๒.๐ ซม.">
+<div class="w-2.5 h-2.5 bg-primary rounded-xs rotate-45 group-hover:scale-125 transition-transform"></div>
+<span class="text-[9px] font-mono text-primary font-bold mt-0.5">2.0</span>
+</div>
+</div>
+</div>
+<!-- The Real A4 Sheet (Authentic Thai Gov Spec: Garuda 3cm, Official Headings) -->
+<div class="w-full max-w-[820px] bg-surface-container-lowest rounded-xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.12)] p-12 sm:p-16 text-on-surface relative transition-all" id="official-document-sheet">
+<!-- Watermark / Micro Gov Print Guides (Subtle) -->
+<div class="absolute top-4 right-6 text-outline-variant font-mono text-[10px] tracking-widest uppercase select-none">
+          กองช่าง เทศบาลเมืองพัฒนา • เอกสารควบคุมภายใน
+        </div>
+<!-- Garuda Crest Header (ตราครุฑ มาตรฐาน ๓ เซนติเมตร) -->
+<div class="flex flex-col items-center justify-center mb-6">
+<svg class="w-20 h-20 text-on-surface" fill="currentColor" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<!-- Stylized Official Thai Garuda Vector -->
+<path d="M50 8C48.5 12 45 15 42 16C39 17 35 15 32 18C30 19.5 31 23 33 25C28 26 23 29 18 34C13 39 10 46 8 53C14 51 20 52 25 54C22 58 20 63 21 68C22 73 26 77 31 79C28 82 25 86 23 90C31 88 38 84 44 79C46 81 48 83 50 83C52 83 54 81 56 79C62 84 69 88 77 90C75 86 72 82 69 79C74 77 78 73 79 68C80 63 78 58 75 54C80 52 86 51 92 53C90 46 87 39 82 34C77 29 72 26 67 25C69 23 70 19.5 68 18C65 15 61 17 58 16C55 15 51.5 12 50 8ZM50 28C53 28 55 31 55 34C55 37 53 40 50 40C47 40 45 37 45 34C45 31 47 28 50 28ZM44 44C46 43 48 42 50 42C52 42 54 43 56 44C60 46 64 50 66 55C60 55 55 52 50 51C45 52 40 55 34 55C36 50 40 46 44 44Z"></path>
+</svg>
+<h2 class="font-headline-lg text-headline-lg font-bold tracking-tight text-on-surface mt-2 text-center">บันทึกข้อความ</h2>
+</div>
+<!-- Official Metadata Section -->
+<div class="space-y-2 mb-6 font-body-lg text-body-lg">
+<div class="flex flex-wrap items-baseline gap-2">
+<span class="font-bold text-on-surface">ส่วนราชการ:</span>
+<span class="flex-1 border-b border-dotted border-outline-variant pb-0.5 text-on-surface">
+              กองช่าง เทศบาลเมืองพัฒนา (ฝ่ายช่างโยธาและแบบแผน) โทร. ๐-๒๔๕๖-๗๘๙๐ ต่อ ๒๐๔
+            </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="flex items-baseline gap-2">
+<span class="font-bold text-on-surface">ที่:</span>
+<span class="flex-1 border-b border-dotted border-outline-variant pb-0.5 text-on-surface">กช ๕๒๐๑๔ / ว ๑๔๒</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-bold text-on-surface">วันที่:</span>
+<span class="flex-1 border-b border-dotted border-outline-variant pb-0.5 text-on-surface">๑๘ มีนาคม ๒๕๖๗</span>
+</div>
+</div>
+<div class="flex flex-wrap items-baseline gap-2">
+<span class="font-bold text-on-surface">เรื่อง:</span>
+<span class="flex-1 font-semibold text-on-surface">
+              รายงานผลการตรวจสอบสถานที่และประมาณการราคาโครงการปรับปรุงผิวจราจรลาดยางแอสฟัลต์คอนกรีต สายพัฒนาการศึกษา
+            </span>
+</div>
+<div class="flex flex-wrap items-baseline gap-2 pt-2">
+<span class="font-bold text-on-surface">เรียน:</span>
+<span class="text-on-surface">นายกเทศมนตรีเมืองพัฒนา (ผ่านปลัดเทศบาลเมืองพัฒนา)</span>
+</div>
+</div>
+<!-- Document Body with Exact Thai Sarabun Indents -->
+<div class="space-y-5 font-body-lg text-body-lg leading-relaxed text-on-surface text-justify [text-justify:inter-cluster]">
+<!-- Section 1 -->
+<div>
+<p class="indent-12">
+<span class="font-bold">๑. ต้นเรื่อง</span> ตามที่ฝ่ายช่างโยธา กองช่าง ได้รับมอบหมายตามคำสั่งเทศบาลเมืองพัฒนา ที่ ๑๐๔/๒๕๖๗ ลงวันที่ ๒ กุมภาพันธ์ ๒๕๖๗ ให้เข้าดำเนินการตรวจสอบสภาพผิวการจราจรที่ชำรุดเสียหาย และวางแผนปรับปรุงถนนสายพัฒนาการศึกษา หมู่ที่ ๓ เพื่ออำนวยความปลอดภัยแก่ประชาชนและสถานศึกษาในเขตเทศบาล นั้น
+            </p>
+</div>
+<!-- Section 2 -->
+<div>
+<p class="indent-12">
+<span class="font-bold">๒. ข้อเท็จจริง</span> นายช่างโยธาและคณะเจ้าหน้าที่ได้ลงพื้นที่สำรวจวัดระดับแนวทางกายภาพ พบว่าถนนดังกล่าวมีความกว้างเฉลี่ย ๖.๐๐ เมตร ระยะทางรวม ๑,๔๕๐ เมตร ผิวทางเดิมชำรุดแตกร้าว หลุดร่อน และมีน้ำท่วมขังช่วงฤดูมรสุม กองช่างจึงได้จัดทำรายละเอียดแบบรูปรายการก่อสร้าง และคำนวณราคากลางตามหลักเกณฑ์การคำนวณราคากลางงานก่อสร้างของราชการ (BOQ) เป็นที่เรียบร้อย โดยกำหนดงวดงานและแผนการเบิกจ่ายงบประมาณ ดังนี้
+            </p>
+</div>
+<!-- Rich Visual Table: งวดงาน & การจัดซื้อจัดจ้าง -->
+<div class="my-4 rounded-xl overflow-hidden bg-surface-container-low p-1 shadow-xs">
+<table class="w-full text-left text-body-sm font-body-sm">
+<thead class="bg-surface-container text-on-surface font-semibold">
+<tr>
+<th class="py-2.5 px-3">งวดงาน</th>
+<th class="py-2.5 px-3">รายละเอียดงานตามสัญญา</th>
+<th class="py-2.5 px-3 text-center">ระยะเวลา</th>
+<th class="py-2.5 px-3 text-right">จำนวนเงิน (บาท)</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-highest">
+<tr class="hover:bg-surface-container-high/50 transition-colors">
+<td class="py-2.5 px-3 font-medium">งวดที่ ๑</td>
+<td class="py-2.5 px-3">งานรื้อถอนผิวแอสฟัลต์เดิม และปรับปรุงชั้นรองพื้นทาง (Subbase)</td>
+<td class="py-2.5 px-3 text-center">๓๐ วัน</td>
+<td class="py-2.5 px-3 text-right font-mono">๗๔๐,๐๐๐.๐๐</td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors">
+<td class="py-2.5 px-3 font-medium">งวดที่ ๒</td>
+<td class="py-2.5 px-3">งานปูผิวทางแอสฟัลต์ติกคอนกรีต หนา ๕ ซม. พร้อมระบบระบายน้ำขอบทาง</td>
+<td class="py-2.5 px-3 text-center">๔๕ วัน</td>
+<td class="py-2.5 px-3 text-right font-mono">๑,๑๘๐,๐๐๐.๐๐</td>
+</tr>
+<tr class="hover:bg-surface-container-high/50 transition-colors">
+<td class="py-2.5 px-3 font-medium">งวดที่ ๓ (งวดสุดท้าย)</td>
+<td class="py-2.5 px-3">งานตีเส้นจราจรเทอร์โมพลาสติก ติดตั้งป้ายเตือน และเก็บกวาดพื้นที่</td>
+<td class="py-2.5 px-3 text-center">๑๕ วัน</td>
+<td class="py-2.5 px-3 text-right font-mono">๕๖๐,๐๐๐.๐๐</td>
+</tr>
+<tr class="bg-surface-container font-semibold text-on-surface">
+<td class="py-2.5 px-3 text-right" colspan="3">รวมเป็นเงินงบประมาณทั้งสิ้น (รวมภาษีมูลค่าเพิ่ม)</td>
+<td class="py-2.5 px-3 text-right font-mono text-primary text-body-md font-bold">๒,๔๘๐,๐๐๐.๐๐</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Section 3 -->
+<div>
+<p class="indent-12">
+<span class="font-bold">๓. ข้อพิจารณาและข้อเสนอแนะ</span> เพื่อให้การดำเนินงานเป็นไปตามระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. ๒๕๖๐ จึงเห็นควรพิจารณาดำเนินการ ดังต่อไปนี้
+            </p>
+<div class="space-y-1.5 mt-2 pl-12">
+<p>๓.๑ เห็นชอบแบบรูปรายการก่อสร้างและราคากลาง จำนวนเงิน ๒,๔๘๐,๐๐๐.- บาท (สองล้านสี่แสนแปดหมื่นบาทถ้วน)</p>
+<p>๓.๒ อนุมัติให้จัดจ้างโดยวิธีประกวดราคาอิเล็กทรอนิกส์ (e-bidding) ตามระเบียบฯ ต่อไป</p>
+</div>
+<p class="indent-12 mt-3">
+              จึงเรียนมาเพื่อโปรดพิจารณา หากเห็นชอบโปรดลงนามอนุมัติตามเสนอ
+            </p>
+</div>
+</div>
+<!-- Signature & Official Endorsement Blocks -->
+<div class="mt-12 pt-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+<!-- Left Endorsement (ช่องเกษียณหนังสือ ผอ.กองช่าง / ปลัดเทศบาล) -->
+<div class="p-4 rounded-xl bg-surface-container-low/70 border-0 flex flex-col space-y-3">
+<div class="flex items-center justify-between pb-2 border-b border-surface-container-highest">
+<span class="font-bold text-label-md text-on-surface">ความเห็นของหัวหน้าส่วนราชการ</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-mono text-[10px]">ลำดับเกษียณ ๑</span>
+</div>
+<div class="space-y-1 text-body-sm text-secondary">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded text-primary" type="checkbox"/>
+<span>เรียน นายกเทศมนตรีเมืองพัฒนา</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded text-primary" type="checkbox"/>
+<span>เพื่อโปรดพิจารณาอนุมัติ</span>
+</label>
+</div>
+<div class="pt-4 text-center">
+<div class="font-mono text-outline text-[12px] italic mb-1">[ ลายมือชื่ออิเล็กทรอนิกส์พร้อมประทับเวลา ]</div>
+<div class="font-semibold text-body-md text-on-surface">(นายวิชาญ ธนบูรณ์วิศวกรรม)</div>
+<div class="text-body-sm text-secondary">ผู้อำนวยการกองช่าง</div>
+<div class="text-label-sm text-outline font-mono mt-0.5">๑๙ มี.ค. ๒๕๖๗ • ๐๙:๓๐ น.</div>
+</div>
+</div>
+<!-- Right Endorsement (ผู้จัดทำรายงานบันทึกข้อความ) -->
+<div class="flex flex-col items-center justify-center text-center space-y-2 pt-6">
+<div class="w-32 h-10 flex items-center justify-center">
+<!-- Digital Signature Vector Mock -->
+<svg class="w-28 h-8 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 100 30">
+<path d="M10 20 Q 25 5, 40 22 T 60 15 T 80 25 T 95 10"></path>
+</svg>
+</div>
+<div>
+<div class="font-semibold text-body-md text-on-surface">(นายสุรชัย วงศ์สวัสดิ์)</div>
+<div class="text-body-sm text-secondary">วิศวกรโยธาชำนาญการ</div>
+<div class="text-label-sm text-outline font-mono">ตำแหน่งเลขที่ ๐๔-๒-๐๕-๐๐๑</div>
+</div>
+<!-- Verification Badge -->
+<div class="mt-2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-medium">
+<span class="material-symbols-outlined text-[14px] text-emerald-600">verified</span>
+<span>ตรวจสอบลายมือชื่อดิจิทัล PKI ถูกต้อง</span>
+</div>
+</div>
+</div>
+<!-- Official Seal Watermark Base -->
+<div class="mt-8 pt-4 border-t border-surface-container-highest flex items-center justify-between text-label-sm text-outline">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">qr_code_2</span>
+<span>ตรวจสอบต้นฉบับดิจิทัล: D-GOV-2567-ENG-0891</span>
+</div>
+<div>หน้า ๑ จาก ๑</div>
+</div>
+</div>
+</div>
+<!-- Right Side: macOS Pages Style Inspector Panel (4 Cols on xl) -->
+<div class="xl:col-span-4 flex flex-col space-y-4">
+<!-- Card 1: Document Properties & Margins Inspector -->
+<div class="rounded-2xl bg-surface-container-lowest/90 mac-frosted shadow-sm p-5 space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">tune</span>
+<h3 class="font-headline-sm text-label-lg font-semibold text-on-surface">การตั้งค่าหน้ากระดาษ</h3>
+</div>
+<span class="font-mono text-label-sm text-outline">ISO 216</span>
+</div>
+<div class="grid grid-cols-2 gap-3 text-label-md">
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col">
+<span class="text-secondary text-body-sm">ขนาดกระดาษ</span>
+<span class="font-semibold text-on-surface mt-1">A4 แนวตั้ง</span>
+<span class="text-outline text-label-sm mt-0.5">210 × 297 มม.</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col">
+<span class="text-secondary text-body-sm">ระยะขอบราชการ</span>
+<span class="font-semibold text-on-surface mt-1">มาตรฐาน ก.พ.ร.</span>
+<span class="text-outline text-label-sm mt-0.5">หน้า 3 ซม. / หลัง 2 ซม.</span>
+</div>
+</div>
+<div class="space-y-2 pt-1">
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface">ตราครุฑทางการ</span>
+<span class="px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed text-label-sm font-semibold">๓ เซนติเมตร</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface">วรรคตอนระเบียบสารบรรณ</span>
+<span class="text-secondary">ย่อหน้า ๒.๕ ซม. (๑๒ เคาะ)</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Template Library Switcher -->
+<div class="rounded-2xl bg-surface-container-lowest/90 mac-frosted shadow-sm p-5 space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[20px]">inventory_2</span>
+<h3 class="font-headline-sm text-label-lg font-semibold text-on-surface">แบบฟอร์มสำเร็จรูป</h3>
+</div>
+<button class="text-primary hover:text-primary-container text-label-sm font-medium">ดูทั้งหมด</button>
+</div>
+<div class="space-y-2">
+<!-- Template Active -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-primary/10 transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">draft</span>
+</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">บันทึกข้อความทั่วไป</div>
+<div class="text-body-sm text-secondary">ระเบียบสำนักนายกฯ ๒๕๒๖</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px]">check_circle</span>
+</div>
+<!-- Template Option 2 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">apartment</span>
+</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">แบบ ข.๑ คำขออนุญาตก่อสร้าง</div>
+<div class="text-body-sm text-secondary">พรบ. ควบคุมอาคาร พ.ศ. ๒๕๒๒</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]">arrow_forward_ios</span>
+</div>
+<!-- Template Option 3 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">ใบรับรอง อ.๑ (การใช้อาคาร)</div>
+<div class="text-body-sm text-secondary">การตรวจสอบวิศวกรรมโครงสร้าง</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]">arrow_forward_ios</span>
+</div>
+<!-- Template Option 4 -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">assignment</span>
+</div>
+<div>
+<div class="font-label-md text-label-md font-semibold text-on-surface">รายงานผู้ควบคุมงานประจำสัปดาห์</div>
+<div class="text-body-sm text-secondary">บันทึกตรวจรับพัสดุรายงวด</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]">arrow_forward_ios</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Auto-Link BOQ / Engineering Cost Estimator Widget -->
+<div class="rounded-2xl bg-gradient-to-br from-surface-container-low to-surface-container shadow-sm p-5 space-y-3 relative overflow-hidden">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">link</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-label-lg font-semibold text-on-surface">เชื่อมโยงฐานข้อมูล BOQ</h3>
+<p class="font-body-sm text-body-sm text-secondary">แบบ ปร.๔ / ปร.๕ ล่าสุดในระบบ</p>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-lowest/80 mac-frosted space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">รหัสโครงการ</span>
+<span class="font-mono text-label-sm font-semibold text-on-surface">PR-67-RD-044</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">ราคากลางอนุมัติ</span>
+<span class="font-mono text-label-md font-bold text-primary">฿ 2,480,000.00</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">ผู้คำนวณราคา</span>
+<span class="text-label-sm text-on-surface">นายสุรชัย ว. (ภย. ๔๒๙๑๐)</span>
+</div>
+</div>
+<button class="w-full py-2 px-3 rounded-full bg-primary text-on-primary font-label-md text-label-md font-semibold hover:bg-primary-container transition-all flex items-center justify-center gap-1.5 shadow-xs">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+<span>ซิงค์ตารางงวดงานลงในเอกสาร</span>
+</button>
+</div>
+<!-- Card 4: Revision History & Audit Trails -->
+<div class="rounded-2xl bg-surface-container-lowest/90 mac-frosted shadow-sm p-5 space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">history</span>
+<h3 class="font-headline-sm text-label-lg font-semibold text-on-surface">ประวัติการแก้ไข (Audit Log)</h3>
+</div>
+<span class="text-label-sm text-outline">v2.4</span>
+</div>
+<div class="relative pl-5 space-y-3 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-container-highest">
+<div class="relative">
+<div class="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-primary"></div>
+<div class="text-label-md font-semibold text-on-surface">แก้ไขตารางแบ่งงวดงาน ๓ งวด</div>
+<div class="text-body-sm text-secondary">โดย นายสุรชัย วงศ์สวัสดิ์ • วันนี้ ๑๔:๒๐</div>
+</div>
+<div class="relative">
+<div class="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-outline-variant"></div>
+<div class="text-label-md font-medium text-on-surface">ปรับแก้ระยะขอบกระดาษตาม พ.ร.บ.</div>
+<div class="text-body-sm text-secondary">โดย ระบบอัตโนมัติ • วันนี้ ๑๑:๐๕</div>
+</div>
+<div class="relative">
+<div class="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-outline-variant"></div>
+<div class="text-label-md font-medium text-on-surface">สร้างฉบับร่างเอกสารจากแม่แบบ</div>
+<div class="text-body-sm text-secondary">โดย ธุรการฝ่ายแบบแผน • ๑๗ มี.ค. ๑๕:๔๐</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple interactive micro-effects for document buttons
+  document.addEventListener('DOMContentLoaded', () => {
+    const routeBtn = document.getElementById('btn-route');
+    if (routeBtn) {
+      routeBtn.addEventListener('click', () => {
+        const originalText = routeBtn.innerHTML;
+        routeBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>กำลังส่งเกษียณ...</span>';
+        setTimeout(() => {
+          routeBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">task_alt</span><span>ส่งเกษียณสำเร็จ!</span>';
+          routeBtn.classList.remove('bg-primary');
+          routeBtn.classList.add('bg-emerald-600');
+          setTimeout(() => {
+            routeBtn.innerHTML = originalText;
+            routeBtn.classList.add('bg-primary');
+            routeBtn.classList.remove('bg-emerald-600');
+          }, 2400);
+        }, 900);
+      });
+    }
+
+    const exportBtn = document.getElementById('btn-export');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        alert('กำลังสร้างไฟล์ PDF ทางการตามมาตรฐาน e-Government Document Standard (PDF/A)...');
+      });
+    }
+  });
+</script></main></div></body></html>

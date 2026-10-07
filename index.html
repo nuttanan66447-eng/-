@@ -1,4 +1,114 @@
 <!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ระบบกองช่าง เทศบาลตำบลสีแก้ว</title>
+<meta name="description" content="ระบบบริหารโครงการและเอกสารราชการ กองช่าง เทศบาลตำบลสีแก้ว อำเภอเมืองร้อยเอ็ด จังหวัดร้อยเอ็ด"/>
+<meta name="theme-color" content="#f8f9ff"/>
+<link rel="icon" type="image/png" href="assets/favicon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300..800&family=Manrope:wght@400..800&family=Sarabun:wght@300;400;500;600;700&display=swap"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"/>
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css"/>
+<link rel="stylesheet" href="assets/css/app.css"/>
+</head>
+<body class="bg-background font-body-md text-body-md text-on-surface antialiased">
+<a href="#view" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[3000] btn-primary">ข้ามไปเนื้อหา</a>
 
-<html lang="th"><head><meta charset="utf-8"/><title>ภาพรวมโครงการ | กองช่าง เทศบาลตำบลสีแก้ว</title><meta name="description" content="ระบบบริหารโครงการ กองช่าง เทศบาลตำบลสีแก้ว อ.เมือง จ.ร้อยเอ็ด"/><link rel="icon" type="image/png" href="assets/favicon.png"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;family=Source+Sans+3:wght@400;600&amp;family=Sarabun:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css"/><link rel="stylesheet" href="assets/gas/data-panel.css"/><link rel="stylesheet" href="assets/styles.css"/><link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="assets/theme-v184.css"/></head><body class="bg-surface text-on-surface antialiased"><div id="sidebar-backdrop" class="hidden fixed inset-0 z-[45] bg-tertiary/60 lg:hidden"></div><aside id="sidebar" class="-translate-x-full lg:translate-x-0 transition-transform duration-200 overflow-y-auto fixed left-0 top-0 h-full w-72 bg-tertiary text-inverse-on-surface z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="sk-side-top"><a href="index.html" class="sk-brand" title="กลับหน้าแรก"><span class="sk-brand-logo"><img src="assets/logo-sikaew.jpg" alt="ตราสัญลักษณ์เทศบาลตำบลสีแก้ว"/></span><span class="sk-brand-text"><b>โครงการกองช่างเทศบาลตำบลสีแก้ว</b><small id="sk-brand-sub">ฐานข้อมูลโครงการ</small></span></a><nav class="sk-menu-list" aria-label="เมนูหลัก"><a class="sk-menu" href="index.html?page=openEntryGate" data-page="openEntryGate"><span class="sk-menu-icon teal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><b>กรอกข้อมูลโครงการ</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openEngineerReportHome" data-page="openEngineerReportHome"><span class="sk-menu-icon green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10a2 2 0 0 1 2 2v16l-7-3-7 3V5a2 2 0 0 1 2-2Zm2 3h6M9 10h6M9 14h4"/></svg></span><b>รายงานช่าง</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openBuildingInspectionPage" data-page="openBuildingInspectionPage"><span class="sk-menu-icon building"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v11h14V10M9 21v-7h6v7M8 9h.01M16 9h.01"/></svg></span><b>ตรวจสอบอาคาร</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openTestResultPage" data-page="openTestResultPage"><span class="sk-menu-icon test"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3M8 15h8m-6-4h4"/></svg></span><b>ผลทดสอบ</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openTorDraftHome" data-page="openTorDraftHome"><span class="sk-menu-icon tor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6V3Zm9 0v5h5M9 12h7M9 16h7M9 8h2"/></svg></span><b>ร่าง TOR</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openCentralPricePage" data-page="openCentralPricePage"><span class="sk-menu-icon price"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M17 6.5c0-1.4-2.2-2.5-5-2.5S7 5.1 7 6.5 9.2 9 12 9s5 1.1 5 2.5S14.8 14 12 14s-5 1.1-5 2.5S9.2 19 12 19s5-1.1 5-2.5"/></svg></span><b>กำหนดราคากลาง</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openLowBidNoticePage" data-page="openLowBidNoticePage"><span class="sk-menu-icon low-bid"><b class="sk-menu-pct">%</b></span><b>แจ้งราคาต่ำกว่าราคากลาง ๑๕%</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openKReportHome" data-page="openKReportHome"><span class="sk-menu-icon kreport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16v18H4V3Zm4 4h8M8 11h2m4 0h2M8 15h2m4 0h2M8 19h2m4 0h2"/></svg></span><b>รายงานค่า K</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openCompensationPage" data-page="openCompensationPage"><span class="sk-menu-icon compensation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3V6Zm4 3h.01M17 15h.01M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"/></svg></span><b>เบิกค่าตอบแทน</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openDocumentLibrary" data-page="openDocumentLibrary"><span class="sk-menu-icon orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm0 4h18"/></svg></span><b>เอกสารดาวน์โหลด</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openLocalRoadEntryGate" data-page="openLocalRoadEntryGate"><span class="sk-menu-icon cyan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 5 21m11-18 3 18M12 4v3m0 4v3m0 4v2M3 21h18"/></svg></span><b>คุมสายทาง</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openConstructionDurationPage" data-page="openConstructionDurationPage"><span class="sk-menu-icon duration"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5l3 2M7 3h10M9 3v2m6-2v2M5 7a8 8 0 1 0 14 0M4 21h16"/></svg></span><b>คำนวณงวดงาน</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><a class="sk-menu" href="index.html?page=openPerformanceEvaluationPage" data-page="openPerformanceEvaluationPage"><span class="sk-menu-icon evaluation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10a2 2 0 0 1 2 2v16H5V5a2 2 0 0 1 2-2Zm3 0h4v3h-4V3Zm-2 7h8M8 14h5M8 18h3"/></svg></span><b>แบบประเมิน</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a><details class="sk-menu-group"><summary class="sk-menu"><span class="sk-menu-icon pink"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8.5 4a7 7 0 0 0-.12-1.3l2-1.55-2-3.46-2.46 1a8 8 0 0 0-2.25-1.3L15.3 2h-4l-.38 3.39a8 8 0 0 0-2.25 1.3l-2.46-1-2 3.46 2 1.55A7 7 0 0 0 6.1 12c0 .44.04.87.12 1.3l-2 1.55 2 3.46 2.46-1a8 8 0 0 0 2.25 1.3L11.3 22h4l.38-3.39a8 8 0 0 0 2.25-1.3l2.46 1 2-3.46-2-1.55c.08-.43.12-.86.12-1.3Z"/></svg></span><b>ระบบ</b><span class="sk-menu-arrow" aria-hidden="true">⌄</span></summary><div class="sk-submenu"><a href="index.html?page=openPersonnelManager" data-page="openPersonnelManager">👥 รายชื่อบุคลากร</a><a href="index.html?page=openUserManager" data-page="openUserManager">🔐 จัดการผู้ใช้งาน</a><a href="index.html?page=openRolePermissionManager" data-page="openRolePermissionManager">🛡️ ตัวจัดการสิทธิ์การใช้งาน</a><a href="index.html?page=openSystemOptionManager" data-page="openSystemOptionManager">🧩 จัดการตัวเลือกทั้งหมด</a></div></details><a class="sk-menu" href="index.html?page=openSupervisorGameFromSidebar" data-page="openSupervisorGameFromSidebar"><span class="sk-menu-icon game"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8h8a5 5 0 0 1 4.7 6.7l-1 2.8a2.2 2.2 0 0 1-3.7.8L14.5 17h-5L8 18.3a2.2 2.2 0 0 1-3.7-.8l-1-2.8A5 5 0 0 1 8 8Zm-1 4v4m-2-2h4m7-1h.01M18 15h.01M9 8V5h6v3"/></svg></span><b>เกมส์พักระหว่างงาน</b><span class="sk-menu-arrow" aria-hidden="true">›</span></a></nav></div><div class="sk-side-user"><div class="sk-side-user-text"><b id="sk-side-user-name">ผู้เยี่ยมชม | ดู Dashboard</b><small id="sk-side-user-role">เข้าสู่ระบบเพื่อบันทึกและซิงก์ข้อมูล</small></div><button type="button" data-action="sk-side-account" class="sk-side-login" id="sk-side-login">เข้าสู่ระบบ</button></div></aside><div class="lg:pl-72 flex flex-col min-h-screen"><header class="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-4 lg:px-space-xl gap-space-sm flex items-center justify-between"><div class="flex items-center gap-space-md min-w-0"><button id="sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="เปิดเมนู" class="lg:hidden p-space-xs -ml-space-xs text-primary"><span class="material-symbols-outlined">menu</span></button><span class="font-headline-sm text-headline-sm text-primary tracking-tight truncate">ระบบบริหารโครงการ กองช่าง เทศบาลตำบลสีแก้ว</span><span class="hidden md:flex shrink-0 bg-surface-container-high text-primary font-label-sm text-label-sm px-space-sm py-space-2xs rounded-full flex items-center gap-space-xs"><span class="material-symbols-outlined text-space-md">calendar_today</span>ปีงบประมาณ 2567</span></div><div class="flex items-center gap-space-sm md:gap-space-lg shrink-0"><div class="hidden md:flex items-center gap-space-xs bg-surface-container-low text-secondary px-space-sm py-space-2xs rounded-full"><span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span><span class="font-label-md text-label-md font-semibold">กำลังปฏิบัติราชการ</span></div><button id="notif-btn" aria-label="การแจ้งเตือน" class="relative p-space-xs text-on-surface-variant hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined">notifications</span><span class="notif-count absolute top-1 right-1 w-4 h-4 bg-secondary-container text-on-primary font-code-sm text-code-sm rounded-full flex items-center justify-center font-bold">3</span></button><button id="profile-btn" type="button" aria-label="เมนูผู้ใช้" class="flex items-center gap-space-sm pl-space-md bg-surface-container-low/50 hover:bg-surface-container py-space-2xs px-space-sm rounded-full transition-colors"><span class="w-8 h-8 shrink-0 rounded-full bg-surface-container"></span><div class="hidden sm:flex flex-col text-left"><span class="font-label-md text-label-md font-semibold text-on-surface leading-tight">กำลังโหลด...</span></div></button></div></header><main id="app-main" class="w-full min-w-0 pt-16 bg-surface flex-1"><div id="app-holder" class="relative w-full" style="height:calc(100vh - 4rem)"><div id="app-loading" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-on-surface-variant"><span class="material-symbols-outlined animate-spin text-[40px] text-primary">progress_activity</span><p>กำลังเปิดระบบบริหารโครงการ...</p></div></div></main></div><script src="assets/vendor/leaflet/leaflet.js"></script><script src="assets/personnel.js"></script><script src="assets/data.js"></script><script src="assets/ui.js"></script><script src="assets/thai-date.js"></script><script src="assets/tambon-map.js"></script><script src="assets/docs.js"></script><script src="assets/flows.js"></script><script src="assets/gas/gas-bridge.js"></script><script src="assets/config.js"></script><script src="assets/vendor/supabase/supabase.js"></script><script src="assets/cloud.js"></script><script>window.SK_DATA_PANEL={fab:false};</script><script src="assets/vendor/xlsx/xlsx.full.min.js" defer></script><script src="assets/gas/data-panel.js"></script><script src="assets/realdata.js"></script><script src="assets/word-export.js"></script><script src="assets/doc-engine.js"></script><script src="assets/pages/app.js"></script></body></html>
+<!-- เมนูด้านซ้าย -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full w-72 z-50 flex flex-col bg-white/80 glass shadow-[0_1px_8px_rgba(0,0,0,0.04)] -translate-x-full lg:translate-x-0 transition-transform duration-200" aria-label="เมนูหลัก">
+  <div class="pt-5 px-6 pb-3 flex items-center justify-between">
+    <div class="flex items-center gap-2" aria-hidden="true"><i class="w-3 h-3 rounded-full bg-[#ff5f56]"></i><i class="w-3 h-3 rounded-full bg-[#ffbd2e]"></i><i class="w-3 h-3 rounded-full bg-[#27c93f]"></i></div>
+    <span class="font-label-sm text-label-sm text-outline tracking-wider">SIKAEW CIVIL</span>
+  </div>
+  <a href="#/overview" class="mx-3 px-3 py-3 flex items-center gap-3 rounded-2xl hover:bg-surface-container-low">
+    <img src="assets/logo-sikaew.jpg" alt="" class="w-10 h-10 rounded-full object-cover shadow-sm ring-2 ring-white"/>
+    <span class="min-w-0"><span class="block font-headline-sm text-label-lg font-semibold text-on-surface leading-tight">เทศบาลตำบลสีแก้ว</span><span class="block font-body-sm text-body-sm text-on-surface-variant">กองช่าง • อ.เมืองร้อยเอ็ด</span></span>
+  </a>
+  <div class="px-4 py-2">
+    <button type="button" id="side-status" data-action="account" class="w-full px-3 py-1.5 rounded-full bg-surface-container-low text-secondary flex items-center justify-between font-label-sm text-label-sm">
+      <span class="flex items-center gap-1.5"><span id="side-dot" class="w-2 h-2 rounded-full bg-outline"></span><span id="side-status-text">ใช้งานในเครื่องนี้</span></span>
+      <span class="text-outline font-mono text-[10px]">v5.0</span>
+    </button>
+  </div>
+  <nav class="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+    <div class="nav-group">ส่วนบริหารงานช่าง</div>
+    <a class="nav-link" data-nav="overview" href="#/overview"><span class="material-symbols-outlined">dashboard</span><span>ภาพรวมโครงการ</span></a>
+    <a class="nav-link" data-nav="projects" href="#/projects"><span class="material-symbols-outlined">inventory_2</span><span>ทะเบียนโครงการ</span></a>
+    <a class="nav-link" data-nav="documents" href="#/documents"><span class="material-symbols-outlined">description</span><span>พิมพ์เอกสารราชการ</span></a>
+    <a class="nav-link" data-nav="tracking" href="#/tracking"><span class="material-symbols-outlined">photo_camera</span><span>ติดตามงาน &amp; รูปภาพ</span></a>
+    <div class="nav-group">วิศวกรรม &amp; พื้นที่</div>
+    <a class="nav-link" data-nav="map" href="#/map"><span class="material-symbols-outlined">map</span><span>แผนที่ GIS ตำบล</span></a>
+    <a class="nav-link" data-nav="tools" href="#/tools"><span class="material-symbols-outlined">construction</span><span>เครื่องมือระบบหลัก</span></a>
+    <div class="nav-group">ระบบ</div>
+    <a class="nav-link" data-nav="users" href="#/users"><span class="material-symbols-outlined">manage_accounts</span><span>ผู้ใช้และสิทธิ์</span></a>
+    <a class="nav-link" data-nav="data" href="#/data"><span class="material-symbols-outlined">database</span><span>ข้อมูล &amp; นำเข้า Excel</span></a>
+  </nav>
+  <a href="#/entry" class="p-4 mx-3 mb-4 rounded-2xl bg-surface-container-low/80 hover:bg-surface-container transition-colors">
+    <span class="flex items-center gap-3">
+      <span class="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-[20px]">add</span></span>
+      <span class="min-w-0 flex-1"><span class="block font-label-lg text-label-lg text-on-surface">กรอกข้อมูลโครงการ</span><span id="side-db" class="block font-body-sm text-body-sm text-secondary truncate">ฐานข้อมูลโครงการ</span></span>
+    </span>
+  </a>
+</aside>
+<div id="sidebar-backdrop" class="fixed inset-0 z-40 bg-[rgba(11,28,48,0.3)] hidden lg:hidden"></div>
+
+<div class="lg:pl-72">
+  <!-- แถบด้านบน -->
+  <header id="topbar" class="fixed top-0 left-0 lg:left-72 right-0 h-16 z-40 bg-white/75 glass shadow-[0_1px_8px_rgba(0,0,0,0.03)] px-4 md:px-gutter flex items-center gap-3">
+    <button type="button" id="menu-btn" class="icon-btn lg:hidden" aria-label="เปิดเมนู" aria-controls="sidebar" aria-expanded="false"><span class="material-symbols-outlined">menu</span></button>
+    <form id="search" class="flex-1 max-w-md" role="search">
+      <label class="w-full flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface-container-low text-on-surface-variant shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus-within:bg-white focus-within:shadow-[0_0_0_2px_#007bb9] transition-all">
+        <span class="material-symbols-outlined text-outline text-[18px]">search</span>
+        <span class="sr-only">ค้นหา</span>
+        <input id="search-input" type="search" autocomplete="off" class="bg-transparent border-0 outline-none w-full font-body-sm text-body-sm text-on-surface placeholder:text-outline" placeholder="ค้นหาโครงการ, ผู้รับจ้าง, เลขที่สัญญา, หมู่บ้าน..."/>
+        <kbd class="hidden md:inline font-label-sm text-[11px] px-2 py-0.5 rounded-md bg-surface-container-highest text-on-surface-variant font-mono">/</kbd>
+      </label>
+    </form>
+    <div class="flex items-center gap-2 md:gap-3 ml-auto">
+      <span id="fy-chip" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface font-label-md text-label-md"><span class="material-symbols-outlined text-primary text-[18px]">event_available</span><span></span></span>
+      <span class="hidden md:block w-px h-6 bg-surface-container-highest"></span>
+      <button type="button" id="cloud-btn" data-action="account" class="icon-btn" aria-label="สถานะข้อมูล"><span class="material-symbols-outlined">cloud_off</span></button>
+      <button type="button" id="user-btn" data-action="account" class="flex items-center gap-3 pl-2 sm:pl-3 py-1 pr-1.5 rounded-full bg-surface-container-low hover:bg-surface-container transition-all">
+        <span class="text-right hidden sm:block"><span id="user-name" class="block font-label-md text-label-md font-semibold text-on-surface leading-tight">เข้าสู่ระบบ</span><span id="user-role" class="block font-body-sm text-[11px] text-outline">ผู้เยี่ยมชม</span></span>
+        <span class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="relative pt-16 min-h-screen bg-gradient-to-b from-surface to-background">
+    <div id="view" class="px-4 md:px-gutter py-space-lg max-w-[1600px] mx-auto" tabindex="-1"></div>
+  </main>
+</div>
+
+<script>window.SK_DATA_PANEL = { fab: false };</script>
+<script src="assets/config.js"></script>
+<script src="assets/vendor/supabase/supabase.js"></script>
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script src="assets/vendor/xlsx/xlsx.full.min.js"></script>
+<script src="assets/personnel.js"></script>
+<script src="assets/gas/gas-bridge.js"></script>
+<script src="assets/gas/data-panel.js"></script>
+<script src="assets/js/core.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/cloud.js"></script>
+<script src="assets/js/projects.js"></script>
+<script src="assets/js/engine.js"></script>
+<script src="assets/js/docs.js"></script>
+<script src="assets/js/photos.js"></script>
+<script src="assets/js/map.js"></script>
+<script src="assets/js/word-export.js"></script>
+<script src="assets/js/views/common.js"></script>
+<script src="assets/js/views/overview.js"></script>
+<script src="assets/js/views/projects.js"></script>
+<script src="assets/js/views/project.js"></script>
+<script src="assets/js/views/documents.js"></script>
+<script src="assets/js/views/tracking.js"></script>
+<script src="assets/js/views/map.js"></script>
+<script src="assets/js/views/system.js"></script>
+<script src="assets/js/views/users.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
