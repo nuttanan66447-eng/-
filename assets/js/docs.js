@@ -76,7 +76,7 @@
     root.setAttribute('data-sk-std', '1'); // จัดรูปแบบมาตรฐานแล้ว
     root.style.zoom = '';
     // ส่วนช่วยแสดงผลของตัวแก้ไข (เส้นขอบกระดาษ/ตัวแบ่งหน้า) ไม่เก็บลงสำเนา
-    Array.prototype.forEach.call(root.querySelectorAll('.sk-guide,.sk-break,#sk-paper-css'), function (x) { x.remove(); });
+    Array.prototype.forEach.call(root.querySelectorAll('.sk-guide,.sk-break,.sk-gap,#sk-paper-css'), function (x) { x.remove(); });
     var body = root.querySelector('body'); if (body) body.removeAttribute('contenteditable');
     Array.prototype.forEach.call(root.querySelectorAll('.sk-paper'), function (x) { x.classList.remove('sk-paper'); });
     Array.prototype.forEach.call(root.querySelectorAll('script'), function (x) { x.remove(); });
@@ -91,32 +91,68 @@
       return r.width > 690 && r.width < 1200 && r.height > 400;
     });
     // แผ่นกระดาษ = กล่องสัดส่วน A4 (ตั้ง/นอน) ชั้นนอกสุด; ไม่มีเลย = กล่องสูงชั้นในสุด
-    var a4 = boxes.filter(function (el) { var r = el.getBoundingClientRect(), q = Math.max(r.width, r.height) / Math.min(r.width, r.height); return Math.abs(q - 1.414) < 0.14; });
+    var a4 = boxes.filter(function (el) { if (el.classList.contains('sk-paper') || el.hasAttribute('data-sk-page')) return true; var r = el.getBoundingClientRect(), q = Math.max(r.width, r.height) / Math.min(r.width, r.height); return Math.abs(q - 1.414) < 0.14; });
     if (a4.length) return a4.filter(function (el) { return !a4.some(function (o) { return o !== el && o.contains(el); }); });
     return boxes.filter(function (el) { return !boxes.some(function (o) { return o !== el && el.contains(o); }); }).slice(0, 1);
   }
+  function paginate(d, page, pageH, pt, pb) {
+    var win = d.defaultView;
+    var flow = Array.prototype.filter.call(page.children, function (c) {
+      if (/(^|\s)sk-(guide|break|gap)(\s|$)/.test(c.className)) return false;
+      var cs = win.getComputedStyle(c);
+      return cs.position !== 'absolute' && cs.position !== 'fixed' && cs.display !== 'none';
+    });
+    flow.forEach(function (c) {
+      for (var pass = 0; pass < 3; pass++) {
+        var t0 = page.getBoundingClientRect().top, r = c.getBoundingClientRect(), top = r.top - t0, bot = r.bottom - t0;
+        var k = Math.floor(top / pageH), start = k * pageH + pt, limit = (k + 1) * pageH - pb, need = 0;
+        if (k > 0 && top < start - 1) need = start - top;                                   // ตกอยู่ในระยะขอบบนของหน้าใหม่
+        else if (bot > limit + 1 && r.height < pageH - pt - pb) need = (k + 1) * pageH + pt - top; // เลยขอบล่าง: ยกไปหน้าถัดไป
+        if (need <= 0.5) break;
+        var gap = c.previousElementSibling;
+        if (!gap || !gap.classList.contains('sk-gap')) {
+          gap = d.createElement('div'); gap.className = 'sk-gap';
+          gap.setAttribute('contenteditable', 'false'); gap.setAttribute('aria-hidden', 'true');
+          gap.style.cssText = 'height:0;margin:0;padding:0;border:0';
+          page.insertBefore(gap, c);
+        }
+        gap.style.height = ((parseFloat(gap.style.height) || 0) + need) + 'px';
+      }
+    });
+  }
   function decoratePages(d) {
-    Array.prototype.forEach.call(d.querySelectorAll('.sk-guide,.sk-break'), function (x) { x.remove(); });
+    Array.prototype.forEach.call(d.querySelectorAll('.sk-guide,.sk-break,.sk-gap'), function (x) { x.remove(); });
     if (!d.getElementById('sk-paper-css')) {
       var st = d.createElement('style'); st.id = 'sk-paper-css';
       st.textContent = '@media screen{html,body{background:#e9eef7!important}.sk-paper{background:#fff!important;box-shadow:0 1px 3px rgba(15,23,42,.14),0 10px 30px rgba(15,23,42,.10)!important;margin:0 auto 22px!important}' +
         '.sk-guide{position:absolute;pointer-events:none;border:1px dashed rgba(0,97,148,.35);border-radius:2px;z-index:5}' +
         '.sk-break{position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(186,26,26,.55);pointer-events:none;z-index:6}' +
         '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}}' +
-        '@media print{.sk-guide,.sk-break{display:none!important}}';
+        '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}}';
       d.head.appendChild(st);
     }
     var win = d.defaultView;
     paperPages(d).forEach(function (page) {
       page.classList.add('sk-paper');
+      page.setAttribute('data-sk-page', '');
       var cs = win.getComputedStyle(page);
       if (cs.position === 'static') page.style.position = 'relative';
       var landscape = page.offsetWidth > page.offsetHeight * 1.1 && page.offsetWidth > 1000;
       var pageH = (landscape ? 210 : 297) * MM;
       var pt = parseFloat(cs.paddingTop) || 0, pr = parseFloat(cs.paddingRight) || 0, pb = parseFloat(cs.paddingBottom) || 0, pl = parseFloat(cs.paddingLeft) || 0;
       var mk = function (cls, css, html) { var x = d.createElement('div'); x.className = cls; x.setAttribute('contenteditable', 'false'); x.setAttribute('aria-hidden', 'true'); x.style.cssText = css; if (html) x.innerHTML = html; page.appendChild(x); return x; };
-      // เส้นขอบเขตการพิมพ์ (ระยะขอบกระดาษ) ของแผ่นแรก
-      if (pt || pl) mk('sk-guide', 'top:' + pt + 'px;left:' + pl + 'px;right:' + pr + 'px;height:' + Math.max(0, Math.min(page.offsetHeight, pageH) - pt - pb) + 'px');
+      var std = page.classList.contains('sk-std') || page.classList.contains('sk-std-ext');
+      if (std) {
+        // หนังสือราชการยาวเกิน 1 แผ่น: แบ่งหน้าแบบ Word — ย่อหน้าที่เลยขอบล่างขึ้นต้นหน้าถัดไปใต้ระยะขอบบน
+        page.style.removeProperty('min-height');
+        paginate(d, page, pageH, pt, pb);
+        var count = Math.max(1, Math.ceil((page.offsetHeight - 8) / pageH));
+        page.style.setProperty('min-height', (count * pageH) + 'px', 'important'); // แผ่นเต็มหน้าสุดท้าย (ท้ายหนังสืออยู่ล่างสุดของหน้าสุดท้าย)
+        for (var g = 0; g < count; g++) mk('sk-guide', 'top:' + (g * pageH + pt) + 'px;left:' + pl + 'px;right:' + pr + 'px;height:' + Math.max(0, pageH - pt - pb) + 'px');
+      } else if (pt || pl) {
+        // เส้นขอบเขตการพิมพ์ (ระยะขอบกระดาษ) ของแผ่นแรก
+        mk('sk-guide', 'top:' + pt + 'px;left:' + pl + 'px;right:' + pr + 'px;height:' + Math.max(0, Math.min(page.offsetHeight, pageH) - pt - pb) + 'px');
+      }
       // เนื้อหายาวเกิน 1 แผ่น: แสดงตำแหน่งขึ้นหน้าใหม่
       for (var n = 1; n * pageH < page.offsetHeight - 8; n++) mk('sk-break', 'top:' + Math.round(n * pageH) + 'px', '<span>หน้า ' + (n + 1) + '</span>');
     });
@@ -125,6 +161,7 @@
   function fitOverflow(d) {
     var win = d.defaultView;
     paperPages(d).forEach(function (page) {
+      if (page.classList.contains('sk-std') || page.classList.contains('sk-std-ext')) return; // หนังสือราชการคง 16pt ตามมาตรฐาน — ยาวเกินขึ้นหน้าใหม่แทน
       var els = Array.prototype.filter.call(page.querySelectorAll('*'), function (e) { return !e.closest('.sk-guide,.sk-break'); });
       var bottom = function () {
         var top = page.getBoundingClientRect().top, b = 0;
@@ -157,8 +194,10 @@
     for (; n; n = back ? n.previousSibling : n.nextSibling) {
       if (n.nodeType === 3) { if (!blank(n.data)) return false; continue; }
       if (n.nodeType !== 1) continue;
-      if (isLocked(n)) return !n.classList.contains('sk-guide') && !n.classList.contains('sk-break');
-      if (blank(n.textContent) && !n.querySelector('img,svg')) continue;
+      if (/(^|\s)sk-(guide|break|gap)(\s|$)/.test(n.className)) continue; // เส้นช่วยแสดงผล ไม่ใช่เนื้อหา
+      if (isLocked(n)) return true;
+      if (n.tagName === 'BR') return false; // บรรทัดว่างจาก Enter: ลบได้ (Backspace เลื่อนข้อความขึ้น)
+      if (blank(n.textContent) && !n.querySelector('img,svg,[contenteditable=false]')) return false;
       var r = hitsLocked(back ? n.lastChild : n.firstChild, back);
       if (r !== null) return r;
     }
@@ -191,7 +230,7 @@
     var sel = d.getSelection(); if (!sel || !sel.rangeCount) return;
     var rg = sel.getRangeAt(0), back = e.key === 'Backspace';
     if (!rg.collapsed) {
-      var hit = Array.prototype.some.call(d.querySelectorAll('[contenteditable=false]'), function (x) { return !x.classList.contains('sk-guide') && !x.classList.contains('sk-break') && rg.intersectsNode(x); });
+      var hit = Array.prototype.some.call(d.querySelectorAll('[contenteditable=false]'), function (x) { return !/(^|\s)sk-(guide|break|gap)(\s|$)/.test(x.className) && rg.intersectsNode(x); });
       if (hit) { e.preventDefault(); SK.toast('ป้ายหัวเอกสาร (เช่น ที่ วันที่ เรื่อง) แก้ไขไม่ได้ — เลือกเฉพาะข้อความที่ต้องการลบ', 'info'); }
       return;
     }
@@ -326,8 +365,12 @@
       keepEdits();
       var z = zoom; zoom = 1; fit();
       SK.toast('กำลังสร้างไฟล์ Word...');
-      SK.wordExport.download(iframe.contentDocument, fileBase + '.docx').then(function () { SK.toast('ดาวน์โหลดไฟล์ Word แล้ว', 'success'); },
-        function (err) { SK.toast('สร้างไฟล์ Word ไม่สำเร็จ: ' + (err && err.message || err), 'error'); }).then(function () { zoom = z; fit(); });
+      // Word แบ่งหน้าเอง: เอาช่องว่างแบ่งหน้าของตัวแก้ไขออกก่อนวัดตำแหน่ง แล้วใส่กลับหลังสร้างไฟล์
+      var wd = iframe.contentDocument;
+      Array.prototype.forEach.call(wd.querySelectorAll('.sk-gap'), function (x) { x.remove(); });
+      Array.prototype.forEach.call(wd.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
+      SK.wordExport.download(wd, fileBase + '.docx').then(function () { SK.toast('ดาวน์โหลดไฟล์ Word แล้ว', 'success'); },
+        function (err) { SK.toast('สร้างไฟล์ Word ไม่สำเร็จ: ' + (err && err.message || err), 'error'); }).then(function () { zoom = z; fit(); decoratePages(wd); fit(); });
     });
     box.querySelector('[data-print]').addEventListener('click', function () {
       keepEdits();
