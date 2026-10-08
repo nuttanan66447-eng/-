@@ -5,7 +5,7 @@
   var state = { year: null, cat: '', q: '', page: 1 }, PER = 5, mapCtl = null, el = null;
 
   var SHORTCUTS = [
-    { key: 'memo', icon: 'description', note: 'รายงานผลการก่อสร้างประจำสัปดาห์' },
+    { key: 'combined', icon: 'engineering', note: 'บันทึกข้อความ + บันทึกการปฏิบัติงาน + ผลการดำเนินงาน' },
     { key: 'centralPrice', icon: 'calculate', note: 'บันทึก คำสั่ง รายงานการประชุม และรายงานผล' },
     { key: 'completion', icon: 'task_alt', note: 'รายงานวันถึงกำหนดส่งมอบงานของผู้รับจ้าง' },
     { key: 'testResult', icon: 'science', note: 'ดิน เหล็ก คอนกรีต AC Job-mix' }

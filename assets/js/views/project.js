@@ -185,7 +185,7 @@
       (list.length ? diaryList(list) : V.empty('edit_note', 'ยังไม่มีบันทึกหน้างาน', 'บันทึกการตรวจหน้างาน ปัญหา/อุปสรรค และแนบรูปถ่ายในแต่ละวัน')) + '</section>';
   }
   function documents(p) {
-    var list = docsOf(p), quick = ['combined', 'memo', 'weeklyWork', 'completion', 'contractorNotice', 'centralPrice', 'testResult', 'photo'];
+    var list = docsOf(p), quick = ['combined', 'sCurve', 'completion', 'contractorNotice', 'centralPrice', 'testResult', 'photo', 'sign'];
     return '<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">' +
       '<section class="xl:col-span-7 card card-pad"><div class="flex items-center justify-between gap-2 mb-4"><h2 class="card-title">' + icon('note_add') + 'สร้างเอกสารของโครงการนี้</h2><a href="#/documents?project=' + p.id + '" class="font-label-md text-label-md text-primary font-semibold hover:underline">ทุกแบบ →</a></div>' +
         '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' + quick.map(function (k) {

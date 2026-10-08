@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   var SK = window.SK, V = SK.view, esc = SK.esc, icon = SK.icon;
-  var el = null, st = { project: '', village: '', doc: '', phase: 'pick', html: '', entry: null, q: '' }, ed = null, busy = false;
+  var el = null, st = { project: '', village: '', year: '', source: '', doc: '', phase: 'pick', html: '', entry: null, q: '' }, ed = null, busy = false;
 
   function E() { return SK.engine; }
   function project() { return st.project ? SK.projects.byId(st.project) : null; }
@@ -90,15 +90,29 @@
     var q = box.querySelector('#dc-q');
     q.addEventListener('input', function () { st.q = q.value; var pos = q.selectionStart; main(); var n = el.querySelector('#dc-q'); n.focus(); n.setSelectionRange(pos, pos); });
   }
+  // ตัวกรองโครงการ: หมู่บ้าน ปีงบประมาณ ประเภทเงิน
+  function sources() {
+    var m = {};
+    SK.projects.list.forEach(function (p) { if (p.source) m[p.source] = 1; });
+    return Object.keys(m).sort();
+  }
   function picker() {
-    var list = SK.projects.list.filter(function (p) { return !st.village || p.villageNo === st.village; });
-    return '<div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-3">' +
-      '<label class="field"><span>หมู่บ้าน</span><select id="dc-village" class="input">' + V.villageOptions(st.village) + '</select></label>' +
-      '<label class="field"><span>โครงการ</span><select id="dc-project" class="input">' + V.projectOptions(st.project, list).replace('— เลือกโครงการ —', SK.projects.loaded ? (list.length ? '— เลือกโครงการ (' + list.length + ') —' : 'ไม่มีโครงการ') : 'กำลังโหลด...') + '</select></label></div>';
+    var list = SK.projects.list.filter(function (p) {
+      return (!st.village || p.villageNo === st.village) && (!st.year || String(p.year) === String(st.year)) && (!st.source || p.source === st.source);
+    });
+    if (st.project && !list.some(function (p) { return p.id === st.project; })) { var cur = SK.projects.byId(st.project); if (cur) list.unshift(cur); }
+    return '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">' +
+      '<label class="field"><span>ปีงบประมาณ</span><select id="dc-year" class="input">' + V.yearOptions(st.year) + '</select></label>' +
+      '<label class="field"><span>ประเภทเงิน</span><select id="dc-source" class="input">' + V.options(sources().map(function (x) { return [x, x]; }), st.source, 'ทุกประเภทเงิน') + '</select></label>' +
+      '<label class="field"><span>หมู่บ้าน</span><select id="dc-village" class="input">' + V.villageOptions(st.village) + '</select></label></div>' +
+      '<label class="field"><span>โครงการ</span><select id="dc-project" class="input">' + V.projectOptions(st.project, list).replace('— เลือกโครงการ —', SK.projects.loaded ? (list.length ? '— เลือกโครงการ (' + list.length + ') —' : 'ไม่มีโครงการตามตัวกรอง') : 'กำลังโหลด...') + '</select></label>';
   }
   function bindPicker(box) {
-    var v = box.querySelector('#dc-village'), p = box.querySelector('#dc-project');
-    if (v) v.addEventListener('change', function () { st.village = v.value; st.project = ''; main(); side(); });
+    [['dc-village', 'village'], ['dc-year', 'year'], ['dc-source', 'source']].forEach(function (x) {
+      var el2 = box.querySelector('#' + x[0]);
+      if (el2) el2.addEventListener('change', function () { st[x[1]] = el2.value; main(); side(); });
+    });
+    var p = box.querySelector('#dc-project');
     if (p) p.addEventListener('change', function () { st.project = p.value; setUrl(); main(); side(); });
   }
   function setUrl() {
@@ -143,13 +157,16 @@
         '<div class="grid grid-cols-2 gap-3"><div class="p-3 rounded-[18px] bg-surface-container-low/70"><span class="block font-label-sm text-label-sm text-outline">ขนาดกระดาษ</span><b class="font-label-lg text-label-lg">A4 แนวตั้ง</b><span class="block font-body-sm text-body-sm text-outline">210 × 297 มม.</span></div>' +
         '<div class="p-3 rounded-[18px] bg-surface-container-low/70"><span class="block font-label-sm text-label-sm text-outline">รูปแบบหนังสือ</span><b class="font-label-lg text-label-lg">ตามระบบหลัก</b><span class="block font-body-sm text-body-sm text-outline">TH Sarabun PSK</span></div></div>' +
         '<p class="mt-3 font-body-sm text-body-sm text-outline">หนังสือราชการทุกฉบับใช้รูปแบบเดียวกับระบบหลัก — พิมพ์/PDF/Word ได้จากหน้าเอกสาร</p></section>' +
-      '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('inventory_2') + 'แบบฟอร์มสำเร็จรูป</h2><button type="button" data-dc="pick" class="font-label-md text-label-md text-primary font-semibold hover:underline">ดูทั้งหมด</button></div>' +
-        '<div class="flex flex-col gap-2">' + quick().map(function (k) {
-          var x = E().doc(k), on = st.doc === k && st.phase !== 'pick';
-          return '<button type="button" data-doc="' + k + '" class="flex items-center gap-3 p-3 rounded-[20px] text-left transition-colors ' + (on ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-surface-container-low/70 hover:bg-surface-container') + '">' +
-            '<span class="w-9 h-9 shrink-0 rounded-full ' + (on ? 'bg-primary text-on-primary' : 'bg-white text-primary') + ' flex items-center justify-center">' + icon(x.icon, 'text-[19px]') + '</span>' +
-            '<span class="min-w-0 flex-1"><span class="block font-label-lg text-label-lg font-semibold truncate">' + esc(x.title) + '</span><span class="block font-body-sm text-body-sm text-outline truncate">' + esc(x.desc) + '</span></span>' + icon(on ? 'check_circle' : 'chevron_right', on ? 'text-primary' : 'text-outline') + '</button>';
-        }).join('') + '</div></section>' +
+      '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('inventory_2') + 'แบบฟอร์มสำเร็จรูป</h2><span class="chip-gray">' + E().DOCS.length + ' แบบ</span></div>' +
+        groups().map(function (g) {
+          return '<h3 class="font-label-md text-label-md text-outline mt-4 mb-1.5 first:mt-0">' + esc(g) + '</h3><div class="flex flex-col gap-1">' +
+            E().DOCS.filter(function (x) { return x.group === g; }).map(function (x) {
+              var on = st.doc === x.key && st.phase !== 'pick';
+              return '<button type="button" data-doc="' + x.key + '" class="flex items-center gap-2.5 px-2.5 py-2 rounded-2xl text-left transition-colors ' + (on ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-surface-container-low') + '">' +
+                '<span class="w-8 h-8 shrink-0 rounded-full ' + (on ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-primary') + ' flex items-center justify-center">' + icon(x.icon, 'text-[17px]') + '</span>' +
+                '<span class="min-w-0 flex-1 font-label-lg text-label-lg ' + (on ? 'font-semibold text-primary' : '') + ' truncate">' + esc(x.title) + '</span>' + (on ? icon('check_circle', 'text-primary text-[18px]') : '') + '</button>';
+            }).join('') + '</div>';
+        }).join('') + '</section>' +
       (p ? '<section class="card card-pad bg-gradient-to-br from-primary-fixed/50 to-white"><div class="flex items-center gap-3 mb-3"><span class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">' + icon('link') + '</span>' +
           '<div class="min-w-0"><h2 class="font-label-lg text-label-lg font-semibold">ข้อมูลโครงการที่เชื่อมกับเอกสาร</h2><p class="font-body-sm text-body-sm text-outline">เติมในแบบฟอร์มอัตโนมัติ</p></div></div>' +
           '<dl class="flex flex-col gap-1.5 p-3 rounded-[18px] bg-white/80 font-body-sm text-body-sm">' +
@@ -160,10 +177,10 @@
       '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('history') + 'ประวัติเอกสาร</h2><span class="chip-gray">' + (p ? p.id : 'ทั้งหมด') + '</span></div>' +
         SK.docs.historyList(hist, { remove: true, empty: 'ยังไม่มีเอกสาร' + (d ? 'แบบนี้' : '') + (p ? 'ของโครงการนี้' : '') }) + '</section>';
   }
-  function quick() {
-    var keys = ['combined', 'memo', 'completion', 'centralPrice', 'testResult'];
-    if (st.doc && keys.indexOf(st.doc) < 0) keys.unshift(st.doc);
-    return keys.slice(0, 5);
+  function groups() {
+    var out = [];
+    E().DOCS.forEach(function (d) { if (out.indexOf(d.group) < 0) out.push(d.group); });
+    return out;
   }
 
   document.addEventListener('click', function (e) {
