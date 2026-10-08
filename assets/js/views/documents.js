@@ -60,6 +60,7 @@
         '<div id="dc-holder" class="relative rounded-[20px] bg-surface-container-low" style="height:calc(100vh - 250px);min-height:480px">' +
           '<div id="dc-wait" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-on-surface-variant">' + icon('progress_activity', 'animate-spin text-primary text-[32px]') + '<span>กำลังเปิดแบบฟอร์มของระบบหลัก...</span></div></div></div>';
       var holder = box.querySelector('#dc-holder');
+      V.fit(holder, 36);
       E().openDoc(d, p ? p.rowNumber : null, holder).then(function () {
         var w = box.querySelector('#dc-wait'); if (w) w.remove();
       }).catch(function (err) {

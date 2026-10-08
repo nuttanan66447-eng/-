@@ -66,5 +66,21 @@
       '<a href="#/entry" class="btn-primary">' + icon('add_circle') + '<span>กรอกข้อมูลโครงการ</span></a><a href="#/data" class="btn-glass">' + icon('upload_file') + '<span>นำเข้าจาก Excel</span></a>');
   }
 
-  SK.view = { pageHead: pageHead, kpi: kpi, progress: progress, empty: empty, loading: loading, filter: filter, options: options, yearOptions: yearOptions, villageOptions: villageOptions, projectOptions: projectOptions, noProjects: noProjects };
+  // ให้กล่องสูงพอดีหน้าจอ (หน้าเว็บไม่ต้องเลื่อน เลื่อนเฉพาะในกล่อง)
+  var fitted = [];
+  function fit(el, bottom) {
+    if (!el) return;
+    el.__fitBottom = bottom == null ? 24 : bottom;
+    var apply = function () {
+      if (!document.body.contains(el)) return;
+      var top = el.getBoundingClientRect().top + window.scrollY;
+      el.style.height = Math.max(420, window.innerHeight - top - el.__fitBottom) + 'px';
+    };
+    apply();
+    fitted = fitted.filter(function (x) { return document.body.contains(x.el); });
+    fitted.push({ el: el, apply: apply });
+  }
+  window.addEventListener('resize', function () { fitted.forEach(function (x) { x.apply(); }); });
+
+  SK.view = { fit: fit, pageHead: pageHead, kpi: kpi, progress: progress, empty: empty, loading: loading, filter: filter, options: options, yearOptions: yearOptions, villageOptions: villageOptions, projectOptions: projectOptions, noProjects: noProjects };
 })();
