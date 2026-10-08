@@ -10,9 +10,6 @@
   // open: คำสั่งเปิดฟอร์มในระบบหลัก • root: id ฟอร์ม • area: พื้นที่พรีวิว • gen: 'submit' หรือคำสั่งสร้าง • print: คำสั่งพิมพ์
   var DOCS = [
     { key: 'combined', group: 'รายงานช่าง', title: 'รายงานช่างรวม 3 เอกสาร', desc: 'บันทึกข้อความ + บันทึกการปฏิบัติงาน + ผลการดำเนินงาน', icon: 'engineering', open: 'openEngineerReportHome();openEngineerCombinedForm()', root: 'engineerCombinedForm', gen: 'submit', print: 'printMemoDocument()' },
-    { key: 'memo', group: 'รายงานช่าง', title: 'บันทึกข้อความรายสัปดาห์', desc: 'รายงานผลการก่อสร้างประจำสัปดาห์', icon: 'description', open: 'openEngineerReportHome();openMemoForm()', root: 'memoForm', gen: 'submit', print: 'printMemoDocument()' },
-    { key: 'weeklyWork', group: 'รายงานช่าง', title: 'บันทึกการปฏิบัติงานประจำสัปดาห์', desc: 'สภาพอากาศ แรงงาน เครื่องจักร รายวัน', icon: 'event_note', open: 'openEngineerReportHome();openWeeklyWorkForm()', root: 'weeklyWorkForm', gen: 'submit', print: 'printMemoDocument()' },
-    { key: 'weeklyPerformance', group: 'รายงานช่าง', title: 'ผลการดำเนินงานประจำสัปดาห์', desc: 'รายงานผลการปฏิบัติงานของผู้รับจ้าง', icon: 'trending_up', open: 'openEngineerReportHome();openWeeklyPerformanceForm()', root: 'weeklyPerformanceForm', gen: 'submit', print: 'printMemoDocument()' },
     { key: 'sCurve', group: 'รายงานช่าง', title: 'S-Curve', desc: 'กราฟแผน/ผลการดำเนินงานสะสม', icon: 'show_chart', open: 'openEngineerReportHome();openSCurveForm()', root: 'sCurveForm', gen: 'submit', print: 'printMemoDocument()' },
     { key: 'workReduction', group: 'รายงานช่าง', title: 'ปรับลดปริมาณงาน', desc: 'บันทึกขอปรับลดปริมาณงานพร้อมรายงานการประชุม', icon: 'content_cut', open: 'openEngineerReportHome();openWorkReductionForm()', root: 'workReductionForm', gen: 'submit', print: 'printMemoDocument()' },
     { key: 'photo', group: 'รูปและป้ายโครงการ', title: 'รูปภาพโครงการ', desc: 'หน้าปริ้นรูปถ่ายก่อน/ระหว่าง/หลังดำเนินการ', icon: 'photo_library', open: 'openEngineerReportHome();openProjectPhotoForm()', root: 'projectPhotoForm', gen: 'submit', print: 'printMemoDocument()' },
@@ -186,7 +183,43 @@
     H + '.thai-date-picker-wrap:hover .thai-date-calendar-btn{background:#dce9ff!important}',
     H + '.card,' + H + '.kpi,' + H + '.filter-panel{border-radius:20px!important;border-color:rgba(100,116,139,.12)!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important}',
     H + '.kpi::before{background:#006194!important}'
-  ].join('');
+  ].join('') + EXTRA_CSS();
+  // ส่วนที่ธีมเดิมใส่สีเขียว/ส้ม/ม่วง: ใช้สีของเว็บ (เพิ่มน้ำหนักตัวเลือกให้ชนะกฎเดิมที่มี !important)
+  function EXTRA_CSS() {
+    var X = function (list) { return list.split(',').map(function (c) { c = c.trim(); var m = /^([^:\s]+)(.*)$/.exec(c); return 'html body ' + m[1] + m[1] + m[1] + m[2]; }).join(','); };
+    var rule = function (sel, css) { return X(sel) + '{' + css + '}'; };
+    return [
+      rule('.control,.manual-entry-control,.computed-control,.project-derived-control,.control.wide', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-left:1px solid rgba(100,116,139,.12)!important;border-radius:18px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important'),
+      rule('.manual-entry-control::before,.computed-control::before,.project-derived-control::before,.manual-entry-control::after,.computed-control::after,.project-derived-control::after', 'background:transparent!important;box-shadow:none!important;border:0!important'),
+      rule('.control label span,.control .badge,.control [class*="badge"],.control [class*="tag"]', 'background:#eff4ff!important;color:#006194!important;border-color:transparent!important'),
+      rule('.report-menu-btn,.compensation-action-btn,.duration-type-card,.building-mode-card,.test-type-card', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.14)!important;border-radius:20px!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important;color:#0b1c30!important'),
+      rule('.report-menu-btn.active,.compensation-action-btn.active,.duration-type-card.active,.building-mode-card.active,.test-type-card.active', 'background:#eff4ff!important;border-color:#006194!important;box-shadow:0 0 0 3px rgba(0,97,148,.14)!important'),
+      rule('.report-menu-btn *,.compensation-action-btn *,.duration-type-card *', 'color:inherit'),
+      rule('.project-completed-toggle,.combined-final-week-tools,.combined-workflow-block,.weekly-work-day-card,.weekly-matrix-wrap,.combined-photo-attachment-card,.compensation-committee-card', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:18px!important;box-shadow:none!important'),
+      rule('.compensation-mode-note,.project-required-note,.memo-filter-note,.duration-result,.form-note,.info-note', 'background:#eff4ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-left:4px solid #006194!important;border-radius:14px!important;box-shadow:none!important'),
+      rule('.completion-signer-mini-btn.add,.performance-mini-btn.add,.compensation-save-btn,.personnel-save,.history-save-btn', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important'),
+      rule('.completion-signer-mini-btn.delete,.performance-mini-btn.delete,.personnel-delete,.history-delete-btn', 'background:#ffdad6!important;background-image:none!important;color:#93000a!important;border:0!important;border-radius:999px!important'),
+      rule('.personnel-tab', 'border-radius:999px!important'),
+      rule('.personnel-tab.active', 'background:#006194!important;background-image:none!important;color:#fff!important;border-color:#006194!important'),
+      rule('.memo-history-count,.compensation-history-count', 'background:#006194!important;color:#fff!important'),
+      rule('.weekly-work-quick-select', 'background:#eff4ff!important;color:#004b73!important;border-color:#bfc7d2!important'),
+      rule('.completion-signer-drag-handle', 'background:#eff4ff!important;color:#006194!important;border-color:transparent!important'),
+      rule('.primary', 'background:#006194!important;background-image:none!important;border-color:#006194!important;color:#fff!important'),
+      rule('.danger', 'background:#ffdad6!important;border-color:#ffdad6!important;color:#93000a!important'),
+      rule('.progress-fill', 'background:#006194!important;background-image:none!important'),
+      // ปุ่มเลือกแบบ (.active) การ์ดผู้ลงนาม หัวข้อ ปุ่มบันทึก ช่องที่ล็อก
+      'html body .entry-backdrop button.active,html body .entry-backdrop button.active.active{background:#eff4ff!important;background-image:none!important;border-color:#006194!important;color:#0b1c30!important;box-shadow:0 0 0 3px rgba(0,97,148,.14)!important}',
+      'html body .entry-backdrop h4,html body .entry-backdrop h5{color:#004b73!important}',
+      'html body .entry-backdrop th{background:#eff4ff!important;color:#004b73!important;border-color:rgba(100,116,139,.2)!important}',
+      rule('.completion-signer-card-head', 'background:#eff4ff!important;background-image:none!important;border-color:rgba(100,116,139,.12)!important;color:#004b73!important'),
+      rule('.completion-signer-title-wrap', 'color:#004b73!important;background:transparent!important;border-color:transparent!important'),
+      rule('.central-price-save-btn,.test-result-save-btn,.compensation-preview-selected-btn,.compensation-save-btn', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 8px 20px -4px rgba(0,97,148,.35)!important'),
+      rule('.central-price-history-count', 'background:#006194!important;color:#fff!important'),
+      rule('.duration-result-kpi', 'background:#eff4ff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;box-shadow:none!important'),
+      rule('.duration-result-kpi b', 'color:#006194!important'),
+      rule('.project-lock-allowed', 'border-color:rgba(100,116,139,.18)!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)!important')
+    ].join('');
+  }
   // หน้าเต็มของระบบหลักในเว็บ: ซ่อนเมนู/แถบบนของระบบหลัก (เว็บมีเมนูของตัวเอง)
   var DOCK_PAGE_CSS = '.topbar{display:none!important}body{padding-left:0!important;margin-left:0!important;background:#f8f9ff!important}' +
     '.app-shell{padding-left:0!important}.entry-backdrop{inset:0!important}.dashboard-commandbar{display:none!important}' +
