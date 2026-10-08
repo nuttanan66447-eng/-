@@ -79,6 +79,7 @@
     Array.prototype.forEach.call(root.querySelectorAll('.sk-guide,.sk-break,.sk-gap,#sk-paper-css'), function (x) { x.remove(); });
     var body = root.querySelector('body'); if (body) body.removeAttribute('contenteditable');
     Array.prototype.forEach.call(root.querySelectorAll('.sk-paper'), function (x) { x.classList.remove('sk-paper'); });
+    Array.prototype.forEach.call(root.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
     Array.prototype.forEach.call(root.querySelectorAll('script'), function (x) { x.remove(); });
     return '<!DOCTYPE html>' + root.outerHTML;
   }
@@ -94,6 +95,11 @@
     var a4 = boxes.filter(function (el) { if (el.classList.contains('sk-paper') || el.hasAttribute('data-sk-page')) return true; var r = el.getBoundingClientRect(), q = Math.max(r.width, r.height) / Math.min(r.width, r.height); return Math.abs(q - 1.414) < 0.14; });
     if (a4.length) return a4.filter(function (el) { return !a4.some(function (o) { return o !== el && o.contains(el); }); });
     return boxes.filter(function (el) { return !boxes.some(function (o) { return o !== el && el.contains(o); }); }).slice(0, 1);
+  }
+  // ช่องว่างแบ่งหน้า/ความสูงเต็มแผ่นของตัวแก้ไข: ใช้บนจอเท่านั้น (พิมพ์/Word แบ่งหน้าเอง)
+  function unpaginate(d) {
+    Array.prototype.forEach.call(d.querySelectorAll('.sk-gap'), function (x) { x.remove(); });
+    Array.prototype.forEach.call(d.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
   }
   function paginate(d, page, pageH, pt, pb) {
     var win = d.defaultView;
@@ -128,7 +134,7 @@
         '.sk-guide{position:absolute;pointer-events:none;border:1px dashed rgba(0,97,148,.35);border-radius:2px;z-index:5}' +
         '.sk-break{position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(186,26,26,.55);pointer-events:none;z-index:6}' +
         '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}}' +
-        '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}}';
+        '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}.sk-foot{position:static!important;inset:auto!important;margin-top:7mm!important;padding-top:3mm!important;transform:none!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
       d.head.appendChild(st);
     }
     var win = d.defaultView;
@@ -145,6 +151,11 @@
       if (std) {
         // หนังสือราชการยาวเกิน 1 แผ่น: แบ่งหน้าแบบ Word — ย่อหน้าที่เลยขอบล่างขึ้นต้นหน้าถัดไปใต้ระยะขอบบน
         page.style.removeProperty('min-height');
+        // ท้ายหนังสือ (ส่วนราชการเจ้าของเรื่อง/โทร.) ชิดล่างของหน้าบนจอ — ตอนพิมพ์ต่อท้ายลายเซ็น ไม่ทับกัน
+        Array.prototype.forEach.call(page.children, function (c) {
+          var ccs = win.getComputedStyle(c);
+          if (ccs.position === 'absolute' && ccs.bottom !== 'auto' && !/(^|\s)sk-/.test(c.className) && !blank(c.textContent)) c.classList.add('sk-foot');
+        });
         paginate(d, page, pageH, pt, pb);
         var count = Math.max(1, Math.ceil((page.offsetHeight - 8) / pageH));
         page.style.setProperty('min-height', (count * pageH) + 'px', 'important'); // แผ่นเต็มหน้าสุดท้าย (ท้ายหนังสืออยู่ล่างสุดของหน้าสุดท้าย)
@@ -331,6 +342,9 @@
       d.body.setAttribute('spellcheck', 'false');
       fitOverflow(d);
       decoratePages(d);
+      // Ctrl+P ในเอกสาร: เอาช่องแบ่งหน้าออกก่อนพิมพ์ แล้วใส่กลับ
+      d.defaultView.addEventListener('beforeprint', function () { unpaginate(d); });
+      d.defaultView.addEventListener('afterprint', function () { decoratePages(d); fit(); });
       d.addEventListener('keydown', function (e) { guardKey(d, e); });
       d.addEventListener('input', function (e) { if (e.inputType === 'insertParagraph') tidyNewLine(d); dirty = true; schedule(); });
       var deco = null;
@@ -367,8 +381,7 @@
       SK.toast('กำลังสร้างไฟล์ Word...');
       // Word แบ่งหน้าเอง: เอาช่องว่างแบ่งหน้าของตัวแก้ไขออกก่อนวัดตำแหน่ง แล้วใส่กลับหลังสร้างไฟล์
       var wd = iframe.contentDocument;
-      Array.prototype.forEach.call(wd.querySelectorAll('.sk-gap'), function (x) { x.remove(); });
-      Array.prototype.forEach.call(wd.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
+      unpaginate(wd);
       SK.wordExport.download(wd, fileBase + '.docx').then(function () { SK.toast('ดาวน์โหลดไฟล์ Word แล้ว', 'success'); },
         function (err) { SK.toast('สร้างไฟล์ Word ไม่สำเร็จ: ' + (err && err.message || err), 'error'); }).then(function () { zoom = z; fit(); decoratePages(wd); fit(); });
     });
@@ -377,8 +390,9 @@
       var w = iframe.contentWindow, z = zoom;
       zoom = 1; fit();
       w.focus();
+      unpaginate(w.document); // เครื่องพิมพ์แบ่งหน้าเองตามระยะขอบ @page
       (w.__skPrint || w.print).call(w);
-      setTimeout(function () { zoom = z; fit(); }, 500);
+      setTimeout(function () { zoom = z; decoratePages(w.document); fit(); }, 500);
     });
     var back = box.querySelector('[data-back]');
     if (back) back.addEventListener('click', function () { keepEdits(); o.onBack(); });
