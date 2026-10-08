@@ -10,9 +10,11 @@
         '<div class="flex items-center gap-3 min-w-0"><span class="w-11 h-11 shrink-0 rounded-full bg-primary text-on-primary flex items-center justify-center">' + icon(o.icon, 'text-[22px]') + '</span>' +
           '<div class="min-w-0"><h1 class="font-headline-md text-headline-md font-semibold">' + esc(o.title) + '</h1><p class="font-body-sm text-body-sm text-outline truncate">' + esc(o.sub || '') + '</p></div></div>' +
         '<div class="flex flex-wrap gap-2">' + (o.actions || '') + '</div></div>' +
-      '<div id="sys-holder" class="relative card overflow-hidden" style="height:calc(100vh - 190px);min-height:520px">' +
+      '<div id="sys-holder" class="relative card overflow-hidden" style="height:calc(100vh - 190px)">' +
         '<div id="sys-wait" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-on-surface-variant">' + icon('progress_activity', 'animate-spin text-primary text-[32px]') + '<span>กำลังเปิดระบบหลัก...</span></div></div>';
-    return root.querySelector('#sys-holder');
+    var holder = root.querySelector('#sys-holder');
+    V.fit(holder);
+    return holder;
   }
   // ผู้ใช้กดปิดหน้าในระบบหลัก (×/ยกเลิก): กลับหน้าก่อนหน้าในเว็บ
   function watch(back) {

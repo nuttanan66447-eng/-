@@ -153,27 +153,49 @@
   }
 
   // ---------- ธีมของระบบหลักให้เข้ากับเว็บ ----------
-  var PAGE_CSS = 'html,body{font-family:"Sarabun",sans-serif}';
+  // ธีมของเว็บ (design/DESIGN.md) ทับธีมเดิมของระบบหลักทุกหน้า/ฟอร์ม — เนื้อหาเอกสารที่พิมพ์ไม่เปลี่ยน
+  var H = 'html body ';
+  var PAGE_CSS = [
+    'html,body{font-family:"Hanken Grotesk","Sarabun",sans-serif!important}',
+    H + '{background:#f8f9ff!important;color:#0b1c30}',
+    H + '.entry-backdrop{background:#f8f9ff!important;backdrop-filter:none!important}',
+    H + '.entry-panel{background:#f8f9ff!important;border:0!important;border-radius:0!important;box-shadow:none!important}',
+    H + '.entry-head{background:rgba(255,255,255,.92)!important;background-image:none!important;color:#0b1c30!important;border-bottom:1px solid rgba(100,116,139,.12)!important;box-shadow:0 1px 8px rgba(0,0,0,.03)!important}',
+    H + '.entry-head h2,' + H + '.entry-head h3{color:#0b1c30!important;font-weight:600!important}',
+    H + '.entry-head p,' + H + '.entry-head small{color:#3f4850!important;opacity:1!important}',
+    H + '.entry-head button,' + H + '.entry-close{background:#eff4ff!important;color:#0b1c30!important;border:0!important;border-radius:999px!important;box-shadow:none!important}',
+    H + '.entry-head button:hover,' + H + '.entry-close:hover{background:#dce9ff!important}',
+    H + '.entry-body{background:#f8f9ff!important;padding-bottom:0!important}',
+    H + '.form-section-title,' + H + '.evaluation-section-title,' + H + '.completion-section-line{background:#eff4ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-radius:16px!important;box-shadow:none!important}',
+    H + '.form-section-title *{color:#004b73!important}',
+    H + '.form-section-title::before,' + H + '.control::before,' + H + 'label::before{background:#006194!important;box-shadow:none!important}',
+    H + '.control,' + H + '.manual-entry-control,' + H + '.computed-control,' + H + '.project-derived-control{background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:18px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important}',
+    H + '.control:hover{border-color:rgba(0,97,148,.25)!important}',
+    H + '.control > label,' + H + 'label{color:#3f4850!important}',
+    H + 'input:not([type=checkbox]):not([type=radio]):not([type=file]),' + H + 'select,' + H + 'textarea{background:rgba(241,245,249,.7)!important;border:1px solid rgba(100,116,139,.18)!important;border-radius:14px!important;color:#0b1c30!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)!important}',
+    H + 'input:focus,' + H + 'select:focus,' + H + 'textarea:focus{background:#fff!important;border-color:#007bb9!important;outline:2px solid rgba(0,123,185,.25)!important;outline-offset:0!important}',
+    H + 'input[type=checkbox],' + H + 'input[type=radio]{accent-color:#006194!important}',
+    H + 'form th{background:#eff4ff!important;color:#004b73!important}',
+    H + '.primary-btn{background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 8px 20px -4px rgba(0,97,148,.35)!important}',
+    H + '.primary-btn:hover{background:#007bb9!important}',
+    H + '.secondary-btn{background:#eff4ff!important;background-image:none!important;color:#0b1c30!important;border:0!important;border-radius:999px!important;box-shadow:none!important}',
+    H + '.secondary-btn:hover{background:#dce9ff!important}',
+    // แถบปุ่มด้านล่างอยู่เหนือปุ่มปฏิทินของช่องวันที่ (ไม่ซ้อนกัน)
+    H + '.entry-actions{position:sticky!important;bottom:0!important;z-index:40!important;background:rgba(255,255,255,.94)!important;border-top:1px solid rgba(100,116,139,.12)!important;box-shadow:0 -8px 24px rgba(15,23,42,.05)!important}',
+    H + '.thai-date-calendar-btn{background:#eff4ff!important;color:#006194!important}',
+    H + '.thai-date-picker-wrap:hover .thai-date-calendar-btn{background:#dce9ff!important}',
+    H + '.card,' + H + '.kpi,' + H + '.filter-panel{border-radius:20px!important;border-color:rgba(100,116,139,.12)!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important}',
+    H + '.kpi::before{background:#006194!important}'
+  ].join('');
   // หน้าเต็มของระบบหลักในเว็บ: ซ่อนเมนู/แถบบนของระบบหลัก (เว็บมีเมนูของตัวเอง)
   var DOCK_PAGE_CSS = '.topbar{display:none!important}body{padding-left:0!important;margin-left:0!important;background:#f8f9ff!important}' +
-    '.app-shell{padding-left:0!important}.entry-backdrop{inset:0!important}.dashboard-commandbar{display:none!important}';
+    '.app-shell{padding-left:0!important}.entry-backdrop{inset:0!important}.dashboard-commandbar{display:none!important}' +
+    'body:has(.entry-backdrop.open){overflow:hidden!important}';
   var NS = '[data-sk-native] ';
   var NATIVE_CSS = [
     'html,body{overflow:hidden!important}',
     'body>:not([data-sk-native]){visibility:hidden!important}',
-    '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:auto!important;margin:0!important;padding:16px 22px 56px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;background:#f8f9ff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}',
-    '[data-sk-native],' + NS + '*{font-family:"Hanken Grotesk","Sarabun",sans-serif!important}',
-    NS + '.form-section-title,' + NS + '.evaluation-section-title,' + NS + '.completion-section-line{background:#eff4ff!important;color:#004b73!important;border:0!important;border-radius:16px!important;box-shadow:none!important}',
-    NS + '.form-section-title *{color:#004b73!important}',
-    NS + '.form-section-title::before,' + NS + '.control::before,' + NS + 'label::before{background:#006194!important;box-shadow:none!important}',
-    NS + '.control,' + NS + '.control.wide,' + NS + '.manual-entry-control,' + NS + '.computed-control,' + NS + '.project-derived-control{background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:18px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important}',
-    NS + '.control > label,' + NS + 'label{color:#3f4850!important}',
-    NS + 'input:not([type=checkbox]):not([type=radio]),' + NS + 'select,' + NS + 'textarea{background:rgba(241,245,249,.7)!important;border:1px solid rgba(100,116,139,.18)!important;border-radius:14px!important;color:#0b1c30!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)!important}',
-    NS + 'input:focus,' + NS + 'select:focus,' + NS + 'textarea:focus{background:#fff!important;border-color:#007bb9!important;outline:2px solid rgba(0,123,185,.25)!important}',
-    NS + 'input[type=checkbox],' + NS + 'input[type=radio]{accent-color:#006194!important}',
-    NS + 'th{background:#eff4ff!important;color:#004b73!important}',
-    NS + '.primary-btn,' + NS + '.performance-mini-btn.add,' + NS + '.completion-signer-mini-btn.add{background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important}',
-    NS + '.secondary-btn{background:#eff4ff!important;color:#0b1c30!important;border:0!important;border-radius:999px!important}'
+    '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:auto!important;margin:0!important;padding:16px 22px 56px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;background:#f8f9ff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}'
   ].join('');
 
   // ---------- วาง iframe ทับกล่องในหน้าเว็บ ----------
