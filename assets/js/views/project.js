@@ -93,8 +93,7 @@
       '</div>' +
       '<div class="xl:col-span-4 flex flex-col gap-gutter">' +
         '<section class="card overflow-hidden"><div class="p-5 pb-3 flex items-center justify-between"><h2 class="card-title">' + icon('location_on') + 'ที่ตั้ง</h2>' + (p.lat ? '' : '<span class="chip-amber">ยังไม่มีพิกัด</span>') + '</div><div id="pj-map" class="h-64 mx-3 mb-3 rounded-[20px] overflow-hidden bg-surface-container"></div></section>' +
-        '<section class="card card-pad"><div class="flex items-center justify-between gap-2 mb-3"><h2 class="card-title">' + icon('history') + 'เอกสารล่าสุด</h2><button type="button" data-tab="docs" class="font-label-md text-label-md text-primary font-semibold hover:underline">ทั้งหมด (' + docs.length + ')</button></div>' +
-          SK.docs.historyList(docs.slice(0, 4), { project: false, empty: 'ยังไม่มีเอกสารของโครงการนี้' }) + '</section>' +
+        SK.docs.historyCard(docs, { key: 'project', chip: p.id, project: false, limit: 6, empty: 'ยังไม่มีเอกสารของโครงการนี้' }) +
         '<section class="card card-pad"><div class="flex items-center justify-between gap-2 mb-3"><h2 class="card-title">' + icon('edit_note') + 'บันทึกหน้างานล่าสุด</h2><button type="button" data-tab="diary" class="font-label-md text-label-md text-primary font-semibold hover:underline">ทั้งหมด (' + d.length + ')</button></div>' +
           (d.length ? diaryList(d.slice(0, 3)) : '<p class="muted font-body-sm text-body-sm">ยังไม่มีบันทึกหน้างาน</p>') + '</section>' +
       '</div></div>';
@@ -186,14 +185,14 @@
   }
   function documents(p) {
     var list = docsOf(p), quick = ['combined', 'sCurve', 'completion', 'contractorNotice', 'centralPrice', 'testResult', 'photo', 'sign'];
-    return '<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">' +
-      '<section class="xl:col-span-7 card card-pad"><div class="flex items-center justify-between gap-2 mb-4"><h2 class="card-title">' + icon('note_add') + 'สร้างเอกสารของโครงการนี้</h2><a href="#/documents?project=' + p.id + '" class="font-label-md text-label-md text-primary font-semibold hover:underline">ทุกแบบ →</a></div>' +
-        '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' + quick.map(function (k) {
+    return SK.docs.historyCard(list, { key: 'project', chip: p.id, project: false, cls: 'mb-gutter', empty: 'ยังไม่มีเอกสารของโครงการนี้' }) +
+      '<div class="grid grid-cols-1 gap-gutter items-start">' +
+      '<section class="card card-pad"><div class="flex items-center justify-between gap-2 mb-4"><h2 class="card-title">' + icon('note_add') + 'สร้างเอกสารของโครงการนี้</h2><a href="#/documents?project=' + p.id + '" class="font-label-md text-label-md text-primary font-semibold hover:underline">ทุกแบบ →</a></div>' +
+        '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">' + quick.map(function (k) {
           var d = SK.engine.doc(k);
           return '<a href="#/documents?project=' + p.id + '&doc=' + k + '" class="flex items-center gap-3 p-3 rounded-[20px] bg-surface-container-low/70 hover:bg-surface-container transition-colors"><span class="w-10 h-10 shrink-0 rounded-xl bg-white text-primary flex items-center justify-center shadow-sm">' + icon(d.icon) + '</span>' +
             '<span class="min-w-0"><span class="block font-label-lg text-label-lg font-semibold truncate">' + esc(d.title) + '</span><span class="block font-body-sm text-body-sm text-outline truncate">' + esc(d.desc) + '</span></span></a>';
-        }).join('') + '</div></section>' +
-      '<section class="xl:col-span-5 card card-pad"><h2 class="card-title mb-4">' + icon('history') + 'ประวัติเอกสาร (' + list.length + ')</h2>' + SK.docs.historyList(list, { project: false, remove: true, empty: 'ยังไม่มีเอกสารของโครงการนี้' }) + '</section></div>';
+        }).join('') + '</div></section></div>';
   }
 
   function addDiary(p) {

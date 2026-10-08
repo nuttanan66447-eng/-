@@ -242,6 +242,28 @@
         '</div></li>';
     }).join('') + '</ol>';
   }
+  // การ์ดประวัติเอกสาร (แบบเดียวกันทุกหน้า): พับเก็บได้ จำสถานะแยกตาม key
+  function histState(key, v) {
+    var k = 'sk-hist-' + (key || 'docs');
+    try { if (v === undefined) return localStorage.getItem(k) !== '0'; localStorage.setItem(k, v ? '1' : '0'); } catch (e) { return true; }
+  }
+  function historyCard(list, opts) {
+    opts = opts || {};
+    var open = histState(opts.key), shown = opts.limit ? list.slice(0, opts.limit) : list;
+    return '<details data-hist-key="' + esc(opts.key || 'docs') + '" class="card group ' + (opts.cls || '') + '"' + (open ? ' open' : '') + '>' +
+      '<summary class="list-none cursor-pointer card-pad flex flex-wrap items-center gap-3 select-none">' +
+        '<h2 class="card-title flex-1 flex-wrap">' + icon('history') + (opts.title || 'ประวัติเอกสาร') + ' <span class="chip-blue">' + list.length + '</span>' + (opts.chip ? '<span class="chip-gray">' + esc(opts.chip) + '</span>' : '') + '</h2>' +
+        (opts.more || '') +
+        '<span data-hist-label class="font-label-md text-label-md text-primary">' + (open ? 'พับเก็บ' : 'แสดง') + '</span>' + icon('expand_more', 'text-primary transition-transform group-open:rotate-180') + '</summary>' +
+      '<div class="px-5 md:px-space-lg pb-5 -mt-2 max-h-[420px] overflow-y-auto">' + historyList(shown, { remove: opts.remove !== false, timeline: false, project: opts.project, empty: opts.empty }) + '</div></details>';
+  }
+  document.addEventListener('toggle', function (e) {
+    var d = e.target;
+    if (!d || !d.matches || !d.matches('details[data-hist-key]')) return;
+    histState(d.dataset.histKey, d.open);
+    var lab = d.querySelector('[data-hist-label]'); if (lab) lab.textContent = d.open ? 'พับเก็บ' : 'แสดง';
+  }, true);
+
   // ปุ่มในรายการประวัติ (คลิกที่ใดก็ได้ในหน้า)
   document.addEventListener('click', function (e) {
     var o = e.target.closest('[data-open-doc]');
@@ -256,5 +278,5 @@
   // ผลการพิมพ์จากหน้าของระบบหลักที่เปิดในเว็บ: แสดงใน Smart Editor
   if (SK.engine) SK.engine.onOutput = function (html) { previewModal({ html: html, title: 'เอกสารจากระบบหลัก' }); };
 
-  SK.docs = { docName: docName, saveHistory: saveHistory, reopen: reopen, editor: editor, previewModal: previewModal, historyList: historyList, readHtml: readHtml, list: docs };
+  SK.docs = { docName: docName, saveHistory: saveHistory, reopen: reopen, editor: editor, previewModal: previewModal, historyList: historyList, historyCard: historyCard, readHtml: readHtml, list: docs };
 })();
