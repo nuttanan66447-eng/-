@@ -22,11 +22,9 @@
           '<p id="dc-sub" class="font-body-sm text-body-sm text-outline truncate"></p></div></div>' +
         '<div id="dc-actions" class="flex flex-wrap gap-2"></div>' +
       '</div>' +
+      '<div id="dc-side" class="mb-gutter"></div>' +
       '<div id="dc-top" class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-gutter items-stretch"></div>' +
-      '<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">' +
-        '<div id="dc-main" class="xl:col-span-8 min-w-0"></div>' +
-        '<aside id="dc-side" class="xl:col-span-4 flex flex-col gap-gutter"></aside>' +
-      '</div>';
+      '<div id="dc-main" class="min-w-0"></div>';
     main();
     side();
   }
@@ -42,9 +40,6 @@
     E().undock();
     sub();
     // กรอกฟอร์ม: ใช้ความกว้างเต็มหน้า (แถบข้อมูลย้ายไปด้านล่าง) ให้ตารางในฟอร์มไม่ต้องเลื่อนซ้ายขวา
-    var wide = st.phase === 'form', sideEl = el.querySelector('#dc-side');
-    box.className = (wide ? 'xl:col-span-12' : 'xl:col-span-8') + ' min-w-0';
-    sideEl.className = wide ? 'xl:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-gutter items-start' : 'xl:col-span-4 flex flex-col gap-gutter';
     if (st.phase === 'preview') {
       acts.innerHTML = '<button type="button" data-dc="pick" class="btn-ghost">' + icon('apps') + '<span>เลือกแบบอื่น</span></button>';
       ed = SK.docs.editor(box, { doc: doc(), project: project(), html: st.html, entry: st.entry, onBack: function () { st.phase = 'form'; main(); redock(); } });
@@ -141,7 +136,7 @@
   function side() {
     var top = el.querySelector('#dc-top'), box = el.querySelector('#dc-side'); if (!box) return;
     var p = project(), d = doc();
-    var hist = SK.docs.list().filter(function (x) { return (!p || x.projectId === p.id) && (!d || x.docKey === d.key); }).slice(0, 6);
+    var hist = SK.docs.list().filter(function (x) { return (!p || x.projectId === p.id) && (!d || x.docKey === d.key); }).slice(0, 20);
     top.innerHTML =
       '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('tune') + 'การตั้งค่าหน้ากระดาษ</h2><span class="chip-gray">ระบบหลัก</span></div>' +
         '<div class="grid grid-cols-2 gap-3"><div class="p-3 rounded-[18px] bg-surface-container-low/70"><span class="block font-label-sm text-label-sm text-outline">ขนาดกระดาษ</span><b class="font-label-lg text-label-lg">A4 แนวตั้ง</b><span class="block font-body-sm text-body-sm text-outline">210 × 297 มม.</span></div>' +
@@ -155,10 +150,17 @@
               return '<div class="flex justify-between gap-3"><dt class="text-outline whitespace-nowrap">' + r[0] + '</dt><dd class="font-semibold text-right">' + esc(r[1]) + '</dd></div>';
             }).join('') + '</dl></section>'
         : '<section class="card card-pad flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-surface-container-low text-primary flex items-center justify-center">' + icon('link_off') + '</span><div><h2 class="font-label-lg text-label-lg font-semibold">ยังไม่ได้เลือกโครงการ</h2><p class="font-body-sm text-body-sm text-outline">เลือกโครงการเพื่อเติมข้อมูลในแบบฟอร์มอัตโนมัติ</p></div></section>');
-    box.innerHTML =
-      '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('history') + 'ประวัติเอกสาร</h2><span class="chip-gray">' + (p ? p.id : 'ทั้งหมด') + '</span></div>' +
-        SK.docs.historyList(hist, { remove: true, empty: 'ยังไม่มีเอกสาร' + (d ? 'แบบนี้' : '') + (p ? 'ของโครงการนี้' : '') }) + '</section>';
+    // ประวัติเอกสาร: ด้านบน พับเก็บได้ (จำสถานะไว้)
+    var open = histOpen();
+    box.innerHTML = '<details class="card group"' + (open ? ' open' : '') + '><summary class="list-none cursor-pointer card-pad flex items-center gap-3 select-none">' +
+        '<h2 class="card-title flex-1">' + icon('history') + 'ประวัติเอกสาร <span class="chip-blue">' + hist.length + (hist.length >= 20 ? '+' : '') + '</span><span class="chip-gray">' + (p ? p.id : 'ทุกโครงการ') + (d ? ' • ' + esc(d.title) : '') + '</span></h2>' +
+        '<span class="font-label-md text-label-md text-primary">' + (open ? 'พับเก็บ' : 'แสดง') + '</span>' + icon('expand_more', 'text-primary transition-transform group-open:rotate-180') + '</summary>' +
+        '<div class="px-5 md:px-space-lg pb-5 -mt-2 max-h-[420px] overflow-y-auto">' + SK.docs.historyList(hist, { remove: true, timeline: false, empty: 'ยังไม่มีเอกสาร' + (d ? 'แบบนี้' : '') + (p ? 'ของโครงการนี้' : '') }) + '</div></details>';
+    box.querySelector('details').addEventListener('toggle', function () { histOpen(this.open); var lab = this.querySelector('summary > span.font-label-md'); if (lab) lab.textContent = this.open ? 'พับเก็บ' : 'แสดง'; });
     if (SK.markDocMenu) SK.markDocMenu();
+  }
+  function histOpen(v) {
+    try { if (v === undefined) return localStorage.getItem('sk-doc-hist') !== '0'; localStorage.setItem('sk-doc-hist', v ? '1' : '0'); } catch (e) { return true; }
   }
   function groups() {
     var out = [];

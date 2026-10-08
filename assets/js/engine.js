@@ -190,7 +190,6 @@
     var rule = function (sel, css) { return X(sel) + '{' + css + '}'; };
     return [
       rule('.control,.manual-entry-control,.computed-control,.project-derived-control,.control.wide', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-left:1px solid rgba(100,116,139,.12)!important;border-radius:18px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important'),
-      rule('.manual-entry-control::before,.computed-control::before,.project-derived-control::before,.manual-entry-control::after,.computed-control::after,.project-derived-control::after', 'background:transparent!important;box-shadow:none!important;border:0!important'),
       rule('.control label span,.control .badge,.control [class*="badge"],.control [class*="tag"]', 'background:#eff4ff!important;color:#006194!important;border-color:transparent!important'),
       rule('.report-menu-btn,.compensation-action-btn,.duration-type-card,.building-mode-card,.test-type-card', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.14)!important;border-radius:20px!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important;color:#0b1c30!important'),
       rule('.report-menu-btn.active,.compensation-action-btn.active,.duration-type-card.active,.building-mode-card.active,.test-type-card.active', 'background:#eff4ff!important;border-color:#006194!important;box-shadow:0 0 0 3px rgba(0,97,148,.14)!important'),
@@ -206,7 +205,20 @@
       rule('.completion-signer-drag-handle', 'background:#eff4ff!important;color:#006194!important;border-color:transparent!important'),
       rule('.primary', 'background:#006194!important;background-image:none!important;border-color:#006194!important;color:#fff!important'),
       rule('.danger', 'background:#ffdad6!important;border-color:#ffdad6!important;color:#93000a!important'),
-      'html body .control>label::after,html body .control.manual-entry-control>label::after,html body .control.computed-control>label::after,html body .control.project-derived-control>label::after{background:#eff4ff!important;color:#006194!important;border-color:transparent!important;box-shadow:none!important}',
+      // สีสันของแบบฟอร์ม (ตามโทนของเว็บ): หัวหมวดไล่สีฟ้า • แถบสีซ้ายและป้ายตามชนิดช่อง
+      rule('.form-section-title,.evaluation-section-title,.completion-section-line', 'background:linear-gradient(100deg,#006194 0%,#007bb9 60%,#38bdf8 100%)!important;color:#fff!important;border:0!important;border-radius:16px!important;box-shadow:0 8px 20px -10px rgba(0,97,148,.55)!important'),
+      rule('.form-section-title *,.evaluation-section-title *,.completion-section-line *', 'color:#fff!important'),
+      rule('.form-section-title::before,.evaluation-section-title::before', 'background:#fff!important;box-shadow:0 0 0 4px rgba(255,255,255,.25)!important'),
+      rule('.control.manual-entry-control', 'border-left:4px solid #ffbd2e!important;background:linear-gradient(180deg,#fffdf5,#fff)!important'),
+      rule('.control.computed-control', 'border-left:4px solid #27c93f!important;background:linear-gradient(180deg,#f6fdf7,#fff)!important'),
+      rule('.control.project-derived-control', 'border-left:4px solid #007bb9!important;background:linear-gradient(180deg,#f3f9ff,#fff)!important'),
+      rule('.control.manual-entry-control::before', 'background:#ffbd2e!important'),
+      rule('.control.computed-control::before', 'background:#27c93f!important'),
+      rule('.control.project-derived-control::before', 'background:#007bb9!important'),
+      'html body .control.manual-entry-control>label::after{background:rgba(255,189,46,.2)!important;color:#b45309!important;border-color:transparent!important;box-shadow:none!important}',
+      'html body .control.computed-control>label::after{background:rgba(39,201,63,.14)!important;color:#15803d!important;border-color:transparent!important;box-shadow:none!important}',
+      'html body .control.project-derived-control>label::after,html body .control>label::after{background:#cce5ff!important;color:#004b73!important;border-color:transparent!important;box-shadow:none!important}',
+      'html body input:focus,html body select:focus,html body textarea:focus{box-shadow:0 0 0 4px rgba(0,123,185,.15)!important}',
       'html body *::-webkit-scrollbar-thumb{background:rgba(100,116,139,.32)!important;background-clip:padding-box!important}',
       'html body *::-webkit-scrollbar-track{background:transparent!important}',
       rule('.progress-fill', 'background:#006194!important;background-image:none!important'),
@@ -226,12 +238,15 @@
   // หน้าเต็มของระบบหลักในเว็บ: ซ่อนเมนู/แถบบนของระบบหลัก (เว็บมีเมนูของตัวเอง)
   var DOCK_PAGE_CSS = '.topbar{display:none!important}body{padding-left:0!important;margin-left:0!important;background:#f8f9ff!important}' +
     '.app-shell{padding-left:0!important}.entry-backdrop{inset:0!important}.dashboard-commandbar{display:none!important}' +
-    'body:has(.entry-backdrop.open){overflow:hidden!important}';
+    'body:has(.entry-backdrop.open){overflow:hidden!important}' +
+    '.preview-paper-scroll{max-height:none!important;height:auto!important;overflow:visible!important}';
   var NS = '[data-sk-native] ';
   var NATIVE_CSS = [
     'html,body{overflow:hidden!important}',
     'body>:not([data-sk-native]){visibility:hidden!important}',
     '[data-sk-native] *{box-sizing:border-box!important}',
+    // พรีวิวเล็กของระบบหลักในฟอร์ม: ใช้ Smart Editor ของเว็บแทน (กด "สร้างเอกสาร")
+    '[data-sk-native] .preview-document-toolbar,[data-sk-native] .preview-paper-scroll,[data-sk-native] .test-result-preview-action,[data-sk-native] .test-result-preview-wrap,[data-sk-native] .evaluation-preview-shell,[data-sk-native] .low-bid-preview-wrap,[data-sk-native] .central-price-preview{display:none!important}',
     '[data-sk-native] .weekly-work-day-card,[data-sk-native] .memo-filter-note,[data-sk-native] .weekly-work-slot-grid,[data-sk-native] .form-grid,[data-sk-native] .control{max-width:100%!important;min-width:0!important}',
     '[data-sk-native] .performance-input-table tr>:nth-child(1),[data-sk-native] .performance-input-table tr>:nth-child(2){width:52px!important}',
     '[data-sk-native] .performance-input-table tr>:nth-child(3){width:24%!important}',
