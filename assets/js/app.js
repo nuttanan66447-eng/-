@@ -119,6 +119,39 @@
   SK.account = account;
   SK.loginForm = loginForm;
 
+  // ---------- เมนูแบบเอกสารสำเร็จรูป (ใต้ "พิมพ์เอกสารราชการ") ----------
+  var navDocs = $('nav-docs');
+  function buildDocMenu() {
+    var groups = [];
+    SK.engine.DOCS.forEach(function (d) { if (groups.indexOf(d.group) < 0) groups.push(d.group); });
+    navDocs.innerHTML = groups.map(function (g) {
+      return '<div class="px-2 pt-2 pb-0.5 font-label-sm text-label-sm text-outline">' + esc(g) + '</div>' +
+        SK.engine.DOCS.filter(function (d) { return d.group === g; }).map(function (d) {
+          return '<a href="#/documents?doc=' + d.key + '" data-doc-nav="' + d.key + '" class="flex items-center gap-2 px-2.5 py-1.5 rounded-full font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors">' +
+            icon(d.icon, 'text-[16px]') + '<span class="truncate">' + esc(d.title) + '</span></a>';
+        }).join('');
+    }).join('');
+  }
+  function markDocMenu() {
+    var r = SK.parseHash(), on = r.name === 'documents';
+    var cur = on && SK.documentsState ? SK.documentsState().doc : '';
+    navDocs.querySelectorAll('[data-doc-nav]').forEach(function (a) {
+      var act = a.dataset.docNav === cur;
+      a.classList.toggle('bg-primary/10', act); a.classList.toggle('text-primary', act); a.classList.toggle('font-semibold', act);
+      if (act) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+  SK.markDocMenu = markDocMenu;
+  buildDocMenu();
+  // เปิดแบบเอกสาร: ใช้โครงการที่เลือกอยู่ในหน้าเอกสาร
+  navDocs.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-doc-nav]'); if (!a) return;
+    e.preventDefault();
+    var proj = SK.documentsState ? SK.documentsState().project : '';
+    SK.go('documents?doc=' + a.dataset.docNav + (proj ? '&project=' + encodeURIComponent(proj) : ''));
+  });
+  window.addEventListener('hashchange', function () { setTimeout(markDocMenu, 0); });
+
   // ---------- เริ่มทำงาน ----------
   window.addEventListener('hashchange', SK.render);
   window.addEventListener('sk:projects', function () { SK.refresh(); });
