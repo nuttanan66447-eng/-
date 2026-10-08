@@ -8,6 +8,7 @@
   body { overscroll-behavior: none; background: #f8f9ff; color: #0b1c30; }
   [hidden] { display: none !important; }
   .grid > * { min-width: 0; }
+  summary.list-none::-webkit-details-marker { display: none; }
   .overflow-x-auto, .overflow-auto, .overflow-y-auto { position: relative; }
   :focus-visible { outline: 2px solid #007bb9; outline-offset: 2px; }
   input, select, textarea, button { font: inherit; }

@@ -4,13 +4,6 @@
   var SK = window.SK, V = SK.view, esc = SK.esc, icon = SK.icon;
   var state = { year: null, cat: '', q: '', page: 1 }, PER = 5, mapCtl = null, el = null;
 
-  var SHORTCUTS = [
-    { key: 'combined', icon: 'engineering', note: 'บันทึกข้อความ + บันทึกการปฏิบัติงาน + ผลการดำเนินงาน' },
-    { key: 'centralPrice', icon: 'calculate', note: 'บันทึก คำสั่ง รายงานการประชุม และรายงานผล' },
-    { key: 'completion', icon: 'task_alt', note: 'รายงานวันถึงกำหนดส่งมอบงานของผู้รับจ้าง' },
-    { key: 'testResult', icon: 'science', note: 'ดิน เหล็ก คอนกรีต AC Job-mix' }
-  ];
-
   function render(root) {
     el = root;
     var P = SK.projects;
@@ -49,24 +42,21 @@
         V.kpi({ icon: 'assignment_late', tone: 'bg-error-container text-error', label: 'ล่าช้า / ใกล้ครบสัญญา (30 วัน)', value: late.length + ' / ' + due30.length, unit: 'โครงการ',
           badge: '<span class="chip-red">ติดตามเร่งรัด</span>' }) +
       '</div>' +
-      '<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter mt-gutter items-start">' +
+      // แถวที่ 1: ทะเบียนงาน + แผนที่ (สูงเท่ากัน) • แถวที่ 2: ใกล้ครบกำหนดสัญญา + ผู้ควบคุมงาน
+      '<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter mt-gutter items-stretch">' +
         '<section class="xl:col-span-8 card card-pad" id="ov-table"></section>' +
-        '<div class="xl:col-span-4 flex flex-col gap-gutter">' +
-          '<section class="card card-pad"><div class="flex items-start justify-between gap-2 mb-3"><h2 class="card-title">' + icon('map') + 'พิกัดโครงการ (GIS Map)</h2><a href="#/map" class="font-label-md text-label-md text-primary font-semibold hover:underline whitespace-nowrap">ขยายเต็มจอ →</a></div>' +
-            '<p class="muted font-body-sm text-body-sm mb-3">หมุดโครงการและขอบเขตตำบลสีแก้ว</p>' +
-            '<div id="ov-map" class="h-64 rounded-[24px] overflow-hidden bg-surface-container"></div>' +
-            '<div class="flex flex-wrap gap-2 mt-3">' + Object.keys(SK.projects.STATUSES).map(function (k) {
-              var s = SK.projects.STATUSES[k], n = list.filter(function (p) { return p.status === k; }).length;
-              return n ? '<span class="chip-gray"><span class="w-2 h-2 rounded-full" style="background:' + s.color + '"></span>' + s.label + ' (' + n + ')</span>' : '';
-            }).join('') + '</div></section>' +
-          '<section class="card card-pad"><div class="flex items-center justify-between gap-2 mb-3"><h2 class="card-title">' + icon('event') + 'ใกล้ครบกำหนดสัญญา</h2><span class="chip-blue">' + due.length + ' โครงการ</span></div>' +
-            (due.length ? '<div class="flex flex-col gap-2.5">' + due.slice(0, 4).map(dueItem).join('') + '</div>' : '<p class="muted font-body-sm text-body-sm">ไม่มีโครงการที่กำลังจะครบกำหนดสัญญา</p>') +
-            '<a href="#/tracking" class="btn-glass w-full mt-4">' + icon('photo_camera') + '<span>ติดตามงานและรูปภาพ</span></a></section>' +
-          '<section class="card card-pad"><div class="flex items-center justify-between gap-2 mb-3"><h2 class="card-title">' + icon('engineering') + 'ผู้ควบคุมงาน</h2><span class="w-2 h-2 rounded-full bg-emerald-500"></span></div>' + supervisors(list) + '</section>' +
-        '</div>' +
+        '<section class="xl:col-span-4 card card-pad flex flex-col"><div class="flex items-start justify-between gap-2 mb-3"><h2 class="card-title">' + icon('map') + 'พิกัดโครงการ (GIS Map)</h2><a href="#/map" class="font-label-md text-label-md text-primary font-semibold hover:underline whitespace-nowrap">ขยายเต็มจอ →</a></div>' +
+          '<div id="ov-map" class="flex-1 min-h-[260px] rounded-[24px] overflow-hidden bg-surface-container"></div>' +
+          '<div class="flex flex-wrap gap-2 mt-3">' + Object.keys(SK.projects.STATUSES).map(function (k) {
+            var s = SK.projects.STATUSES[k], n = list.filter(function (p) { return p.status === k; }).length;
+            return n ? '<span class="chip-gray"><span class="w-2 h-2 rounded-full" style="background:' + s.color + '"></span>' + s.label + ' (' + n + ')</span>' : '';
+          }).join('') + '</div></section>' +
       '</div>' +
-      '<section class="card card-pad mt-gutter"><div class="flex flex-wrap items-center justify-between gap-2 mb-4"><h2 class="card-title">' + icon('folder_open') + 'ทางลัดเอกสารราชการกองช่าง</h2><a href="#/documents" class="font-label-md text-label-md text-primary font-semibold hover:underline">เอกสารทั้งหมด →</a></div>' +
-        '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">' + SHORTCUTS.map(shortcut).join('') + '</div></section>');
+      '<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mt-gutter items-stretch">' +
+        '<section class="card card-pad"><div class="flex items-center justify-between gap-2 mb-3"><h2 class="card-title">' + icon('event') + 'ใกล้ครบกำหนดสัญญา</h2><span class="flex items-center gap-2"><span class="chip-blue">' + due.length + ' โครงการ</span><a href="#/tracking" class="font-label-md text-label-md text-primary font-semibold hover:underline whitespace-nowrap">ติดตามงาน →</a></span></div>' +
+          (due.length ? '<div class="grid grid-cols-1 2xl:grid-cols-2 gap-2.5">' + due.slice(0, 4).map(dueItem).join('') + '</div>' : '<p class="muted font-body-sm text-body-sm">ไม่มีโครงการที่กำลังจะครบกำหนดสัญญา</p>') + '</section>' +
+        '<section class="card card-pad"><div class="flex items-center justify-between gap-2 mb-3"><h2 class="card-title">' + icon('engineering') + 'ผู้ควบคุมงาน</h2><span class="w-2 h-2 rounded-full bg-emerald-500"></span></div>' + supervisors(list) + '</section>' +
+      '</div>');
 
     if (!all.length) return;
     renderTable();
@@ -86,20 +76,13 @@
     list.forEach(function (p) { if (p.supervisor) (by[p.supervisor] = by[p.supervisor] || { name: p.supervisor, pos: p.supervisorPosition, n: 0, active: 0 }).n++; if (p.supervisor && p.status !== 'completed') by[p.supervisor].active++; });
     var arr = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.active - a.active || b.n - a.n; });
     if (!arr.length) return '<p class="muted font-body-sm text-body-sm">ยังไม่ได้กำหนดผู้ควบคุมงานในโครงการ</p>';
-    return '<div class="flex flex-col gap-2">' + arr.slice(0, 4).map(function (s) {
+    return '<div class="grid grid-cols-1 2xl:grid-cols-2 gap-2">' + arr.slice(0, 6).map(function (s) {
       var ini = s.name.replace(/^(นาย|นางสาว|นาง|ว่าที่.*?ตรี|จ\.ส\.อ\.|พ\.อ\.ต\.)\s*/, '').slice(0, 2);
       return '<div class="flex items-center gap-3 p-3 rounded-[20px] bg-surface-container-low/70"><span class="w-10 h-10 shrink-0 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-lg text-label-lg">' + esc(ini) + '</span>' +
         '<span class="min-w-0 flex-1"><span class="block font-label-lg text-label-lg font-semibold truncate">' + esc(s.name) + '</span><span class="block font-body-sm text-body-sm text-outline truncate">' + esc(s.pos || 'ผู้ควบคุมงาน') + '</span></span>' +
         '<span class="chip-blue">' + s.active + '/' + s.n + '</span></div>';
     }).join('') + '</div><p class="mt-3 font-body-sm text-body-sm text-outline">ตัวเลข = โครงการที่ยังไม่แล้วเสร็จ / ทั้งหมด</p>';
   }
-  function shortcut(s) {
-    var d = SK.engine.doc(s.key) || { title: s.key };
-    return '<a href="#/documents?doc=' + s.key + '" class="group flex flex-col gap-3 p-5 rounded-[24px] bg-surface-container-low/70 hover:bg-surface-container transition-colors">' +
-      '<span class="flex items-center justify-between"><span class="w-10 h-10 rounded-xl bg-white text-primary flex items-center justify-center shadow-sm">' + icon(s.icon, 'text-[22px]') + '</span>' + icon('arrow_forward', 'text-outline group-hover:text-primary transition-colors') + '</span>' +
-      '<span><span class="block font-headline-sm text-[18px] leading-6 font-semibold">' + esc(d.title) + '</span><span class="block font-body-sm text-body-sm muted mt-1">' + esc(s.note) + '</span></span></a>';
-  }
-
   function renderTable() {
     var box = el.querySelector('#ov-table');
     if (!box) return;

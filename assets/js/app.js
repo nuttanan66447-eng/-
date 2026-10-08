@@ -125,10 +125,10 @@
     var groups = [];
     SK.engine.DOCS.forEach(function (d) { if (groups.indexOf(d.group) < 0) groups.push(d.group); });
     navDocs.innerHTML = groups.map(function (g) {
-      return '<div class="px-2 pt-2 pb-0.5 font-label-sm text-label-sm text-outline">' + esc(g) + '</div>' +
+      return '<div class="px-2 pt-2.5 pb-1 font-label-md text-label-md text-outline">' + esc(g) + '</div>' +
         SK.engine.DOCS.filter(function (d) { return d.group === g; }).map(function (d) {
-          return '<a href="#/documents?doc=' + d.key + '" data-doc-nav="' + d.key + '" class="flex items-center gap-2 px-2.5 py-1.5 rounded-full font-body-sm text-body-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors">' +
-            icon(d.icon, 'text-[16px]') + '<span class="truncate">' + esc(d.title) + '</span></a>';
+          return '<a href="#/documents?doc=' + d.key + '" data-doc-nav="' + d.key + '" class="flex items-center gap-2.5 px-2.5 py-2 rounded-full font-body-md text-[15px] leading-5 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors">' +
+            icon(d.icon, 'text-[19px]') + '<span class="truncate">' + esc(d.title) + '</span></a>';
         }).join('');
     }).join('');
   }

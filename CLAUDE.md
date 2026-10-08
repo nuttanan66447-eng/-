@@ -18,7 +18,9 @@
 - `assets/js/cloud.js` = Supabase: ซิงก์ records/workbooks/files แบบเดิม, เข้าสู่ระบบชื่อผู้ใช้ (`<ชื่อ>@users.sikaew-kongchang.app`), จัดการ staff (Edge Function `staff-user` หรือสร้างจากเบราว์เซอร์ถ้ายังไม่ deploy)
 - `assets/js/projects.js` = `SK.projects` อ่านชีท "ฐานข้อมูลโครงการ" ผ่าน `SKGas.call('getDashboardDataFast')` รหัส `P-<แถว>` โหลดใหม่เมื่อ worker แจ้ง `saved`
 - `assets/js/engine.js` = `SK.engine` ระบบหลัก (system.html?engine=1) ใน iframe เดียว: DOCS (แบบเอกสาร), TOOLS (หน้าของระบบหลัก), `openDoc`/`generate` (เก็บ HTML ที่ระบบหลักส่งพิมพ์), `dock(holder)` วาง iframe ทับกล่องในหน้า (ฟอร์มเอกสาร/หน้ากรอกข้อมูลโครงการ/เครื่องมือ)
-- `assets/js/docs.js` = Smart Editor (`SK.docs.editor`) แก้ไขข้อความ พิมพ์ Word + ประวัติเอกสาร (แทนที่ฉบับเดิมเมื่อแบบ+โครงการ+สัปดาห์/งวดเดียวกัน) — หนังสือราชการใช้รูปแบบของระบบหลัก ไม่จัดรูปแบบทับ
+- `assets/js/docs.js` = Smart Editor (`SK.docs.editor`) แก้ไขบนเอกสารแบบ Word (พิมพ์ได้ทันที แถบเครื่องมือ ขนาด/สี/จัดแนว/รายการ/ระยะบรรทัด บันทึกอัตโนมัติ) พิมพ์ Word + ประวัติเอกสาร (แทนที่ฉบับเดิมเมื่อแบบ+โครงการ+สัปดาห์/งวดเดียวกัน)
+- `assets/js/doc-standard.js` = จัดหนังสือราชการตามมาตรฐานการพิมพ์ (ไฟล์ formstandard ที่ผู้ใช้ส่งมา): บันทึกข้อความ (ขอบ 3/2/2.5/2 ซม., TH Sarabun PSK 16pt, ครุฑ 1.5 ซม., หัว 29pt/35pt, ป้าย 20pt, ย่อหน้า 2.5 ซม.) และหนังสือภายนอก (ครุฑ 3 ซม.) — ทำใน Smart Editor หลังระบบหลักสร้าง, สำเนาในประวัติมี `data-sk-std` ไม่จัดซ้ำ
+- เมนูซ้ายมีรายการแบบเอกสารทั้งหมด (ใต้ พิมพ์เอกสารราชการ, สร้างใน app.js จาก `SK.engine.DOCS`); หน้าเอกสาร: ประวัติ (พับได้) → การตั้งค่าหน้ากระดาษ + ข้อมูลโครงการ → ฟอร์ม/เอกสาร
 - `assets/js/photos.js` (รูปโครงการ ก่อน/ระหว่าง/หลัง), `map.js` (Leaflet + ขอบเขตจากชีท/OSM), `word-export.js` (.docx จากพรีวิว)
 - `assets/js/views/*.js` = หน้าต่าง ๆ: overview, projects, project, documents, tracking, map, system (entry/tools), users (+data), common (ส่วนประกอบร่วม); `assets/js/app.js` = เมนู/แถบบน/บัญชี
 - `assets/gas/` = ตัวจำลอง Apps Script (worker แต่ละหน้า/iframe โหลดชีทใหม่เมื่อ worker อื่นบันทึก), `data-panel.js` ใช้เฉพาะ importFile/exportFile
