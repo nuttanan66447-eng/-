@@ -40,6 +40,10 @@
     if (ed) { ed.leave(); ed = null; }
     E().undock();
     sub();
+    // กรอกฟอร์ม: ใช้ความกว้างเต็มหน้า (แถบข้อมูลย้ายไปด้านล่าง) ให้ตารางในฟอร์มไม่ต้องเลื่อนซ้ายขวา
+    var wide = st.phase === 'form', sideEl = el.querySelector('#dc-side');
+    box.className = (wide ? 'xl:col-span-12' : 'xl:col-span-8') + ' min-w-0';
+    sideEl.className = wide ? 'xl:col-span-12 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 gap-gutter items-start' : 'xl:col-span-4 flex flex-col gap-gutter';
     if (st.phase === 'preview') {
       acts.innerHTML = '<button type="button" data-dc="pick" class="btn-ghost">' + icon('apps') + '<span>เลือกแบบอื่น</span></button>';
       ed = SK.docs.editor(box, { doc: doc(), project: project(), html: st.html, entry: st.entry, onBack: function () { st.phase = 'form'; main(); redock(); } });
@@ -57,11 +61,10 @@
       box.innerHTML = '<div class="card p-3"><div class="flex flex-wrap items-center gap-2 px-2 pb-3">' +
           '<span class="tabs"><span class="tab is-active">' + icon(d.icon, 'text-[16px] align-middle') + ' แบบฟอร์ม</span><span class="tab">' + esc(d.group) + '</span></span>' +
           '<span class="flex-1"></span><span class="font-body-sm text-body-sm text-outline">กรอกข้อมูลในแบบฟอร์มของระบบหลักด้านล่าง แล้วกด <b class="text-primary">สร้างเอกสาร</b></span></div>' +
-        '<div id="dc-holder" class="relative rounded-[20px] bg-surface-container-low" style="height:calc(100vh - 250px);min-height:480px">' +
+        '<div id="dc-holder" class="relative rounded-[20px] bg-surface-container-low" style="height:480px">' +
           '<div id="dc-wait" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-on-surface-variant">' + icon('progress_activity', 'animate-spin text-primary text-[32px]') + '<span>กำลังเปิดแบบฟอร์มของระบบหลัก...</span></div></div></div>';
       var holder = box.querySelector('#dc-holder');
-      V.fit(holder, 36);
-      E().openDoc(d, p ? p.rowNumber : null, holder).then(function () {
+      E().openDoc(d, p ? p.rowNumber : null, holder, { autoHeight: true }).then(function () {
         var w = box.querySelector('#dc-wait'); if (w) w.remove();
       }).catch(function (err) {
         holder.innerHTML = '<div class="p-6">' + V.empty('error', 'เปิดแบบฟอร์มไม่สำเร็จ', esc(err.message || err)) + '</div>';
@@ -123,7 +126,7 @@
   }
   function redock() {
     var holder = el.querySelector('#dc-holder');
-    if (holder && E().lastDockWrap) { E().dock(holder, { wrap: E().lastDockWrap, keepActions: doc() && doc().keepActions }); var w = holder.querySelector('#dc-wait'); if (w) w.remove(); }
+    if (holder && E().lastDockWrap) { E().dock(holder, { wrap: E().lastDockWrap, keepActions: doc() && doc().keepActions, autoHeight: true }); var w = holder.querySelector('#dc-wait'); if (w) w.remove(); }
   }
 
   function build(btn) {

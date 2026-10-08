@@ -206,6 +206,9 @@
       rule('.completion-signer-drag-handle', 'background:#eff4ff!important;color:#006194!important;border-color:transparent!important'),
       rule('.primary', 'background:#006194!important;background-image:none!important;border-color:#006194!important;color:#fff!important'),
       rule('.danger', 'background:#ffdad6!important;border-color:#ffdad6!important;color:#93000a!important'),
+      'html body .control>label::after,html body .control.manual-entry-control>label::after,html body .control.computed-control>label::after,html body .control.project-derived-control>label::after{background:#eff4ff!important;color:#006194!important;border-color:transparent!important;box-shadow:none!important}',
+      'html body *::-webkit-scrollbar-thumb{background:rgba(100,116,139,.32)!important;background-clip:padding-box!important}',
+      'html body *::-webkit-scrollbar-track{background:transparent!important}',
       rule('.progress-fill', 'background:#006194!important;background-image:none!important'),
       // ปุ่มเลือกแบบ (.active) การ์ดผู้ลงนาม หัวข้อ ปุ่มบันทึก ช่องที่ล็อก
       'html body .entry-backdrop button.active,html body .entry-backdrop button.active.active{background:#eff4ff!important;background-image:none!important;border-color:#006194!important;color:#0b1c30!important;box-shadow:0 0 0 3px rgba(0,97,148,.14)!important}',
@@ -228,7 +231,18 @@
   var NATIVE_CSS = [
     'html,body{overflow:hidden!important}',
     'body>:not([data-sk-native]){visibility:hidden!important}',
-    '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:auto!important;margin:0!important;padding:16px 22px 56px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;background:#f8f9ff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}'
+    '[data-sk-native] *{box-sizing:border-box!important}',
+    '[data-sk-native] .weekly-work-day-card,[data-sk-native] .memo-filter-note,[data-sk-native] .weekly-work-slot-grid,[data-sk-native] .form-grid,[data-sk-native] .control{max-width:100%!important;min-width:0!important}',
+    '[data-sk-native] .performance-input-table tr>:nth-child(1),[data-sk-native] .performance-input-table tr>:nth-child(2){width:52px!important}',
+    '[data-sk-native] .performance-input-table tr>:nth-child(3){width:24%!important}',
+    '[data-sk-native] .weekly-work-slot-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(118px,1fr))!important}',
+    '[data-sk-native] .weekly-work-slot{width:auto!important;min-width:0!important}',
+    '[data-sk-native] table{max-width:100%!important}',
+    '[data-sk-native] .weekly-matrix-table,[data-sk-native] .performance-input-table{width:100%!important;min-width:0!important;table-layout:fixed!important}',
+    '[data-sk-native] .weekly-matrix-table th,[data-sk-native] .weekly-matrix-table td,[data-sk-native] .performance-input-table th,[data-sk-native] .performance-input-table td{padding:4px!important;font-size:13px!important;word-break:break-word!important;min-width:0!important;width:auto!important}',
+    '[data-sk-native] .weekly-matrix-table select,[data-sk-native] .weekly-matrix-table input,[data-sk-native] .weekly-matrix-table textarea,[data-sk-native] .performance-input-table select,[data-sk-native] .performance-input-table input,[data-sk-native] .performance-input-table textarea{width:100%!important;min-width:0!important;padding-left:4px!important;padding-right:4px!important}',
+    '[data-sk-native] .weekly-matrix-wrap,[data-sk-native] .performance-table-input-wrap,[data-sk-native] .s-curve-table-input-wrap,[data-sk-native] .k-formula-table-wrap{max-width:100%!important;overflow-x:auto!important}',
+    '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow-x:hidden!important;overflow-y:auto!important;margin:0!important;padding:16px 22px 56px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;background:#f8f9ff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}'
   ].join('');
 
   // ---------- วาง iframe ทับกล่องในหน้าเว็บ ----------
@@ -246,25 +260,34 @@
     } else st.textContent = DOCK_PAGE_CSS;
     d.head.appendChild(st);
     var raf = 0;
+    // iframe วางแบบ absolute ตามตำแหน่งกล่องในหน้า: เลื่อนไปพร้อมหน้าเว็บ (ไม่ต้องตามด้วยสคริปต์)
+    // โหมดฟอร์ม (autoHeight): กล่องสูงเท่าแบบฟอร์ม — เลื่อนเฉพาะหน้าเว็บ ไม่มีแถบเลื่อนซ้อนใน iframe
+    function contentHeight() {
+      if (!wrap) return 0;
+      var cs = W().getComputedStyle(wrap), h = 0;
+      Array.prototype.forEach.call(wrap.children, function (c) { if (c.offsetParent || c.getClientRects().length) h = Math.max(h, c.offsetTop + c.offsetHeight); });
+      return h + (parseFloat(cs.paddingBottom) || 0) + 8;
+    }
     function place() {
       raf = 0;
+      if (!document.body.contains(holder)) { frame.style.cssText = OFFSCREEN; return; }
+      if (opts.autoHeight) {
+        var ch = contentHeight();
+        if (ch && Math.abs(holder.offsetHeight - ch) > 2) holder.style.height = Math.max(opts.minHeight || 360, ch) + 'px';
+      }
       var r = holder.getBoundingClientRect();
-      if (!r.width || !document.body.contains(holder)) { frame.style.cssText = OFFSCREEN; return; }
-      var top = Math.max(r.top, 64), clip = top - r.top;
-      frame.style.cssText = 'position:fixed;left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px;border:0;z-index:30;opacity:1;background:#f8f9ff;' +
-        'border-radius:20px;clip-path:inset(' + clip + 'px 0 0 0 round 20px)';
+      if (!r.width) { frame.style.cssText = OFFSCREEN; return; }
+      frame.style.cssText = 'position:absolute;left:' + (r.left + window.scrollX) + 'px;top:' + (r.top + window.scrollY) + 'px;width:' + r.width + 'px;height:' + r.height + 'px;border:0;z-index:30;opacity:1;background:#f8f9ff;border-radius:20px';
     }
     function schedule() { if (!raf) raf = requestAnimationFrame(place); }
-    var timer = setInterval(place, 400);
+    var timer = setInterval(place, 300);
     window.addEventListener('resize', schedule);
-    window.addEventListener('scroll', schedule, true);
     place();
     docked = {
       wrap: wrap,
       undock: function () {
         clearInterval(timer);
         window.removeEventListener('resize', schedule);
-        window.removeEventListener('scroll', schedule, true);
         frame.style.cssText = OFFSCREEN;
         st.remove();
         // คืนฟอร์มกลับที่เดิมก่อนสร้าง/พิมพ์ (ระบบหลักวัดหน้ากระดาษจากหน้าตาปกติ)
@@ -325,7 +348,7 @@
     return true;
   }
   // เปิดฟอร์มเอกสารของระบบหลัก (เลือกโครงการให้) แล้ววางในกล่อง holder
-  function openDoc(doc, rowNumber, holder) {
+  function openDoc(doc, rowNumber, holder, opts) {
     return load().then(function () {
       undock();
       closeAll();
@@ -342,7 +365,7 @@
       var root = rootEl(doc);
       if (!root) throw new Error('ไม่พบแบบฟอร์มของเอกสารนี้ในระบบหลัก');
       var wrap = root.closest('.memo-form-wrap, [id$="FormWrap"], [id$="Backdrop"]') || root;
-      if (holder) dock(holder, { wrap: wrap, keepActions: doc.keepActions });
+      if (holder) dock(holder, Object.assign({ wrap: wrap, keepActions: doc.keepActions }, opts || {}));
     });
   }
   function generate(doc) {
