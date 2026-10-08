@@ -164,7 +164,29 @@
     }
     return null;
   }
+  // Enter แบบ Word: บรรทัดใหม่ห่างเท่าระยะบรรทัดปกติ ไม่พาระยะเว้นก่อนย่อหน้า/ความสูงของกล่องเดิมไปด้วย
+  function tidyNewLine(d) {
+    var sel = d.getSelection(); if (!sel || !sel.rangeCount) return;
+    var n = sel.getRangeAt(0).startContainer; if (n.nodeType === 3) n = n.parentNode;
+    var win = d.defaultView, block = n;
+    while (block && block !== d.body && !/^(block|list-item|flex|grid|table-cell)$/.test(win.getComputedStyle(block).display)) block = block.parentNode;
+    if (!block || block === d.body || /^(TD|TH|SECTION|BODY)$/.test(block.tagName) || block.classList.contains('sk-paper')) return;
+    ['margin-top', 'padding-top', 'margin-bottom', 'padding-bottom'].forEach(function (k) { block.style.setProperty(k, '0', 'important'); });
+    block.style.setProperty('min-height', '0', 'important');
+    block.style.removeProperty('height');
+  }
   function guardKey(d, e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      // ช่องในแถว ป้าย|ข้อความ (เรื่อง/เรียน/สิ่งที่ส่งมาด้วย ฯลฯ): ขึ้นบรรทัดใหม่ในช่องเดิม ไม่สร้างช่องใหม่ไปอยู่ใต้ป้าย
+      var s0 = d.getSelection(), win = d.defaultView;
+      if (s0 && s0.rangeCount) {
+        var b = s0.getRangeAt(0).startContainer; if (b.nodeType === 3) b = b.parentNode;
+        while (b && b !== d.body && !/^(block|list-item|flex|grid|table-cell)$/.test(win.getComputedStyle(b).display)) b = b.parentNode;
+        var inRow = function (x) { return x && x !== d.body && /flex|grid/.test(win.getComputedStyle(x).display); };
+        if (b && b !== d.body && (inRow(b) || inRow(b.parentNode))) { e.preventDefault(); d.execCommand('insertLineBreak'); }
+      }
+      return;
+    }
     if (e.key !== 'Backspace' && e.key !== 'Delete') return;
     var sel = d.getSelection(); if (!sel || !sel.rangeCount) return;
     var rg = sel.getRangeAt(0), back = e.key === 'Backspace';
@@ -271,7 +293,7 @@
       fitOverflow(d);
       decoratePages(d);
       d.addEventListener('keydown', function (e) { guardKey(d, e); });
-      d.addEventListener('input', function () { dirty = true; schedule(); });
+      d.addEventListener('input', function (e) { if (e.inputType === 'insertParagraph') tidyNewLine(d); dirty = true; schedule(); });
       var deco = null;
       d.addEventListener('keyup', function () { setTimeout(fit, 30); clearTimeout(deco); deco = setTimeout(function () { decoratePages(d); }, 600); });
       var w = iframe.clientWidth;
