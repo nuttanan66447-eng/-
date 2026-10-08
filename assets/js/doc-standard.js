@@ -178,7 +178,7 @@
       page.classList.add('sk-std-ext');
       var sel = '#' + page.id + '.sk-std-ext.sk-std-ext.sk-std-ext';
       css += '@media screen{' + sel + '{width:210mm!important;max-width:none!important;min-height:297mm!important;height:auto!important;max-height:none!important;padding:25mm 20mm 20mm 30mm!important;overflow:visible!important;box-sizing:border-box!important}}' +
-        '@media print{' + sel + '{page:skstd!important;width:auto!important;max-width:none!important;min-height:0!important;height:auto!important;padding:0!important;margin:0!important;box-sizing:border-box!important}}';
+        '@media print{' + sel + '{page:skstd!important;width:auto!important;max-width:none!important;min-height:0!important;height:auto!important;max-height:none!important;padding:0!important;margin:0!important;overflow:visible!important;box-sizing:border-box!important}}';
       set(page, { 'font-family': FONT, 'font-size': '16pt', color: '#000' });
       Array.prototype.forEach.call(page.querySelectorAll('*'), function (el) {
         if (el.closest('table') || el.tagName === 'IMG' || el.tagName === 'svg' || el.closest('svg')) return;
