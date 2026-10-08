@@ -22,6 +22,7 @@
           '<p id="dc-sub" class="font-body-sm text-body-sm text-outline truncate"></p></div></div>' +
         '<div id="dc-actions" class="flex flex-wrap gap-2"></div>' +
       '</div>' +
+      '<div id="dc-top" class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-gutter items-stretch"></div>' +
       '<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">' +
         '<div id="dc-main" class="xl:col-span-8 min-w-0"></div>' +
         '<aside id="dc-side" class="xl:col-span-4 flex flex-col gap-gutter"></aside>' +
@@ -43,7 +44,7 @@
     // กรอกฟอร์ม: ใช้ความกว้างเต็มหน้า (แถบข้อมูลย้ายไปด้านล่าง) ให้ตารางในฟอร์มไม่ต้องเลื่อนซ้ายขวา
     var wide = st.phase === 'form', sideEl = el.querySelector('#dc-side');
     box.className = (wide ? 'xl:col-span-12' : 'xl:col-span-8') + ' min-w-0';
-    sideEl.className = wide ? 'xl:col-span-12 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 gap-gutter items-start' : 'xl:col-span-4 flex flex-col gap-gutter';
+    sideEl.className = wide ? 'xl:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-gutter items-start' : 'xl:col-span-4 flex flex-col gap-gutter';
     if (st.phase === 'preview') {
       acts.innerHTML = '<button type="button" data-dc="pick" class="btn-ghost">' + icon('apps') + '<span>เลือกแบบอื่น</span></button>';
       ed = SK.docs.editor(box, { doc: doc(), project: project(), html: st.html, entry: st.entry, onBack: function () { st.phase = 'form'; main(); redock(); } });
@@ -71,27 +72,13 @@
       });
       return;
     }
-    // เลือกแบบเอกสาร
+    // เลือกแบบเอกสาร: รายการแบบทั้งหมดอยู่ในเมนูด้านซ้าย (ใต้ "พิมพ์เอกสารราชการ")
     acts.innerHTML = '<a href="#/tools" class="btn-glass">' + icon('construction') + '<span>เครื่องมือระบบหลัก</span></a>';
-    var groups = [];
-    E().DOCS.forEach(function (d) { if (groups.indexOf(d.group) < 0) groups.push(d.group); });
-    var ql = st.q.trim().toLowerCase();
     box.innerHTML = '<section class="card card-pad mb-gutter"><h2 class="card-title mb-1">' + icon('folder_shared') + 'โครงการ</h2><p class="muted font-body-sm text-body-sm mb-4">เลือกโครงการเพื่อเติมข้อมูลในเอกสารอัตโนมัติ (เอกสารงานอาคาร/บุคลากรไม่ต้องเลือก)</p>' + picker() + '</section>' +
-      '<section class="card card-pad"><div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4"><h2 class="card-title">' + icon('dashboard_customize') + 'แบบเอกสารสำเร็จรูป (' + E().DOCS.length + ')</h2>' +
-        '<label class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-low sm:w-72">' + icon('search', 'text-outline text-[18px]') + '<span class="sr-only">ค้นหาแบบเอกสาร</span><input id="dc-q" type="search" value="' + esc(st.q) + '" placeholder="ค้นหาแบบเอกสาร..." class="bg-transparent outline-none w-full font-body-sm text-body-sm"/></label></div>' +
-        groups.map(function (g) {
-          var items = E().DOCS.filter(function (d) { return d.group === g && (!ql || (d.title + ' ' + d.desc).toLowerCase().indexOf(ql) >= 0); });
-          if (!items.length) return '';
-          return '<h3 class="font-label-lg text-label-lg text-outline mt-5 mb-2 first:mt-0">' + esc(g) + '</h3><div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-3">' + items.map(function (d) {
-            return '<button type="button" data-doc="' + d.key + '" class="group text-left flex items-start gap-3 p-4 rounded-[22px] bg-surface-container-low/70 hover:bg-white hover:shadow-md ring-1 ring-transparent hover:ring-[rgba(15,23,42,0.06)] transition-all">' +
-              '<span class="w-10 h-10 shrink-0 rounded-xl bg-white text-primary flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:text-on-primary transition-colors">' + icon(d.icon) + '</span>' +
-              '<span class="min-w-0 flex-1"><span class="block font-label-lg text-label-lg font-semibold leading-snug">' + esc(d.title) + '</span><span class="block font-body-sm text-body-sm text-outline mt-0.5">' + esc(d.desc) + '</span>' +
-              (d.general ? '<span class="chip-gray mt-2">ไม่ผูกโครงการ</span>' : '') + '</span>' + icon('chevron_right', 'text-outline mt-2') + '</button>';
-          }).join('') + '</div>';
-        }).join('') + '</section>';
+      '<section class="card card-pad flex items-start gap-4"><span class="w-12 h-12 shrink-0 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">' + icon('menu_open', 'text-[26px]') + '</span>' +
+        '<div><h2 class="font-headline-sm text-headline-sm font-semibold">เลือกแบบเอกสารจากเมนูด้านซ้าย</h2><p class="muted mt-1">แบบเอกสารสำเร็จรูปทั้ง ' + E().DOCS.length + ' แบบ อยู่ใต้เมนู <b class="text-primary">พิมพ์เอกสารราชการ</b> แบ่งตามหมวด — กดชื่อเอกสารเพื่อเปิดแบบฟอร์มของโครงการที่เลือก</p>' +
+        '<button type="button" data-dc="menu" class="btn-glass mt-3 lg:hidden">' + icon('menu') + '<span>เปิดเมนูแบบเอกสาร</span></button></div></section>';
     bindPicker(box);
-    var q = box.querySelector('#dc-q');
-    q.addEventListener('input', function () { st.q = q.value; var pos = q.selectionStart; main(); var n = el.querySelector('#dc-q'); n.focus(); n.setSelectionRange(pos, pos); });
   }
   // ตัวกรองโครงการ: หมู่บ้าน ปีงบประมาณ ประเภทเงิน
   function sources() {
@@ -152,33 +139,26 @@
 
   // ---------- แถบขวา ----------
   function side() {
-    var box = el.querySelector('#dc-side'); if (!box) return;
+    var top = el.querySelector('#dc-top'), box = el.querySelector('#dc-side'); if (!box) return;
     var p = project(), d = doc();
     var hist = SK.docs.list().filter(function (x) { return (!p || x.projectId === p.id) && (!d || x.docKey === d.key); }).slice(0, 6);
-    box.innerHTML =
+    top.innerHTML =
       '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('tune') + 'การตั้งค่าหน้ากระดาษ</h2><span class="chip-gray">ระบบหลัก</span></div>' +
         '<div class="grid grid-cols-2 gap-3"><div class="p-3 rounded-[18px] bg-surface-container-low/70"><span class="block font-label-sm text-label-sm text-outline">ขนาดกระดาษ</span><b class="font-label-lg text-label-lg">A4 แนวตั้ง</b><span class="block font-body-sm text-body-sm text-outline">210 × 297 มม.</span></div>' +
         '<div class="p-3 rounded-[18px] bg-surface-container-low/70"><span class="block font-label-sm text-label-sm text-outline">รูปแบบหนังสือ</span><b class="font-label-lg text-label-lg">ตามระบบหลัก</b><span class="block font-body-sm text-body-sm text-outline">TH Sarabun PSK</span></div></div>' +
         '<p class="mt-3 font-body-sm text-body-sm text-outline">หนังสือราชการทุกฉบับใช้รูปแบบเดียวกับระบบหลัก — พิมพ์/PDF/Word ได้จากหน้าเอกสาร</p></section>' +
-      '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('inventory_2') + 'แบบฟอร์มสำเร็จรูป</h2><span class="chip-gray">' + E().DOCS.length + ' แบบ</span></div>' +
-        groups().map(function (g) {
-          return '<h3 class="font-label-md text-label-md text-outline mt-4 mb-1.5 first:mt-0">' + esc(g) + '</h3><div class="flex flex-col gap-1">' +
-            E().DOCS.filter(function (x) { return x.group === g; }).map(function (x) {
-              var on = st.doc === x.key && st.phase !== 'pick';
-              return '<button type="button" data-doc="' + x.key + '" class="flex items-center gap-2.5 px-2.5 py-2 rounded-2xl text-left transition-colors ' + (on ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-surface-container-low') + '">' +
-                '<span class="w-8 h-8 shrink-0 rounded-full ' + (on ? 'bg-primary text-on-primary' : 'bg-surface-container-low text-primary') + ' flex items-center justify-center">' + icon(x.icon, 'text-[17px]') + '</span>' +
-                '<span class="min-w-0 flex-1 font-label-lg text-label-lg ' + (on ? 'font-semibold text-primary' : '') + ' truncate">' + esc(x.title) + '</span>' + (on ? icon('check_circle', 'text-primary text-[18px]') : '') + '</button>';
-            }).join('') + '</div>';
-        }).join('') + '</section>' +
-      (p ? '<section class="card card-pad bg-gradient-to-br from-primary-fixed/50 to-white"><div class="flex items-center gap-3 mb-3"><span class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">' + icon('link') + '</span>' +
-          '<div class="min-w-0"><h2 class="font-label-lg text-label-lg font-semibold">ข้อมูลโครงการที่เชื่อมกับเอกสาร</h2><p class="font-body-sm text-body-sm text-outline">เติมในแบบฟอร์มอัตโนมัติ</p></div></div>' +
-          '<dl class="flex flex-col gap-1.5 p-3 rounded-[18px] bg-white/80 font-body-sm text-body-sm">' +
-            [['รหัสโครงการ', p.id], ['ค่างาน', '฿ ' + SK.money(p.budget, 2)], ['ผู้รับจ้าง', p.contractor || '-'], ['ผู้ควบคุมงาน', p.supervisor || '-'], ['สัญญา', (p.contractNo || '-') + (p.end ? ' • สิ้นสุด ' + SK.dateShort(p.end) : '')]].map(function (r) {
+      (p ? '<section class="card card-pad bg-gradient-to-br from-primary-fixed/50 to-white"><div class="flex flex-wrap items-center gap-3 mb-3"><span class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">' + icon('link') + '</span>' +
+          '<div class="min-w-0 flex-1"><h2 class="font-label-lg text-label-lg font-semibold">ข้อมูลโครงการที่เชื่อมกับเอกสาร</h2><p class="font-body-sm text-body-sm text-outline">เติมในแบบฟอร์มอัตโนมัติ</p></div>' +
+          '<a href="#/project/' + p.id + '" class="btn-glass !py-1.5">' + icon('open_in_new') + '<span>หน้าโครงการ</span></a><a href="#/entry/' + p.id + '" class="btn-primary !py-1.5">' + icon('edit') + '<span>แก้ไขข้อมูล</span></a></div>' +
+          '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 p-3 rounded-[18px] bg-white/80 font-body-sm text-body-sm">' +
+            [['รหัสโครงการ', p.id], ['ค่างาน', '฿ ' + SK.money(p.budget, 2)], ['ผู้รับจ้าง', p.contractor || '-'], ['ผู้ควบคุมงาน', p.supervisor || '-'], ['สัญญา', (p.contractNo || '-') + (p.end ? ' • สิ้นสุด ' + SK.dateShort(p.end) : '')], ['ปีงบประมาณ', (p.year || '-') + (p.source ? ' • ' + p.source : '')]].map(function (r) {
               return '<div class="flex justify-between gap-3"><dt class="text-outline whitespace-nowrap">' + r[0] + '</dt><dd class="font-semibold text-right">' + esc(r[1]) + '</dd></div>';
-            }).join('') + '</dl>' +
-          '<div class="flex gap-2 mt-3"><a href="#/project/' + p.id + '" class="btn-glass flex-1">' + icon('open_in_new') + '<span>หน้าโครงการ</span></a><a href="#/entry/' + p.id + '" class="btn-primary flex-1">' + icon('edit') + '<span>แก้ไขข้อมูล</span></a></div></section>' : '') +
+            }).join('') + '</dl></section>'
+        : '<section class="card card-pad flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-surface-container-low text-primary flex items-center justify-center">' + icon('link_off') + '</span><div><h2 class="font-label-lg text-label-lg font-semibold">ยังไม่ได้เลือกโครงการ</h2><p class="font-body-sm text-body-sm text-outline">เลือกโครงการเพื่อเติมข้อมูลในแบบฟอร์มอัตโนมัติ</p></div></section>');
+    box.innerHTML =
       '<section class="card card-pad"><div class="flex items-center justify-between mb-3"><h2 class="card-title">' + icon('history') + 'ประวัติเอกสาร</h2><span class="chip-gray">' + (p ? p.id : 'ทั้งหมด') + '</span></div>' +
         SK.docs.historyList(hist, { remove: true, empty: 'ยังไม่มีเอกสาร' + (d ? 'แบบนี้' : '') + (p ? 'ของโครงการนี้' : '') }) + '</section>';
+    if (SK.markDocMenu) SK.markDocMenu();
   }
   function groups() {
     var out = [];
@@ -197,11 +177,13 @@
     }
     var a = e.target.closest('[data-dc]');
     if (!a || !el.contains(a)) return;
+    if (a.dataset.dc === 'menu') { var mb = document.getElementById('menu-btn'); if (mb) mb.click(); return; }
     if (a.dataset.dc === 'pick') { if (busy) return; st.phase = 'pick'; st.doc = ''; setUrl(); main(); side(); }
     else if (a.dataset.dc === 'build') build(a);
   });
   window.addEventListener('sk:documents', function () { if (el && document.body.contains(el) && el.querySelector('#dc-side')) side(); });
 
+  SK.documentsState = function () { return { project: st.project, doc: st.phase === 'pick' ? '' : st.doc }; };
   SK.route('documents', {
     title: 'พิมพ์เอกสารราชการ', render: render,
     // ข้อมูลโครงการเปลี่ยน: ปรับเฉพาะส่วนที่ไม่กระทบแบบฟอร์มที่กำลังกรอก
