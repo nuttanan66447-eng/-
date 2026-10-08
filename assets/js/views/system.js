@@ -62,7 +62,7 @@
         kicker: '<span class="chip-blue">' + icon('verified', 'text-[14px]') + 'ระบบหลัก v190</span>',
         title: 'เครื่องมือระบบหลัก',
         desc: 'หน้าทำงานทุกหน้าของระบบหลักของกองช่าง (รายงานช่าง ผลทดสอบ ราคากลาง TOR ค่า K ค่าตอบแทน คุมสายทาง ฯลฯ) ใช้ข้อมูลชุดเดียวกับเว็บ'
-      }) + '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-gutter">' + SK.engine.TOOLS.map(function (t) {
+      }) + '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-gutter">' + SK.engine.TOOLS.filter(function (t) { return !t.admin || SK.cloud.isAdmin(); }).map(function (t) {
         var href = t.fn === 'openEntryGate' ? '#/entry' : '#/system/' + t.fn;
         return '<a href="' + href + '" class="group card p-5 flex items-center gap-4 hover:shadow-md transition-all"><span class="w-12 h-12 shrink-0 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">' + icon(t.icon, 'text-[24px]') + '</span>' +
           '<span class="flex-1 font-label-lg text-label-lg font-semibold">' + esc(t.title) + '</span>' + icon('arrow_forward', 'text-outline group-hover:text-primary') + '</a>';
@@ -74,6 +74,7 @@
     render: function (root, r) {
       var fn = r.args[0] || '', t = SK.engine.TOOLS.filter(function (x) { return x.fn === fn; })[0];
       if (!t) { root.innerHTML = '<div class="card">' + V.empty('search_off', 'ไม่พบหน้านี้ในระบบหลัก', '', '<a href="#/tools" class="btn-primary">เครื่องมือระบบหลัก</a>') + '</div>'; return; }
+      if (t.admin && !SK.cloud.isAdmin()) { root.innerHTML = '<div class="card">' + V.empty('admin_panel_settings', 'เฉพาะผู้ดูแลระบบ', 'เข้าสู่ระบบด้วยบัญชีผู้ดูแลระบบเพื่อใช้หน้า ' + esc(t.title), '<a href="#/users" class="btn-primary">ผู้ใช้งานและสิทธิ์</a>') + '</div>'; return; }
       show(root, {
         icon: t.icon, title: t.title, sub: 'หน้าของระบบหลัก — เอกสารที่สั่งพิมพ์จะเปิดใน Smart Editor ของเว็บ',
         actions: '<a href="#/tools" class="btn-glass">' + icon('apps') + '<span>เครื่องมือทั้งหมด</span></a>',
