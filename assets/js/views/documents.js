@@ -47,8 +47,7 @@
     }
     if (st.phase === 'form') {
       var d = doc(), p = project();
-      acts.innerHTML = '<button type="button" data-dc="pick" class="btn-ghost">' + icon('arrow_back') + '<span>เลือกแบบเอกสาร</span></button>' +
-        '<button type="button" data-dc="build" class="btn-primary">' + icon('auto_awesome') + '<span>สร้างเอกสาร</span></button>';
+      acts.innerHTML = '<button type="button" data-dc="pick" class="btn-ghost">' + icon('arrow_back') + '<span>เลือกแบบเอกสาร</span></button>';
       if (!d.general && !p) {
         box.innerHTML = '<section class="card card-pad"><h2 class="card-title mb-2">' + icon(d.icon) + esc(d.title) + '</h2><p class="muted mb-4">เอกสารนี้ใช้ข้อมูลโครงการ — เลือกโครงการก่อน</p>' + picker() + '</section>';
         bindPicker(box);
@@ -56,9 +55,14 @@
       }
       box.innerHTML = '<div class="card p-3"><div class="flex flex-wrap items-center gap-2 px-2 pb-3">' +
           '<span class="tabs"><span class="tab is-active">' + icon(d.icon, 'text-[16px] align-middle') + ' แบบฟอร์ม</span><span class="tab">' + esc(d.group) + '</span></span>' +
-          '<span class="flex-1"></span><span class="font-body-sm text-body-sm text-outline">กรอกข้อมูลในแบบฟอร์มของระบบหลักด้านล่าง แล้วกด <b class="text-primary">สร้างเอกสาร</b></span></div>' +
+          '<span class="flex-1"></span><span class="font-body-sm text-body-sm text-outline">กรอกข้อมูลในแบบฟอร์มของระบบหลักด้านล่าง แล้วกด <b class="text-primary">สร้างเอกสาร</b> ด้านล่าง</span></div>' +
         '<div id="dc-holder" class="relative rounded-[20px] bg-surface-container-low" style="height:480px">' +
-          '<div id="dc-wait" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-on-surface-variant">' + icon('progress_activity', 'animate-spin text-primary text-[32px]') + '<span>กำลังเปิดแบบฟอร์มของระบบหลัก...</span></div></div></div>';
+          '<div id="dc-wait" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-on-surface-variant">' + icon('progress_activity', 'animate-spin text-primary text-[32px]') + '<span>กำลังเปิดแบบฟอร์มของระบบหลัก...</span></div></div></div>' +
+          // ปุ่มสร้างเอกสาร: ด้านล่างแบบฟอร์ม (ติดขอบล่างจอขณะเลื่อน) — อยู่นอกการ์ดเพื่อให้อยู่เหนือแบบฟอร์ม
+          '<div class="sticky bottom-3 z-40 mt-3 flex flex-wrap items-center justify-end gap-2 p-3 rounded-[22px] bg-white/90 glass shadow-[0_-8px_24px_rgba(15,23,42,0.06)] ring-1 ring-[rgba(15,23,42,0.06)]">' +
+            '<span class="mr-auto font-body-sm text-body-sm text-outline">ตรวจข้อมูลในแบบฟอร์มให้ครบ แล้วกดสร้างเอกสาร</span>' +
+            '<button type="button" data-dc="pick" class="btn-glass">' + icon('arrow_back') + '<span>เลือกแบบเอกสาร</span></button>' +
+            '<button type="button" data-dc="build" class="btn-primary !px-6">' + icon('auto_awesome') + '<span>สร้างเอกสาร</span></button></div>';
       var holder = box.querySelector('#dc-holder');
       E().openDoc(d, p ? p.rowNumber : null, holder, { autoHeight: true }).then(function () {
         var w = box.querySelector('#dc-wait'); if (w) w.remove();
@@ -150,17 +154,9 @@
               return '<div class="flex justify-between gap-3"><dt class="text-outline whitespace-nowrap">' + r[0] + '</dt><dd class="font-semibold text-right">' + esc(r[1]) + '</dd></div>';
             }).join('') + '</dl></section>'
         : '<section class="card card-pad flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-surface-container-low text-primary flex items-center justify-center">' + icon('link_off') + '</span><div><h2 class="font-label-lg text-label-lg font-semibold">ยังไม่ได้เลือกโครงการ</h2><p class="font-body-sm text-body-sm text-outline">เลือกโครงการเพื่อเติมข้อมูลในแบบฟอร์มอัตโนมัติ</p></div></section>');
-    // ประวัติเอกสาร: ด้านบน พับเก็บได้ (จำสถานะไว้)
-    var open = histOpen();
-    box.innerHTML = '<details class="card group"' + (open ? ' open' : '') + '><summary class="list-none cursor-pointer card-pad flex items-center gap-3 select-none">' +
-        '<h2 class="card-title flex-1">' + icon('history') + 'ประวัติเอกสาร <span class="chip-blue">' + hist.length + (hist.length >= 20 ? '+' : '') + '</span><span class="chip-gray">' + (p ? p.id : 'ทุกโครงการ') + (d ? ' • ' + esc(d.title) : '') + '</span></h2>' +
-        '<span class="font-label-md text-label-md text-primary">' + (open ? 'พับเก็บ' : 'แสดง') + '</span>' + icon('expand_more', 'text-primary transition-transform group-open:rotate-180') + '</summary>' +
-        '<div class="px-5 md:px-space-lg pb-5 -mt-2 max-h-[420px] overflow-y-auto">' + SK.docs.historyList(hist, { remove: true, timeline: false, empty: 'ยังไม่มีเอกสาร' + (d ? 'แบบนี้' : '') + (p ? 'ของโครงการนี้' : '') }) + '</div></details>';
-    box.querySelector('details').addEventListener('toggle', function () { histOpen(this.open); var lab = this.querySelector('summary > span.font-label-md'); if (lab) lab.textContent = this.open ? 'พับเก็บ' : 'แสดง'; });
+    // ประวัติเอกสาร: ด้านบน พับเก็บได้
+    box.innerHTML = SK.docs.historyCard(hist, { key: 'documents', chip: (p ? p.id : 'ทุกโครงการ') + (d ? ' • ' + d.title : ''), empty: 'ยังไม่มีเอกสาร' + (d ? 'แบบนี้' : '') + (p ? 'ของโครงการนี้' : '') });
     if (SK.markDocMenu) SK.markDocMenu();
-  }
-  function histOpen(v) {
-    try { if (v === undefined) return localStorage.getItem('sk-doc-hist') !== '0'; localStorage.setItem('sk-doc-hist', v ? '1' : '0'); } catch (e) { return true; }
   }
   function groups() {
     var out = [];
