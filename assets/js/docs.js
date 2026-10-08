@@ -75,8 +75,112 @@
     var root = d.documentElement.cloneNode(true);
     root.setAttribute('data-sk-std', '1'); // จัดรูปแบบมาตรฐานแล้ว
     root.style.zoom = '';
+    // ส่วนช่วยแสดงผลของตัวแก้ไข (เส้นขอบกระดาษ/ตัวแบ่งหน้า) ไม่เก็บลงสำเนา
+    Array.prototype.forEach.call(root.querySelectorAll('.sk-guide,.sk-break,#sk-paper-css'), function (x) { x.remove(); });
+    var body = root.querySelector('body'); if (body) body.removeAttribute('contenteditable');
+    Array.prototype.forEach.call(root.querySelectorAll('.sk-paper'), function (x) { x.classList.remove('sk-paper'); });
     Array.prototype.forEach.call(root.querySelectorAll('script'), function (x) { x.remove(); });
     return '<!DOCTYPE html>' + root.outerHTML;
+  }
+
+  // ---------- มุมมองหน้ากระดาษ: กระดาษแต่ละแผ่น เส้นขอบเขตการพิมพ์ (ระยะขอบ) และตัวแบ่งหน้า ----------
+  var MM = 96 / 25.4;
+  function paperPages(d) {
+    var boxes = Array.prototype.filter.call(d.body.querySelectorAll('section, div, article'), function (el) {
+      var r = el.getBoundingClientRect();
+      return r.width > 690 && r.width < 1200 && r.height > 400;
+    });
+    // แผ่นกระดาษ = กล่องสัดส่วน A4 (ตั้ง/นอน) ชั้นนอกสุด; ไม่มีเลย = กล่องสูงชั้นในสุด
+    var a4 = boxes.filter(function (el) { var r = el.getBoundingClientRect(), q = Math.max(r.width, r.height) / Math.min(r.width, r.height); return Math.abs(q - 1.414) < 0.14; });
+    if (a4.length) return a4.filter(function (el) { return !a4.some(function (o) { return o !== el && o.contains(el); }); });
+    return boxes.filter(function (el) { return !boxes.some(function (o) { return o !== el && el.contains(o); }); }).slice(0, 1);
+  }
+  function decoratePages(d) {
+    Array.prototype.forEach.call(d.querySelectorAll('.sk-guide,.sk-break'), function (x) { x.remove(); });
+    if (!d.getElementById('sk-paper-css')) {
+      var st = d.createElement('style'); st.id = 'sk-paper-css';
+      st.textContent = '@media screen{html,body{background:#e9eef7!important}.sk-paper{background:#fff!important;box-shadow:0 1px 3px rgba(15,23,42,.14),0 10px 30px rgba(15,23,42,.10)!important;margin:0 auto 22px!important}' +
+        '.sk-guide{position:absolute;pointer-events:none;border:1px dashed rgba(0,97,148,.35);border-radius:2px;z-index:5}' +
+        '.sk-break{position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(186,26,26,.55);pointer-events:none;z-index:6}' +
+        '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}}' +
+        '@media print{.sk-guide,.sk-break{display:none!important}}';
+      d.head.appendChild(st);
+    }
+    var win = d.defaultView;
+    paperPages(d).forEach(function (page) {
+      page.classList.add('sk-paper');
+      var cs = win.getComputedStyle(page);
+      if (cs.position === 'static') page.style.position = 'relative';
+      var landscape = page.offsetWidth > page.offsetHeight * 1.1 && page.offsetWidth > 1000;
+      var pageH = (landscape ? 210 : 297) * MM;
+      var pt = parseFloat(cs.paddingTop) || 0, pr = parseFloat(cs.paddingRight) || 0, pb = parseFloat(cs.paddingBottom) || 0, pl = parseFloat(cs.paddingLeft) || 0;
+      var mk = function (cls, css, html) { var x = d.createElement('div'); x.className = cls; x.setAttribute('contenteditable', 'false'); x.setAttribute('aria-hidden', 'true'); x.style.cssText = css; if (html) x.innerHTML = html; page.appendChild(x); return x; };
+      // เส้นขอบเขตการพิมพ์ (ระยะขอบกระดาษ) ของแผ่นแรก
+      if (pt || pl) mk('sk-guide', 'top:' + pt + 'px;left:' + pl + 'px;right:' + pr + 'px;height:' + Math.max(0, Math.min(page.offsetHeight, pageH) - pt - pb) + 'px');
+      // เนื้อหายาวเกิน 1 แผ่น: แสดงตำแหน่งขึ้นหน้าใหม่
+      for (var n = 1; n * pageH < page.offsetHeight - 8; n++) mk('sk-break', 'top:' + Math.round(n * pageH) + 'px', '<span>หน้า ' + (n + 1) + '</span>');
+    });
+  }
+  // แผ่นที่สูงตายตัว (เช่น รายงานผลแนวนอน) แต่เนื้อหายาวเกินแผ่น: ย่อตัวอักษรในแผ่นนั้นจนพอดี ลายเซ็นไม่ตกขอบ/ไม่ล้นไปหน้าใหม่ใน Word
+  function fitOverflow(d) {
+    var win = d.defaultView;
+    paperPages(d).forEach(function (page) {
+      var els = Array.prototype.filter.call(page.querySelectorAll('*'), function (e) { return !e.closest('.sk-guide,.sk-break'); });
+      var bottom = function () {
+        var top = page.getBoundingClientRect().top, b = 0;
+        els.forEach(function (e) { if (e.children.length && e.tagName !== 'TD' && e.tagName !== 'TH') return; var r = e.getBoundingClientRect(); if (r.height && r.bottom - top > b) b = r.bottom - top; });
+        return b;
+      };
+      var limit = page.offsetHeight - 4;
+      if (bottom() <= limit) return;
+      els.forEach(function (e) { if (!e.dataset.skFs) e.dataset.skFs = parseFloat(win.getComputedStyle(e).fontSize) || 16; });
+      for (var f = 0.97; f >= 0.7; f -= 0.03) {
+        els.forEach(function (e) { e.style.setProperty('font-size', (e.dataset.skFs * f).toFixed(2) + 'px', 'important'); });
+        if (bottom() <= limit) break;
+      }
+    });
+  }
+  // ป้ายหัวบันทึก/ตราครุฑ: แก้ไม่ได้ (กด Backspace แล้วข้อความไม่รวมเข้ากับป้าย หัวบันทึกไม่เสียรูป)
+  function protectLabels(d) {
+    var LABEL = /^(บันทึกข้อความ|ส่วนราชการ|ที่|วันที่|เรื่อง|เรียน|สิ่งที่ส่งมาด้วย|อ้างถึง)$/;
+    Array.prototype.forEach.call(d.querySelectorAll('b, strong, span, div, p, h1, h2'), function (el) {
+      if (!el.children.length && LABEL.test((el.textContent || '').replace(/\s+/g, ' ').trim())) el.setAttribute('contenteditable', 'false');
+    });
+    Array.prototype.forEach.call(d.querySelectorAll('img, svg'), function (g) { g.setAttribute('contenteditable', 'false'); });
+  }
+
+  // Backspace/Delete ข้างป้ายที่ล็อกไว้ ไม่ให้ลบป้ายหรือดึงข้อความไปรวมกับป้าย
+  function isLocked(n) { return n.nodeType === 1 && n.getAttribute('contenteditable') === 'false'; }
+  function blank(t) { return !/[^\s\u00a0\u200b]/.test(t || ''); }
+  function hitsLocked(n, back) {
+    // true = ตัวถัดไปที่จะถูกลบเป็นป้ายที่ล็อกไว้, false = เป็นข้อความธรรมดา, null = ว่าง (ดูต่อ)
+    for (; n; n = back ? n.previousSibling : n.nextSibling) {
+      if (n.nodeType === 3) { if (!blank(n.data)) return false; continue; }
+      if (n.nodeType !== 1) continue;
+      if (isLocked(n)) return !n.classList.contains('sk-guide') && !n.classList.contains('sk-break');
+      if (blank(n.textContent) && !n.querySelector('img,svg')) continue;
+      var r = hitsLocked(back ? n.lastChild : n.firstChild, back);
+      if (r !== null) return r;
+    }
+    return null;
+  }
+  function guardKey(d, e) {
+    if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+    var sel = d.getSelection(); if (!sel || !sel.rangeCount) return;
+    var rg = sel.getRangeAt(0), back = e.key === 'Backspace';
+    if (!rg.collapsed) {
+      var hit = Array.prototype.some.call(d.querySelectorAll('[contenteditable=false]'), function (x) { return !x.classList.contains('sk-guide') && !x.classList.contains('sk-break') && rg.intersectsNode(x); });
+      if (hit) { e.preventDefault(); SK.toast('ป้ายหัวเอกสาร (เช่น ที่ วันที่ เรื่อง) แก้ไขไม่ได้ — เลือกเฉพาะข้อความที่ต้องการลบ', 'info'); }
+      return;
+    }
+    var node = rg.startContainer, off = rg.startOffset, start;
+    if (node.nodeType === 3) {
+      if (!blank(back ? node.data.slice(0, off) : node.data.slice(off))) return;
+      start = back ? node.previousSibling : node.nextSibling;
+    } else start = back ? node.childNodes[off - 1] : node.childNodes[off];
+    var r = hitsLocked(start, back);
+    for (var cur = node; r === null && cur && cur !== d.body; cur = cur.parentNode) r = hitsLocked(back ? cur.previousSibling : cur.nextSibling, back);
+    if (r === true) e.preventDefault();
   }
 
   // ---------- Smart Editor ----------
@@ -161,9 +265,15 @@
       var d = iframe.contentDocument;
       // มาตรฐานการพิมพ์หนังสือราชการ (assets/js/doc-standard.js) — สำเนาในประวัติที่จัดแล้วไม่ต้องจัดซ้ำ
       if (!d.documentElement.hasAttribute('data-sk-std')) { try { if (SK.docStandard) SK.docStandard.apply(d); } catch (e) { console.warn('จัดรูปแบบมาตรฐานไม่สำเร็จ', e); } }
-      d.designMode = 'on';
+      protectLabels(d);
+      d.body.setAttribute('contenteditable', 'true');
+      d.body.setAttribute('spellcheck', 'false');
+      fitOverflow(d);
+      decoratePages(d);
+      d.addEventListener('keydown', function (e) { guardKey(d, e); });
       d.addEventListener('input', function () { dirty = true; schedule(); });
-      d.addEventListener('keyup', function () { setTimeout(fit, 30); });
+      var deco = null;
+      d.addEventListener('keyup', function () { setTimeout(fit, 30); clearTimeout(deco); deco = setTimeout(function () { decoratePages(d); }, 600); });
       var w = iframe.clientWidth;
       zoom = w && w < 830 ? Math.max(0.4, Math.floor((w - 24) / 794 * 20) / 20) : 1;
       fit();

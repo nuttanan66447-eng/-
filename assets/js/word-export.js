@@ -76,7 +76,7 @@
     return this.lh[key];
   };
   Builder.prototype.rPr = function (cs, u) {
-    var sz = Math.max(2, Math.round(parseFloat(cs.fontSize) * 1.5));
+    var sz = Math.max(2, Math.round(parseFloat(cs.fontSize) * 1.5 * (this.fontScale || 1)));
     var bold = parseInt(cs.fontWeight, 10) >= 600 || cs.fontWeight === 'bold';
     var x = '<w:rPr><w:rFonts w:ascii="' + FONT + '" w:hAnsi="' + FONT + '" w:eastAsia="' + FONT + '" w:cs="' + FONT + '"/>';
     if (bold) x += '<w:b/><w:bCs/>';
@@ -480,7 +480,10 @@
           (fill && fill !== 'FFFFFF' ? '<w:shd w:val="clear" w:color="auto" w:fill="' + fill + '"/>' : '') +
           '<w:tcMar><w:top w:w="' + tw(parseFloat(cs.paddingTop)) + '" w:type="dxa"/><w:left w:w="' + tw(parseFloat(cs.paddingLeft)) + '" w:type="dxa"/><w:bottom w:w="' + tw(parseFloat(cs.paddingBottom)) + '" w:type="dxa"/><w:right w:w="' + tw(parseFloat(cs.paddingRight)) + '" w:type="dxa"/></w:tcMar>' +
           '<w:vAlign w:val="' + va + '"/>';
+        var keepScale = self.fontScale;
+        self.fontScale = 0.94;
         var items = self.flow(td, { left: inner.left, right: inner.right }, []);
+        self.fontScale = keepScale;
         var body = self.itemsXml(items, va === 'top' ? inner.top : null, null);
         var vm = '';
         if (td.rowSpan > 1) {
@@ -552,6 +555,26 @@
     return all.filter(function (el) { return !all.some(function (o) { return o !== el && el.contains(o); }); });
   }
 
+  // ระยะขอบของหน้า = ระยะจากขอบกระดาษถึงเนื้อหาจริง (padding หรือตำแหน่งกล่องลูก) ไม่เกินค่าที่เหมาะสม
+  function contentMargins(page, r, pad) {
+    var t = Infinity, l = Infinity, rt = -Infinity, bt = -Infinity;
+    Array.prototype.forEach.call(page.querySelectorAll('*'), function (el) {
+      if (el.classList.contains('sk-guide') || el.classList.contains('sk-break')) return;
+      var cs = el.ownerDocument.defaultView.getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'absolute' || cs.position === 'fixed') return;
+      if (el.children.length && !/^(TABLE|IMG|SVG)$/i.test(el.tagName)) return;
+      var x = el.getBoundingClientRect();
+      if (!x.width || !x.height) return;
+      t = Math.min(t, x.top); l = Math.min(l, x.left); rt = Math.max(rt, x.right); bt = Math.max(bt, x.bottom);
+    });
+    var clamp = function (v, p) { return Math.max(0, Math.min(1701, tw(Math.max(p, Math.min(v, 120))))); };
+    if (t === Infinity) return { top: clamp(pad('paddingTop'), 0), right: clamp(pad('paddingRight'), 0), bottom: clamp(pad('paddingBottom'), 0), left: clamp(pad('paddingLeft'), 0) };
+    return {
+      top: clamp(t - r.top - 2, 0), left: clamp(l - r.left - 2, 0),
+      right: clamp(r.right - rt - 2, 0), bottom: Math.max(0, Math.min(1134, tw(Math.max(0, r.bottom - bt - 4))))
+    };
+  }
+
   function build(doc) {
     var b = new Builder(doc), win = doc.defaultView;
     var pages = pagesOf(doc);
@@ -570,15 +593,12 @@
       var landscape = r.width > r.height * 1.1 && r.width > 1000;
       var std = page.classList.contains('sk-std');
       var pad = function (k) { return parseFloat(cs[k]) || 0; };
-      var m = std ? STD_MARGIN : {
-        top: Math.max(340, tw(pad('paddingTop'))), right: Math.max(340, tw(pad('paddingRight'))),
-        bottom: Math.max(340, tw(pad('paddingBottom'))), left: Math.max(340, tw(pad('paddingLeft')))
-      };
+      var m = std ? STD_MARGIN : contentMargins(page, r, pad);
       var W = landscape ? 16838 : 11906, H = landscape ? 11906 : 16838;
       var sect = '<w:sectPr><w:pgSz w:w="' + W + '" w:h="' + H + '"' + (landscape ? ' w:orient="landscape"' : '') + '/>' +
         '<w:pgMar w:top="' + m.top + '" w:right="' + m.right + '" w:bottom="' + m.bottom + '" w:left="' + m.left + '" w:header="709" w:footer="709" w:gutter="0"/><w:cols w:space="708"/><w:docGrid w:linePitch="360"/></w:sectPr>';
       var ref = { left: r.left + m.left / TW, right: r.right - m.right / TW, top: r.top + m.top / TW };
-      if (!std) { var bx = b.box(page); ref = { left: bx.left, right: bx.right, top: bx.top }; }
+      // หน้าที่ไม่ได้จัดตามมาตรฐาน: ระยะขอบ = ตำแหน่งเนื้อหาจริงในพรีวิว (ไม่ดันเนื้อหาลงจนล้นหน้า)
       var items = b.flow(page, ref, []);
       body += b.itemsXml(items, ref.top, i < pages.length - 1 ? sect : null);
       if (i === pages.length - 1) body += sect;
