@@ -187,10 +187,27 @@
       set(garuda, { height: '3cm', 'max-height': '3cm', width: 'auto', 'max-width': 'none' });
     });
     if (pages.length) st.textContent = css; else st.remove();
+    pages.forEach(function (page) { fitWidth(win, page); });
     doc.__skStandard = true;
     return pages.length;
   }
 
+  // กล่องที่กว้างเกินขอบขวา (เช่น บรรทัดวันที่ กว้าง 100% + เว้นซ้าย): เบราว์เซอร์ย่อทั้งหน้าตอนพิมพ์ ตัวอักษรเล็กกว่า 16pt
+  // ปรับให้อยู่ในขอบเขตโดยคงตำแหน่งข้อความเดิม (กึ่งกลางเดิม / ชิดซ้ายเดิม)
+  function fitWidth(win, page) {
+    var pr = page.getBoundingClientRect(), pcs = win.getComputedStyle(page);
+    var left = pr.left + (parseFloat(pcs.paddingLeft) || 0), right = pr.right - (parseFloat(pcs.paddingRight) || 0);
+    Array.prototype.forEach.call(page.querySelectorAll('*'), function (el) {
+      var cs = win.getComputedStyle(el);
+      if (cs.position === 'absolute' || cs.position === 'fixed' || cs.display === 'inline' || el.closest('table,svg')) return;
+      var r = el.getBoundingClientRect();
+      if (!r.width || r.right <= right + 1 || r.left < left - 1) return;
+      var over = r.right - right, start = r.left - left + (parseFloat(cs.paddingLeft) || 0);
+      var pad = /center/.test(cs.textAlign) ? start + over : start;
+      set(el, { width: 'auto', 'max-width': '100%', 'margin-left': '0', 'margin-right': '0', left: '0', right: 'auto', transform: 'none', 'padding-left': Math.max(0, pad) + 'px', 'box-sizing': 'border-box' });
+    });
+  }
+
   window.SK = window.SK || {};
-  window.SK.docStandard = { apply: apply };
+  window.SK.docStandard = { apply: apply, fitWidth: fitWidth };
 })();

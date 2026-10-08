@@ -78,7 +78,7 @@
     // ส่วนช่วยแสดงผลของตัวแก้ไข (เส้นขอบกระดาษ/ตัวแบ่งหน้า) ไม่เก็บลงสำเนา
     Array.prototype.forEach.call(root.querySelectorAll('.sk-guide,.sk-break,.sk-gap,#sk-paper-css'), function (x) { x.remove(); });
     var body = root.querySelector('body'); if (body) body.removeAttribute('contenteditable');
-    Array.prototype.forEach.call(root.querySelectorAll('.sk-paper'), function (x) { x.classList.remove('sk-paper'); });
+    Array.prototype.forEach.call(root.querySelectorAll('.sk-paper,.sk-pagestart'), function (x) { x.classList.remove('sk-paper'); x.classList.remove('sk-pagestart'); });
     Array.prototype.forEach.call(root.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
     Array.prototype.forEach.call(root.querySelectorAll('script'), function (x) { x.remove(); });
     return '<!DOCTYPE html>' + root.outerHTML;
@@ -123,18 +123,20 @@
           page.insertBefore(gap, c);
         }
         gap.style.height = ((parseFloat(gap.style.height) || 0) + need) + 'px';
+        c.classList.add('sk-pagestart'); // ตอนพิมพ์ขึ้นหน้าใหม่ตรงนี้เหมือนบนจอ (เว้นบนเล็กน้อยให้สระบนไม่ตกค้างท้ายหน้าก่อน)
       }
     });
   }
   function decoratePages(d) {
     Array.prototype.forEach.call(d.querySelectorAll('.sk-guide,.sk-break,.sk-gap'), function (x) { x.remove(); });
+    Array.prototype.forEach.call(d.querySelectorAll('.sk-pagestart'), function (x) { x.classList.remove('sk-pagestart'); });
     if (!d.getElementById('sk-paper-css')) {
       var st = d.createElement('style'); st.id = 'sk-paper-css';
       st.textContent = '@media screen{html,body{background:#e9eef7!important}.sk-paper{background:#fff!important;box-shadow:0 1px 3px rgba(15,23,42,.14),0 10px 30px rgba(15,23,42,.10)!important;margin:0 auto 22px!important}' +
         '.sk-guide{position:absolute;pointer-events:none;border:1px dashed rgba(0,97,148,.35);border-radius:2px;z-index:5}' +
         '.sk-break{position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(186,26,26,.55);pointer-events:none;z-index:6}' +
         '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}}' +
-        '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}.sk-foot{position:static!important;inset:auto!important;margin-top:7mm!important;padding-top:3mm!important;transform:none!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
+        '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}.sk-pagestart{break-before:page!important;page-break-before:always!important;margin-top:0!important;padding-top:2.5mm!important}.sk-foot{position:static!important;inset:auto!important;margin-top:7mm!important;padding-top:3mm!important;transform:none!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
       d.head.appendChild(st);
     }
     var win = d.defaultView;
@@ -337,6 +339,8 @@
       var d = iframe.contentDocument;
       // มาตรฐานการพิมพ์หนังสือราชการ (assets/js/doc-standard.js) — สำเนาในประวัติที่จัดแล้วไม่ต้องจัดซ้ำ
       if (!d.documentElement.hasAttribute('data-sk-std')) { try { if (SK.docStandard) SK.docStandard.apply(d); } catch (e) { console.warn('จัดรูปแบบมาตรฐานไม่สำเร็จ', e); } }
+      // สำเนาเก่าในประวัติ (จัดมาตรฐานแล้ว): ปรับกล่องที่กว้างเกินขอบด้วย กันย่อทั้งหน้าตอนพิมพ์
+      if (SK.docStandard && SK.docStandard.fitWidth) Array.prototype.forEach.call(d.querySelectorAll('.sk-std,.sk-std-ext'), function (pg) { SK.docStandard.fitWidth(d.defaultView, pg); });
       protectLabels(d);
       d.body.setAttribute('contenteditable', 'true');
       d.body.setAttribute('spellcheck', 'false');
