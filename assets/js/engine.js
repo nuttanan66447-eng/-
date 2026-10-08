@@ -46,8 +46,11 @@
     { fn: 'openLocalRoadEntryGate', title: 'คุมสายทาง', icon: 'add_road' },
     { fn: 'openConstructionDurationPage', title: 'คำนวณงวดงาน', icon: 'timer' },
     { fn: 'openPerformanceEvaluationPage', title: 'แบบประเมิน', icon: 'assignment_ind' },
-    { fn: 'openPersonnelManager', title: 'รายชื่อบุคลากร', icon: 'badge' },
-    { fn: 'openSystemOptionManager', title: 'ตัวเลือกในฟอร์ม', icon: 'tune' }
+    // หน้าผู้ดูแลระบบ: เฉพาะบัญชีผู้ดูแลระบบของเว็บ (SK.cloud.isAdmin)
+    { fn: 'openPersonnelManager', title: 'รายชื่อบุคลากร', icon: 'badge', admin: true },
+    { fn: 'openUserManager', title: 'จัดการผู้ใช้งาน', icon: 'manage_accounts', admin: true },
+    { fn: 'openRolePermissionManager', title: 'ตัวจัดการสิทธิ์การใช้งาน', icon: 'shield_person', admin: true },
+    { fn: 'openSystemOptionManager', title: 'จัดการตัวเลือกทั้งหมด', icon: 'tune', admin: true }
   ];
 
   var frame = null, readyPromise = null, captured = null, messages = [], currentArea = 'memoPrintArea', generating = false;
@@ -120,7 +123,8 @@
         waitFor(function () { return run('typeof loadData === "function" && typeof enterAuthenticatedApp === "function" && typeof allRows !== "undefined"'); }, 20000).then(function (ok) {
           if (!ok) return reject(new Error('โหลดระบบหลักไม่สำเร็จ'));
           // สิทธิ์ใช้งานตรวจที่เว็บแล้ว (เข้าสู่ระบบด้วยบัญชีเจ้าหน้าที่): ใช้ระบบหลักในฐานะผู้ดูแล
-          run('currentUser={username:"website",fullName:' + JSON.stringify(userName()) + ',department:"กองช่าง",position:"",role:"admin",roleLabel:"ผู้ดูแลระบบ"};enterAuthenticatedApp();');
+          // ผู้ดูแลระบบของเว็บใช้ชื่อ website-admin: หน้าผู้ดูแลของระบบหลักยอมรับเฉพาะชื่อนี้ (gas-worker.js)
+          run('currentUser={username:' + JSON.stringify(SK.cloud && SK.cloud.isAdmin() ? 'website-admin' : 'website') + ',fullName:' + JSON.stringify(userName()) + ',department:"กองช่าง",position:"",role:"admin",roleLabel:"ผู้ดูแลระบบ"};enterAuthenticatedApp();');
           if (typeof w.showToast === 'function') w.showToast = function (m, type) { if (generating) { if (type === 'error') messages.push(String(m)); } else SK.toast(String(m), type === 'error' ? 'error' : 'success'); };
           var st = w.document.createElement('style');
           st.setAttribute('data-sk', 'base');

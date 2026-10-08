@@ -26,8 +26,10 @@
           return '<div class="p-4 rounded-[20px] bg-surface-container-low/70"><span class="' + r.chip + ' mb-2">' + icon(r.icon, 'text-[14px]') + r.label + '</span><ul class="flex flex-col gap-1 font-body-sm text-body-sm">' +
             r.can.map(function (x) { return '<li class="flex items-start gap-1.5">' + icon('check', 'text-[16px] text-[#15803d]') + esc(x) + '</li>'; }).join('') + '</ul></div>';
         }).join('') + '</div></section>' +
-        '<section class="card card-pad"><h2 class="card-title mb-2">' + icon('badge') + 'รายชื่อบุคลากรในเอกสาร</h2><p class="muted font-body-sm text-body-sm mb-3">ชื่อ-ตำแหน่งผู้ลงนาม ผู้ควบคุมงาน และกรรมการที่ใช้ในหนังสือราชการ จัดการในระบบหลัก</p>' +
-          '<a href="#/system/openPersonnelManager" class="btn-glass w-full">' + icon('edit') + '<span>จัดการรายชื่อบุคลากร</span></a></section>' +
+        (SK.cloud.isAdmin() ? '<section class="card card-pad"><h2 class="card-title mb-2">' + icon('admin_panel_settings') + 'จัดการระบบหลัก (ผู้ดูแลระบบ)</h2><p class="muted font-body-sm text-body-sm mb-3">รายชื่อบุคลากรในเอกสาร ผู้ใช้งาน สิทธิ์ และตัวเลือกในแบบฟอร์มของระบบหลัก</p><div class="flex flex-col gap-2">' +
+          SK.engine.TOOLS.filter(function (t) { return t.admin; }).map(function (t) {
+            return '<a href="#/system/' + t.fn + '" class="btn-glass w-full justify-start">' + icon(t.icon) + '<span>' + esc(t.title) + '</span></a>';
+          }).join('') + '</div></section>' : '') +
       '</div></div>';
     list();
   }

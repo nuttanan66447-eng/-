@@ -163,7 +163,20 @@ self.onmessage = function (e) {
         if (!/^[A-Za-z]\w*$/.test(fn) || /_$/.test(fn) || BLOCKED[fn] || typeof self[fn] !== 'function') {
           throw new Error('Script function not found: ' + fn);
         }
-        reply.result = clone(self[fn].apply(null, clone(msg.args || [])));
+        var args = clone(msg.args || []);
+        // หน้าผู้ดูแลของระบบหลัก (ผู้ใช้งาน/สิทธิ์/ตัวเลือก) เปิดจากเว็บด้วยชื่อ "website-admin" เฉพาะบัญชีผู้ดูแลระบบของเว็บ
+        // (engine.js ตั้งชื่อนี้เมื่อ SK.cloud.isAdmin() เท่านั้น) — ไม่ต้องมีชื่อนี้ในชีทผู้ใช้งานระบบ
+        var asAdmin = args[0] === 'website-admin', keepAdmin = self.assertAdminUser_, keepOpt = self.assertSystemOptionManagerUser_;
+        if (asAdmin) {
+          self.assertAdminUser_ = self.assertSystemOptionManagerUser_ = function () {
+            var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID), sheet = getUserSheet_(ss);
+            ensureDefaultUserRows_(sheet);
+            var me = { rowNumber: 0, values: ['website-admin', '', 'ผู้ดูแลระบบเว็บไซต์', 'กองช่าง', '', 'admin', 'active', ''] };
+            return { ss: ss, sheet: sheet, admin: me, user: me };
+          };
+        }
+        try { reply.result = clone(self[fn].apply(null, args)); }
+        finally { if (asAdmin) { self.assertAdminUser_ = keepAdmin; self.assertSystemOptionManagerUser_ = keepOpt; } }
         if (!/^(get|load|fetch|check|is|has|list|find|search)/.test(fn)) scheduleSave();
         reply.ok = true;
       } else if (msg.type === 'import') {
