@@ -431,7 +431,7 @@
         '<span class="block font-label-lg text-label-lg font-semibold text-on-surface line-clamp-2">' + esc(docName(d)) + '</span>' +
         '<span class="block font-body-sm text-body-sm text-outline">' + (d.updatedBy || d.owner ? 'โดย ' + esc(d.updatedBy || d.owner) + ' • ' : '') + esc(SK.timeAgo(d.updatedAt || d.createdAt) || SK.dateShort(d.date)) +
         (opts.project !== false && p ? ' • ' + esc(p.id) : '') + (d.edited ? ' • แก้ไขข้อความแล้ว' : '') + '</span></button>' +
-        (opts.remove ? '<button type="button" data-del-doc="' + esc(d.id) + '" class="icon-btn w-8 h-8 shrink-0" aria-label="ลบเอกสาร">' + icon('delete', 'text-[18px]') + '</button>' : '') +
+        (opts.remove ? '<button type="button" data-del-doc="' + esc(d.id) + '" class="icon-btn w-8 h-8 shrink-0 hover:!text-error hover:!bg-error-container/60" aria-label="ลบเอกสาร">' + icon('delete', 'text-[18px]') + '</button>' : '') +
         '</div></li>';
     }).join('') + '</ol>';
   }

@@ -170,8 +170,6 @@
     H + '.form-section-title,' + H + '.evaluation-section-title,' + H + '.completion-section-line{background:#eff4ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-radius:16px!important;box-shadow:none!important}',
     H + '.form-section-title *{color:#004b73!important}',
     H + '.form-section-title::before,' + H + '.control::before,' + H + 'label::before{background:#006194!important;box-shadow:none!important}',
-    H + '.control,' + H + '.manual-entry-control,' + H + '.computed-control,' + H + '.project-derived-control{background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:18px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important}',
-    H + '.control:hover{border-color:rgba(0,97,148,.25)!important}',
     H + '.control > label,' + H + 'label{color:#3f4850!important}',
     H + 'input:not([type=checkbox]):not([type=radio]):not([type=file]),' + H + 'select,' + H + 'textarea{background:rgba(241,245,249,.7)!important;border:1px solid rgba(100,116,139,.18)!important;border-radius:14px!important;color:#0b1c30!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)!important}',
     H + 'input:focus,' + H + 'select:focus,' + H + 'textarea:focus{background:#fff!important;border-color:#007bb9!important;outline:2px solid rgba(0,123,185,.25)!important;outline-offset:0!important}',
@@ -190,10 +188,10 @@
   ].join('') + EXTRA_CSS();
   // ส่วนที่ธีมเดิมใส่สีเขียว/ส้ม/ม่วง: ใช้สีของเว็บ (เพิ่มน้ำหนักตัวเลือกให้ชนะกฎเดิมที่มี !important)
   function EXTRA_CSS() {
-    var X = function (list) { return list.split(',').map(function (c) { c = c.trim(); var m = /^([^:\s]+)(.*)$/.exec(c); return 'html body ' + m[1] + m[1] + m[1] + m[2]; }).join(','); };
+    var X = function (list) { return list.split(',').map(function (c) { c = c.trim(); var m = /^([^:\s]+)(.*)$/.exec(c); return 'html body ' + (/^[a-z]/i.test(m[1]) ? m[1] + ':not(#_sk1):not(#_sk2)' : m[1] + m[1] + m[1]) + m[2]; }).join(','); };
     var rule = function (sel, css) { return X(sel) + '{' + css + '}'; };
     return [
-      rule('.control,.manual-entry-control,.computed-control,.project-derived-control,.control.wide', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-left:1px solid rgba(100,116,139,.12)!important;border-radius:18px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important'),
+      rule('.control,.manual-entry-control,.computed-control,.project-derived-control,.control.wide', 'background:transparent!important;background-image:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important'),
       rule('.control label span,.control .badge,.control [class*="badge"],.control [class*="tag"]', 'background:#eff4ff!important;color:#006194!important;border-color:transparent!important'),
       rule('.report-menu-btn,.compensation-action-btn,.duration-type-card,.building-mode-card,.test-type-card', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.14)!important;border-radius:20px!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important;color:#0b1c30!important'),
       rule('.report-menu-btn.active,.compensation-action-btn.active,.duration-type-card.active,.building-mode-card.active,.test-type-card.active', 'background:#eff4ff!important;border-color:#006194!important;box-shadow:0 0 0 3px rgba(0,97,148,.14)!important'),
@@ -210,15 +208,15 @@
       rule('.primary', 'background:#006194!important;background-image:none!important;border-color:#006194!important;color:#fff!important'),
       rule('.danger', 'background:#ffdad6!important;border-color:#ffdad6!important;color:#93000a!important'),
       // สีสันของแบบฟอร์ม (ตามโทนของเว็บ): หัวหมวดไล่สีฟ้า • แถบสีซ้ายและป้ายตามชนิดช่อง
-      rule('.form-section-title,.evaluation-section-title,.completion-section-line', 'background:linear-gradient(100deg,#006194 0%,#007bb9 60%,#38bdf8 100%)!important;color:#fff!important;border:0!important;border-radius:16px!important;box-shadow:0 8px 20px -10px rgba(0,97,148,.55)!important'),
-      rule('.form-section-title *,.evaluation-section-title *,.completion-section-line *', 'color:#fff!important'),
-      rule('.form-section-title::before,.evaluation-section-title::before', 'background:#fff!important;box-shadow:0 0 0 4px rgba(255,255,255,.25)!important'),
-      rule('.control.manual-entry-control', 'border-left:4px solid #ffbd2e!important;background:linear-gradient(180deg,#fffdf5,#fff)!important'),
-      rule('.control.computed-control', 'border-left:4px solid #27c93f!important;background:linear-gradient(180deg,#f6fdf7,#fff)!important'),
-      rule('.control.project-derived-control', 'border-left:4px solid #007bb9!important;background:linear-gradient(180deg,#f3f9ff,#fff)!important'),
-      rule('.control.manual-entry-control::before', 'background:#ffbd2e!important'),
-      rule('.control.computed-control::before', 'background:#27c93f!important'),
-      rule('.control.project-derived-control::before', 'background:#007bb9!important'),
+      rule('.form-section-title,.evaluation-section-title,.completion-section-line', 'background:#eff4ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-radius:14px!important;box-shadow:none!important;font-weight:600!important'),
+      rule('.form-section-title *,.evaluation-section-title *,.completion-section-line *', 'color:#004b73!important'),
+      rule('.form-section-title::before,.evaluation-section-title::before', 'background:#006194!important;box-shadow:none!important'),
+      rule('.control.manual-entry-control', 'border-left:0!important;background:transparent!important'),
+      rule('.control.computed-control', 'border-left:0!important;background:transparent!important'),
+      rule('.control.project-derived-control', 'border-left:0!important;background:transparent!important'),
+      rule('.control::before,.control.manual-entry-control::before', 'display:none!important'),
+      
+      
       'html body .control.manual-entry-control>label::after{background:rgba(255,189,46,.2)!important;color:#b45309!important;border-color:transparent!important;box-shadow:none!important}',
       'html body .control.computed-control>label::after{background:rgba(39,201,63,.14)!important;color:#15803d!important;border-color:transparent!important;box-shadow:none!important}',
       'html body .control.project-derived-control>label::after,html body .control>label::after{background:#cce5ff!important;color:#004b73!important;border-color:transparent!important;box-shadow:none!important}',
@@ -238,11 +236,11 @@
       rule('.duration-result-kpi b', 'color:#006194!important'),
       rule('.project-lock-allowed', 'border-color:rgba(100,116,139,.18)!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)!important'),
       // ---------- แดชบอร์ด/หน้าของระบบหลัก: โทนเดียวกับเว็บ (ฟ้า #006194, การ์ดขาวโค้งมน, ปุ่มแคปซูล) ----------
-      rule('.dashboard-welcome', 'background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,244,255,.92))!important;background-image:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,244,255,.92))!important;border:1px solid rgba(100,116,139,.12)!important;border-left:1px solid rgba(100,116,139,.12)!important;border-radius:28px!important;box-shadow:0 1px 3px rgba(15,23,42,.05),0 18px 40px -24px rgba(0,97,148,.35)!important;color:#0b1c30!important'),
+      rule('.dashboard-welcome', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-left:1px solid rgba(100,116,139,.12)!important;border-radius:28px!important;box-shadow:0 1px 3px rgba(15,23,42,.05),0 18px 40px -24px rgba(0,97,148,.35)!important;color:#0b1c30!important'),
       rule('.dashboard-welcome h1,.dashboard-welcome h2', 'color:#0b1c30!important;-webkit-text-fill-color:#0b1c30!important;background:none!important'),
       rule('.dashboard-welcome p,.dashboard-welcome small', 'color:#3f4850!important'),
       rule('.dashboard-welcome-kicker,.dashboard-welcome .eyebrow', 'color:#006194!important'),
-      rule('.dashboard-welcome::before,.dashboard-welcome::after,.kpi::after,.kpi::before', 'background:rgba(0,97,148,.06)!important;background-image:none!important'),
+      rule('.dashboard-welcome::before,.dashboard-welcome::after,.kpi::after,.kpi::before', 'display:none!important'),
       rule('.dashboard-welcome-badge', 'background:#cce5ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
       rule('.dashboard-welcome-badge *', 'color:#004b73!important'),
       rule('.dashboard-create-project,.dashboard-welcome-actions button,.dashboard-welcome-actions a', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 8px 20px -4px rgba(0,97,148,.35)!important'),
@@ -275,7 +273,25 @@
       rule('.document-admin-add', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 8px 20px -4px rgba(0,97,148,.35)!important'),
       rule('.document-view,.document-open,.document-download', 'background:#eff4ff!important;background-image:none!important;color:#006194!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
       rule('.document-delete', 'background:#ffdad6!important;background-image:none!important;color:#93000a!important;border:0!important;border-radius:999px!important'),
+      rule('.document-admin-tools,.document-library-toolbar', 'background:#eff4ff!important;background-image:none!important;border:0!important;border-radius:18px!important;box-shadow:none!important'),
       rule('.document-card', 'background:#fff!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:20px!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important'),
+      // ---------- ระบบปุ่ม: หลัก (ฟ้าเต็ม) • รอง (ฟ้าอ่อน) • แก้ไข (ขอบ) • ลบ (แดงอ่อน) ----------
+      rule('.primary-btn,.primary,.dashboard-create-project,.document-admin-add,.central-price-save-btn,.test-result-save-btn,.compensation-save-btn,.personnel-save,.history-save-btn,button[class*="save-btn"],button[class*="submit"]', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 6px 16px -6px rgba(0,97,148,.45)!important;font-weight:600!important'),
+      rule('.secondary-btn,.secondary,.ghost,.reset-btn,.supervisor-section-toggle-btn,.map-tool-btn,.document-view,.document-open,.document-download,button[class*="toggle-btn"],button[class*="clear"]', 'background:#eff4ff!important;background-image:none!important;color:#006194!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
+      rule('button[class*="edit"],a[class*="edit"],.edit', 'background:#fff!important;background-image:none!important;color:#006194!important;border:1px solid #bfc7d2!important;border-radius:999px!important;box-shadow:none!important'),
+      rule('.danger,.document-delete,.history-delete-btn,.personnel-delete,button[class*="delete"],button[class*="remove"],a[class*="delete"]', 'background:#ffdad6!important;background-image:none!important;color:#93000a!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
+      'html body button:disabled,html body button[disabled]{opacity:.5!important;cursor:not-allowed!important}',
+      // ---------- ตาราง หัวข้อ แผงประวัติ ----------
+      rule('table th', 'background:#eff4ff!important;background-image:none!important;color:#004b73!important;border-color:rgba(100,116,139,.16)!important;font-weight:600!important'),
+      rule('table td', 'border-color:rgba(100,116,139,.12)!important'),
+      rule('.table-wrap', 'border-radius:16px!important;border-color:rgba(100,116,139,.12)!important;box-shadow:none!important'),
+      rule('.entry-backdrop h2,.entry-backdrop h3,main h2,main h3', 'color:#0b1c30!important;font-weight:600!important;background:none!important;-webkit-text-fill-color:currentColor!important'),
+      rule('.project-history-drawer,.memo-history-wrap,.central-price-history-wrap,.compensation-history-wrap,.low-bid-history-wrap,.building-inspection-history-side,.evaluation-history-wrap', 'background:#fff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:20px!important;box-shadow:0 10px 30px -12px rgba(15,23,42,.18)!important'),
+      rule('.project-history-toggle', 'background:#eff4ff!important;background-image:none!important;color:#006194!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
+      rule('.form-grid', 'gap:14px 16px!important'),
+      // แท็บเล็ต 2 คอลัมน์ • มือถือ 1 คอลัมน์ (ช่องเลือกไม่ถูกบีบ ปุ่มไม่บังช่องกรอก)
+      '@media (max-width:900px){html body .form-grid.form-grid.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}html body .form-grid .control.wide.wide{grid-column:1/-1!important}}',
+      '@media (max-width:600px){html body .form-grid.form-grid.form-grid{grid-template-columns:minmax(0,1fr)!important}html body .entry-actions.entry-actions{flex-wrap:wrap!important}html body .entry-actions.entry-actions button{flex:1 1 auto!important}}',
       // รายการโครงการแบบแบ่งหน้า (เว็บเพิ่ม)
       'html body .sk-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px 16px;border-top:1px solid rgba(100,116,139,.12);font-size:13px;color:#3f4850}',
       'html body .sk-pager-nav{display:flex;align-items:center;gap:4px}',
@@ -423,9 +439,9 @@
     var pager = d.createElement('div');
     pager.className = 'sk-pager';
     card.appendChild(pager);
-    var page = 1, busy = false;
+    var page = 1, mo = null;
     function apply() {
-      busy = true;
+      if (mo) mo.disconnect(); // การจัดแถวของเราเองไม่นับเป็นการวาดตารางใหม่
       var rows = Array.prototype.filter.call(tbody.rows, function (r) { return /^\s*focusProject/.test(r.getAttribute('onclick') || ''); });
       var done = function (r) { return !!r.querySelector('.status.done'); };
       rows.sort(function (a, b) { return done(a) - done(b) || (+a.dataset.skOrd || 0) - (+b.dataset.skOrd || 0); });
@@ -444,15 +460,14 @@
         (pages > 1 ? '<span class="sk-pager-nav"><button type="button" data-sk-page="' + (page - 1) + '"' + (page === 1 ? ' disabled' : '') + '>‹ ก่อนหน้า</button>' +
           nums.map(function (n) { return n === '…' ? '<i>…</i>' : '<button type="button" data-sk-page="' + n + '" class="' + (n === page ? 'is-on' : '') + '">' + n + '</button>'; }).join('') +
           '<button type="button" data-sk-page="' + (page + 1) + '"' + (page === pages ? ' disabled' : '') + '>ถัดไป ›</button></span>' : '') : '';
-      setTimeout(function () { busy = false; }, 0);
+      if (mo) mo.observe(tbody, { childList: true });
     }
     pager.addEventListener('click', function (e) {
       var b = e.target.closest('[data-sk-page]'); if (!b || b.disabled) return;
       page = +b.dataset.skPage; apply();
     });
     // ระบบหลักวาดตารางใหม่เมื่อเปลี่ยนตัวกรอง: เริ่มหน้า 1 แล้วจัดใหม่
-    var mo = new (d.defaultView.MutationObserver)(function () { if (busy) return; page = 1; apply(); });
-    mo.observe(tbody, { childList: true });
+    mo = new (d.defaultView.MutationObserver)(function () { page = 1; apply(); });
     apply();
     return function () {
       mo.disconnect(); pager.remove(); card.classList.remove('sk-dash-list');

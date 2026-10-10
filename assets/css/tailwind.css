@@ -28,6 +28,7 @@
   .btn-glass { @apply btn bg-surface-container-low text-on-surface shadow-sm hover:bg-surface-container; }
   .btn-ghost { @apply btn text-on-surface-variant hover:bg-primary/10 hover:text-primary; }
   .btn-danger { @apply btn bg-error-container/70 text-error hover:bg-error-container; }
+  .btn-edit { @apply btn bg-white text-primary ring-1 ring-outline-variant hover:bg-primary/5 hover:ring-primary/40; }
   .icon-btn { @apply inline-flex items-center justify-center w-9 h-9 rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors; }
 
   .chip { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm font-semibold whitespace-nowrap; }

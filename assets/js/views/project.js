@@ -29,7 +29,6 @@
     root.innerHTML =
       '<nav class="flex items-center gap-1 mb-3 font-label-md text-label-md text-outline" aria-label="ตำแหน่ง"><a href="#/projects" class="hover:text-primary">ทะเบียนโครงการ</a>' + icon('chevron_right', 'text-[16px]') + '<span class="text-on-surface">' + p.id + '</span></nav>' +
       '<section class="card overflow-hidden card-pad">' +
-        '<div class="absolute -right-24 -top-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-50" style="background:radial-gradient(circle,' + S.color + '33,transparent 70%)"></div>' +
         '<div class="relative flex flex-col lg:flex-row gap-space-lg lg:items-center">' +
           '<div class="flex-1 min-w-0 flex flex-col gap-2.5">' +
             '<div class="flex flex-wrap items-center gap-2">' + SK.projects.statusChip(p) + '<span class="chip-gray">' + icon(cat.icon, 'text-[14px]') + esc(p.type || cat.label) + '</span><span class="chip-gray font-mono">' + p.id + '</span>' + (p.year ? '<span class="chip-gray">ปีงบ ' + p.year + '</span>' : '') + '</div>' +
@@ -37,7 +36,7 @@
             '<p class="muted flex items-center gap-1">' + icon('location_on', 'text-[18px]') + esc(p.place || '-') + ' ต.สีแก้ว อ.เมืองร้อยเอ็ด จ.ร้อยเอ็ด</p>' +
             '<div class="flex flex-wrap gap-2 mt-1">' +
               '<a href="#/documents?project=' + p.id + '" class="btn-primary">' + icon('print') + '<span>พิมพ์เอกสาร</span></a>' +
-              '<a href="#/entry/' + p.id + '" class="btn-glass">' + icon('edit') + '<span>แก้ไขข้อมูลโครงการ</span></a>' +
+              '<a href="#/entry/' + p.id + '" class="btn-edit">' + icon('edit') + '<span>แก้ไขข้อมูลโครงการ</span></a>' +
               '<button type="button" data-pj="photo" class="btn-glass">' + icon('add_a_photo') + '<span>เพิ่มรูป</span></button>' +
               (p.lat ? '<a href="https://www.google.com/maps?q=' + p.lat + ',' + p.lng + '" target="_blank" rel="noopener" class="btn-ghost">' + icon('near_me') + '<span>Google Maps</span></a>' : '') +
             '</div></div>' +
