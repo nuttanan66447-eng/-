@@ -269,6 +269,10 @@
       rule('.status.delay', 'background:#ffdad6!important;color:#93000a!important'),
       rule('.progress-track', 'background:#dce9ff!important;border-radius:999px!important'),
       rule('.dashboard-commandbar', 'display:none!important'),
+      // การ์ดตัวเลข/กราฟของผู้ควบคุมงาน: เต็มแถวทุกความกว้าง ไม่มีช่องว่าง (จอกว้าง 1 แถว สัดส่วน 1:2:3:1 • กลาง 2 คอลัมน์ • มือถือ 1 คอลัมน์)
+      '@media (min-width:1100px){html body .kpi-grid.dashboard-page-supervisor:not(#_sk1):not(#_sk2){grid-template-columns:minmax(150px,1fr) minmax(0,2fr) minmax(0,3fr) minmax(150px,1fr)!important}html body .kpi-grid.dashboard-page-supervisor>*:not(#_sk1):not(#_sk2){grid-column:auto!important;grid-row:auto!important}}',
+      '@media (min-width:600px) and (max-width:1099px){html body .kpi-grid.dashboard-page-supervisor:not(#_sk1):not(#_sk2){grid-template-columns:repeat(2,minmax(0,1fr))!important}html body .kpi-grid.dashboard-page-supervisor>:nth-child(1):not(#_sk1):not(#_sk2){order:1;grid-column:auto!important;grid-row:auto!important}html body .kpi-grid.dashboard-page-supervisor>:nth-child(4):not(#_sk1):not(#_sk2){order:2;grid-column:auto!important;grid-row:auto!important}html body .kpi-grid.dashboard-page-supervisor>:nth-child(2):not(#_sk1):not(#_sk2){order:3;grid-column:1/-1!important;grid-row:auto!important}html body .kpi-grid.dashboard-page-supervisor>:nth-child(3):not(#_sk1):not(#_sk2){order:4;grid-column:1/-1!important;grid-row:auto!important}}',
+      '@media (max-width:599px){html body .kpi-grid.dashboard-page-supervisor:not(#_sk1):not(#_sk2){grid-template-columns:minmax(0,1fr)!important}html body .kpi-grid.dashboard-page-supervisor>*:not(#_sk1):not(#_sk2){grid-column:auto!important;grid-row:auto!important}}',
       rule('.central-price-mode-note,.document-admin-note', 'background:#eff4ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-left:4px solid #006194!important;border-radius:14px!important;box-shadow:none!important'),
       rule('.document-admin-add', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 8px 20px -4px rgba(0,97,148,.35)!important'),
       rule('.document-view,.document-open,.document-download', 'background:#eff4ff!important;background-image:none!important;color:#006194!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
@@ -317,11 +321,11 @@
     '[data-sk-native] *{box-sizing:border-box!important}',
     // พรีวิวเล็กของระบบหลักในฟอร์ม: ใช้ Smart Editor ของเว็บแทน (กด "สร้างเอกสาร")
     // หัวหน้าต่าง/ประวัติ/ปุ่มบันทึกของระบบหลักในฟอร์มเอกสาร: เว็บมีหัวหน้า ประวัติเอกสาร และปุ่ม "สร้างเอกสาร" ของตัวเอง
-    '[data-sk-native] .entry-head,[data-sk-native] .project-history-toggle,[data-sk-native] .project-history-drawer,[data-sk-native] .building-inspection-history-side,[data-sk-native] .memo-history-wrap,[data-sk-native] .central-price-history-wrap,[data-sk-native] .compensation-history-wrap,[data-sk-native] .low-bid-history-wrap,[data-sk-native] .central-price-save-row{display:none!important}',
+
     '[data-sk-native] .entry-panel>.entry-body,[data-sk-native] .entry-panel>.entry-head{width:100%!important;max-width:100%!important;margin-right:0!important}',
     // สูงตามเนื้อหาเท่านั้น (ไม่ยืดตามความสูง iframe — กันพื้นที่ว่างใต้ฟอร์ม)
     '[data-sk-native] .entry-panel{height:auto!important;min-height:0!important;max-height:none!important;flex:none!important;align-self:flex-start!important;overflow:visible!important}[data-sk-native] .entry-panel>.entry-body{flex:none!important;height:auto!important;min-height:0!important;overflow:visible!important}',
-    '[data-sk-native] .preview-document-toolbar,[data-sk-native] .preview-paper-scroll,[data-sk-native] .test-result-preview-action,[data-sk-native] .test-result-preview-wrap,[data-sk-native] .evaluation-preview-shell,[data-sk-native] .low-bid-preview-wrap,[data-sk-native] .central-price-preview{display:none!important}',
+
     '[data-sk-native] .weekly-work-day-card,[data-sk-native] .memo-filter-note,[data-sk-native] .weekly-work-slot-grid,[data-sk-native] .form-grid,[data-sk-native] .control{max-width:100%!important;min-width:0!important}',
     '[data-sk-native] .performance-input-table tr>:nth-child(1),[data-sk-native] .performance-input-table tr>:nth-child(2){width:52px!important}',
     '[data-sk-native] .performance-input-table tr>:nth-child(3){width:24%!important}',
@@ -335,6 +339,15 @@
     '[data-sk-native]{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow-x:hidden!important;overflow-y:auto!important;margin:0!important;padding:16px 22px 56px!important;max-width:none!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;background:#f8f9ff!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;visibility:visible!important;opacity:1!important}'
   ].join('');
 
+  // แบบฟอร์มเอกสาร: หัว/ประวัติ/ปุ่มบันทึก/พรีวิวเล็กของระบบหลักไม่แสดง (เว็บมีหัวหน้า ประวัติเอกสาร ปุ่มสร้างเอกสาร และ Smart Editor ของตัวเอง)
+  var DOC_HIDE_CSS = [
+    '[data-sk-native] .entry-head,[data-sk-native] .project-history-toggle,[data-sk-native] .project-history-drawer,[data-sk-native] .building-inspection-history-side,[data-sk-native] .memo-history-wrap,[data-sk-native] .central-price-history-wrap,[data-sk-native] .compensation-history-wrap,[data-sk-native] .low-bid-history-wrap,[data-sk-native] .central-price-save-row{display:none!important}',
+    '[data-sk-native] .preview-document-toolbar,[data-sk-native] .preview-paper-scroll,[data-sk-native] .test-result-preview-action,[data-sk-native] .test-result-preview-wrap,[data-sk-native] .evaluation-preview-shell,[data-sk-native] .low-bid-preview-wrap,[data-sk-native] .central-price-preview{display:none!important}'
+  ].join('');
+  // หน้าเครื่องมือของระบบหลัก (กรอกข้อมูลโครงการ/ราคากลาง/คุมสายทาง ฯลฯ): สูงตามเนื้อหา ไม่มีแถบเลื่อนซ้อน แถบปุ่มอยู่ท้ายฟอร์ม (ไม่ลอยบังช่องกรอก)
+  // หัวหน้าต่างเหลือเฉพาะปุ่ม (ประวัติ/ปิด) — ชื่อหน้าอยู่ที่หัวหน้าเว็บแล้ว
+  var TOOL_CSS = '[data-sk-native] .entry-head h2,[data-sk-native] .entry-head h3,[data-sk-native] .entry-head p{display:none!important}[data-sk-native] .entry-head{justify-content:flex-end!important;padding-top:8px!important;padding-bottom:8px!important;background:transparent!important;border:0!important;box-shadow:none!important}' +
+    '[data-sk-native] .entry-actions{position:static!important;box-shadow:none!important;border-top:1px solid rgba(100,116,139,.12)!important;margin-top:12px!important}';
   // ---------- วาง iframe ทับกล่องในหน้าเว็บ ----------
   // dock(holder, { wrap: element ของระบบหลักที่จะแสดง (โหมดฟอร์ม) | ไม่ระบุ = ทั้งหน้า })
   function dock(holder, opts) {
@@ -346,7 +359,7 @@
       home = { parent: wrap.parentNode, next: wrap.nextSibling };
       wrap.setAttribute('data-sk-native', '1');
       d.body.appendChild(wrap);
-      st.textContent = NATIVE_CSS + (opts.keepActions ? '' : NS + '.form-actions{display:none!important}');
+      st.textContent = NATIVE_CSS + (opts.tool ? TOOL_CSS : DOC_HIDE_CSS) + (opts.keepActions ? '' : NS + '.form-actions{display:none!important}');
     } else st.textContent = DOCK_PAGE_CSS;
     d.head.appendChild(st);
     var raf = 0;
@@ -363,6 +376,7 @@
       raf = 0;
       if (!document.body.contains(holder)) { frame.style.cssText = OFFSCREEN; return; }
       if (opts.autoHeight) {
+        holder.__skAuto = true;
         var ch = contentHeight();
         if (ch && Math.abs(holder.offsetHeight - ch) > 2) holder.style.height = Math.max(opts.minHeight || 360, ch) + 'px';
       }
@@ -398,7 +412,10 @@
       closeAll();
       undock();
       if (code) run(code);
-      dock(holder);
+      // หน้าที่เปิดเป็นหน้าต่าง (backdrop) ของระบบหลัก: วางแบบฟอร์มเต็มกล่อง สูงตามเนื้อหา; อื่น ๆ ทั้งหน้า
+      var open = W().document.querySelector('.entry-backdrop.open, [id$="Backdrop"].open, .memo-form-wrap.open');
+      if (open) dock(holder, { wrap: open, tool: true, keepActions: true, autoHeight: true, minHeight: 420 });
+      else dock(holder);
     });
   }
   // หน้าแรก: แดชบอร์ดของระบบหลัก (ผู้ควบคุมงาน / ธุรการกองช่าง / สายทางทางหลวงท้องถิ่น) เต็มกล่อง สูงตามเนื้อหา

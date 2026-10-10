@@ -71,7 +71,7 @@
     if (!el) return;
     el.__fitBottom = bottom == null ? 24 : bottom;
     var apply = function () {
-      if (!document.body.contains(el)) return;
+      if (!document.body.contains(el) || el.__skAuto) return; // กล่องที่สูงตามเนื้อหา (engine.dock autoHeight) ไม่ต้องปรับ
       var top = el.getBoundingClientRect().top + window.scrollY;
       el.style.height = Math.max(420, window.innerHeight - top - el.__fitBottom) + 'px';
     };
