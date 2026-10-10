@@ -236,7 +236,57 @@
       rule('.central-price-history-count', 'background:#006194!important;color:#fff!important'),
       rule('.duration-result-kpi', 'background:#eff4ff!important;background-image:none!important;border:1px solid rgba(100,116,139,.12)!important;box-shadow:none!important'),
       rule('.duration-result-kpi b', 'color:#006194!important'),
-      rule('.project-lock-allowed', 'border-color:rgba(100,116,139,.18)!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)!important')
+      rule('.project-lock-allowed', 'border-color:rgba(100,116,139,.18)!important;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)!important'),
+      // ---------- แดชบอร์ด/หน้าของระบบหลัก: โทนเดียวกับเว็บ (ฟ้า #006194, การ์ดขาวโค้งมน, ปุ่มแคปซูล) ----------
+      rule('.dashboard-welcome', 'background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,244,255,.92))!important;background-image:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,244,255,.92))!important;border:1px solid rgba(100,116,139,.12)!important;border-left:1px solid rgba(100,116,139,.12)!important;border-radius:28px!important;box-shadow:0 1px 3px rgba(15,23,42,.05),0 18px 40px -24px rgba(0,97,148,.35)!important;color:#0b1c30!important'),
+      rule('.dashboard-welcome h1,.dashboard-welcome h2', 'color:#0b1c30!important;-webkit-text-fill-color:#0b1c30!important;background:none!important'),
+      rule('.dashboard-welcome p,.dashboard-welcome small', 'color:#3f4850!important'),
+      rule('.dashboard-welcome-kicker,.dashboard-welcome .eyebrow', 'color:#006194!important'),
+      rule('.dashboard-welcome::before,.dashboard-welcome::after,.kpi::after,.kpi::before', 'background:rgba(0,97,148,.06)!important;background-image:none!important'),
+      rule('.dashboard-welcome-badge', 'background:#cce5ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
+      rule('.dashboard-welcome-badge *', 'color:#004b73!important'),
+      rule('.dashboard-create-project,.dashboard-welcome-actions button,.dashboard-welcome-actions a', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 8px 20px -4px rgba(0,97,148,.35)!important'),
+      rule('.dashboard-create-project:hover', 'background:#007bb9!important'),
+      rule('.dashboard-switcher', 'background:#eff4ff!important;background-image:none!important;border:0!important;border-radius:999px!important;box-shadow:none!important;padding:5px!important'),
+      rule('.dashboard-tab-btn', 'background:transparent!important;background-image:none!important;color:#3f4850!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
+      rule('.dashboard-tab-btn:hover', 'background:#dce9ff!important;color:#0b1c30!important'),
+      rule('.dashboard-tab-btn.active', 'background:#006194!important;background-image:none!important;color:#fff!important;box-shadow:0 6px 16px -6px rgba(0,97,148,.55)!important'),
+      rule('.filter-panel,.kpi,.card,.chart-card,.boundary-panel', 'background:rgba(255,255,255,.92)!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:24px!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important'),
+      rule('.boundary-panel', 'background:#eff4ff!important;border-radius:18px!important'),
+      rule('.kpi', 'border-left:1px solid rgba(100,116,139,.12)!important;border-top:1px solid rgba(100,116,139,.12)!important;box-shadow:inset 0 3px 0 #006194,0 1px 3px rgba(15,23,42,.05)!important'),
+      rule('.kpi strong,.kpi .kpi-value,.kpi b', 'color:#006194!important'),
+      rule('.card h2,.card h3,.card-head h2,.card-head h3,.kpi h3,.kpi span:first-child', 'color:#0b1c30!important'),
+      rule('.card-head', 'border-bottom-color:rgba(100,116,139,.12)!important;background:transparent!important'),
+      rule('.reset-btn,.supervisor-section-toggle-btn,.secondary,.ghost,.map-tool-btn', 'background:#eff4ff!important;background-image:none!important;color:#006194!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
+      rule('.reset-btn:hover,.supervisor-section-toggle-btn:hover', 'background:#dce9ff!important'),
+      rule('.completion-chart-toggle', 'background:#eff4ff!important;border:0!important;border-radius:999px!important'),
+      rule('.completion-chart-toggle button', 'background:transparent!important;color:#3f4850!important;border:0!important;border-radius:999px!important'),
+      rule('.completion-chart-toggle button.active', 'background:#006194!important;color:#fff!important'),
+      rule('main th,.table-wrap th', 'background:#eff4ff!important;color:#004b73!important;border-color:rgba(100,116,139,.14)!important'),
+      rule('main td', 'border-color:rgba(100,116,139,.1)!important'),
+      rule('main tbody tr:hover td', 'background:#f3f8ff!important'),
+      rule('.status', 'border-radius:999px!important;padding:3px 10px!important'),
+      rule('.status.done', 'background:rgba(39,201,63,.14)!important;color:#15803d!important'),
+      rule('.status.doing', 'background:#cce5ff!important;color:#004b73!important'),
+      rule('.status.delay', 'background:#ffdad6!important;color:#93000a!important'),
+      rule('.progress-track', 'background:#dce9ff!important;border-radius:999px!important'),
+      rule('.dashboard-commandbar', 'display:none!important'),
+      rule('.central-price-mode-note,.document-admin-note', 'background:#eff4ff!important;background-image:none!important;color:#004b73!important;border:0!important;border-left:4px solid #006194!important;border-radius:14px!important;box-shadow:none!important'),
+      rule('.document-admin-add', 'background:#006194!important;background-image:none!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 8px 20px -4px rgba(0,97,148,.35)!important'),
+      rule('.document-view,.document-open,.document-download', 'background:#eff4ff!important;background-image:none!important;color:#006194!important;border:0!important;border-radius:999px!important;box-shadow:none!important'),
+      rule('.document-delete', 'background:#ffdad6!important;background-image:none!important;color:#93000a!important;border:0!important;border-radius:999px!important'),
+      rule('.document-card', 'background:#fff!important;border:1px solid rgba(100,116,139,.12)!important;border-radius:20px!important;box-shadow:0 1px 3px rgba(15,23,42,.05)!important'),
+      // รายการโครงการแบบแบ่งหน้า (เว็บเพิ่ม)
+      'html body .sk-pager{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px 16px;border-top:1px solid rgba(100,116,139,.12);font-size:13px;color:#3f4850}',
+      'html body .sk-pager-nav{display:flex;align-items:center;gap:4px}',
+      'html body .sk-pager button{min-width:34px;height:34px;padding:0 12px;border:0;border-radius:999px;background:#eff4ff;color:#0b1c30;font:inherit;cursor:pointer}',
+      'html body .sk-pager button:hover:not(:disabled){background:#dce9ff}',
+      'html body .sk-pager button.is-on{background:#006194;color:#fff;font-weight:600}',
+      'html body .sk-pager button:disabled{opacity:.45;cursor:default}',
+      'html body .sk-pager i{padding:0 4px;color:#707881;font-style:normal}',
+      'html body .sk-dash-list tbody tr{cursor:pointer}',
+      'html body .sk-dash-list.sk-dash-list{margin-bottom:18px!important}',
+      'html body .sk-dash-list .table-wrap,html body .sk-dash-list .table-wrap.table-wrap{max-height:none!important;height:auto!important;overflow-y:visible!important;overflow-x:auto!important}'
     ].join('');
   }
   // หน้าเต็มของระบบหลักในเว็บ: ซ่อนเมนู/แถบบนของระบบหลัก (เว็บมีเมนูของตัวเอง)
@@ -344,8 +394,12 @@
       var d = W().document, main = d.querySelector('.app-shell > main') || d.querySelector('main');
       if (!main) throw new Error('ไม่พบหน้าแดชบอร์ดของระบบหลัก');
       var dk = dock(holder, { autoHeight: true, measure: main, minHeight: 600 });
+      var cleanup = enhanceDashboard(d, main);
       var onClick = function (e) {
         var t = e.target.closest && e.target.closest('[onclick]'); if (!t) return;
+        // แถวรายการโครงการ: เปิดหน้าโครงการของเว็บ (รายละเอียด แผนที่ รูป เอกสาร)
+        var fp = /^\s*focusProject\((\d+)\)/.exec(t.getAttribute('onclick') || '');
+        if (fp) { e.preventDefault(); e.stopPropagation(); SK.go('project/P-' + String(fp[1]).padStart(3, '0')); return; }
         var m = /^\s*(open\w+)\s*\(([^)]*)\)/.exec(t.getAttribute('onclick') || ''); if (!m) return;
         var fn = m[1], route = fn === 'openEntryGate' ? 'entry' : TOOLS.some(function (x) { return x.fn === fn; }) ? 'system/' + fn : '';
         if (!route) return;
@@ -354,9 +408,57 @@
       };
       d.addEventListener('click', onClick, true);
       var base = dk.undock;
-      dk.undock = function () { d.removeEventListener('click', onClick, true); base(); };
+      dk.undock = function () { d.removeEventListener('click', onClick, true); cleanup(); base(); };
       return dk;
     });
+  }
+  // แดชบอร์ด: รายการโครงการอยู่ใต้ตัวกรอง แบ่งหน้า (ยังไม่แล้วเสร็จขึ้นก่อน)
+  var DASH_PER = 10;
+  function enhanceDashboard(d, main) {
+    var tbody = d.getElementById('projectTable'), card = tbody && tbody.closest('section'), filter = main.querySelector('.filter-panel.dashboard-page-supervisor');
+    if (!card || !filter) return function () {};
+    var home = { parent: card.parentNode, next: card.nextSibling };
+    filter.parentNode.insertBefore(card, filter.nextSibling);
+    card.classList.add('sk-dash-list');
+    var pager = d.createElement('div');
+    pager.className = 'sk-pager';
+    card.appendChild(pager);
+    var page = 1, busy = false;
+    function apply() {
+      busy = true;
+      var rows = Array.prototype.filter.call(tbody.rows, function (r) { return /^\s*focusProject/.test(r.getAttribute('onclick') || ''); });
+      var done = function (r) { return !!r.querySelector('.status.done'); };
+      rows.sort(function (a, b) { return done(a) - done(b) || (+a.dataset.skOrd || 0) - (+b.dataset.skOrd || 0); });
+      rows.forEach(function (r, i) { if (!r.dataset.skOrd) r.dataset.skOrd = String(i + 1); });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+      var pages = Math.max(1, Math.ceil(rows.length / DASH_PER));
+      page = Math.min(page, pages);
+      rows.forEach(function (r, i) {
+        r.style.display = Math.floor(i / DASH_PER) + 1 === page ? '' : 'none';
+        if (r.cells[0]) r.cells[0].textContent = String(i + 1);
+      });
+      var open = rows.filter(function (r) { return !done(r); }).length;
+      var nums = [];
+      for (var n = 1; n <= pages; n++) if (n === 1 || n === pages || Math.abs(n - page) <= 1) nums.push(n); else if (nums[nums.length - 1] !== '…') nums.push('…');
+      pager.innerHTML = rows.length ? '<span class="sk-pager-info">แสดง ' + Math.min(rows.length, (page - 1) * DASH_PER + 1) + '–' + Math.min(rows.length, page * DASH_PER) + ' จาก ' + rows.length + ' รายการ • ยังไม่แล้วเสร็จ ' + open + ' รายการ (แสดงก่อน)</span>' +
+        (pages > 1 ? '<span class="sk-pager-nav"><button type="button" data-sk-page="' + (page - 1) + '"' + (page === 1 ? ' disabled' : '') + '>‹ ก่อนหน้า</button>' +
+          nums.map(function (n) { return n === '…' ? '<i>…</i>' : '<button type="button" data-sk-page="' + n + '" class="' + (n === page ? 'is-on' : '') + '">' + n + '</button>'; }).join('') +
+          '<button type="button" data-sk-page="' + (page + 1) + '"' + (page === pages ? ' disabled' : '') + '>ถัดไป ›</button></span>' : '') : '';
+      setTimeout(function () { busy = false; }, 0);
+    }
+    pager.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-sk-page]'); if (!b || b.disabled) return;
+      page = +b.dataset.skPage; apply();
+    });
+    // ระบบหลักวาดตารางใหม่เมื่อเปลี่ยนตัวกรอง: เริ่มหน้า 1 แล้วจัดใหม่
+    var mo = new (d.defaultView.MutationObserver)(function () { if (busy) return; page = 1; apply(); });
+    mo.observe(tbody, { childList: true });
+    apply();
+    return function () {
+      mo.disconnect(); pager.remove(); card.classList.remove('sk-dash-list');
+      Array.prototype.forEach.call(tbody.rows, function (r) { r.style.display = ''; });
+      home.parent.insertBefore(card, home.next && home.next.parentNode === home.parent ? home.next : null);
+    };
   }
   // หน้าของระบบหลักยังเปิดอยู่ไหม (ผู้ใช้กดปิด × ในหน้า)
   function pageOpen() {
