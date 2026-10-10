@@ -13,6 +13,7 @@
 ## โครงสร้าง (เว็บรุ่นใหม่ — เขียนใหม่ทั้งหมดตามแบบใน `design/`)
 
 - หน้าเดียว `index.html` (SPA, ที่อยู่ `#/...`) ธีม Civic Architectural Glass จาก `design/DESIGN.md` (ภาพตัวอย่าง `design/dashboard.png`, `design/document-editor.png`) — Tailwind `assets/css/tailwind.css` → `assets/css/app.css`
+- ปุ่มในเว็บ: `btn-primary` (งานหลักของหน้า 1 ปุ่ม) • `btn-glass` (รอง) • `btn-edit` (แก้ไข) • `btn-danger`/ไอคอนแดง (ลบ) — หน้าระบบหลักใช้ชุดเดียวกันผ่าน `EXTRA_CSS` ใน engine.js (ไม่ใช้แถบไล่สี/กรอบซ้อนกรอบ)
 - `assets/js/core.js` = ตัวช่วย (esc, วันที่ไทย, เงิน), toast/modal/formModal/confirm, ตัวเปลี่ยนหน้า `SK.route(name,{render,refresh,leave})`
 - `assets/js/store.js` = `SK.store` ข้อมูลเว็บ (documents, diary, photos, meta) key เดิม `sikaew-kongchang-db-v2` + `SK.store.files` (IndexedDB `sikaew-kongchang-files` + Storage)
 - `assets/js/cloud.js` = Supabase: ซิงก์ records/workbooks/files แบบเดิม, เข้าสู่ระบบชื่อผู้ใช้ (`<ชื่อ>@users.sikaew-kongchang.app`), จัดการ staff (Edge Function `staff-user` หรือสร้างจากเบราว์เซอร์ถ้ายังไม่ deploy)

@@ -5,7 +5,6 @@
 
   function pageHead(o) {
     return '<section class="card overflow-hidden card-pad mb-space-lg">' +
-      '<div class="absolute -right-20 -top-24 w-80 h-80 rounded-full bg-gradient-to-br from-primary-fixed/40 via-tertiary-fixed/20 to-transparent blur-3xl pointer-events-none"></div>' +
       '<div class="relative flex flex-col md:flex-row md:items-center justify-between gap-space-md">' +
         '<div class="min-w-0 space-y-1">' +
           (o.kicker ? '<div class="flex flex-wrap items-center gap-2">' + o.kicker + '</div>' : '') +

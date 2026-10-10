@@ -59,7 +59,7 @@
         '<div id="dc-holder" class="relative rounded-[20px] bg-surface-container-low" style="height:480px">' +
           '<div id="dc-wait" class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-on-surface-variant">' + icon('progress_activity', 'animate-spin text-primary text-[32px]') + '<span>กำลังเปิดแบบฟอร์มของระบบหลัก...</span></div></div></div>' +
           // ปุ่มสร้างเอกสาร: ด้านล่างแบบฟอร์ม (ติดขอบล่างจอขณะเลื่อน) — อยู่นอกการ์ดเพื่อให้อยู่เหนือแบบฟอร์ม
-          '<div class="sticky bottom-3 z-40 mt-3 flex flex-wrap items-center justify-end gap-2 p-3 rounded-[22px] bg-white/90 glass shadow-[0_-8px_24px_rgba(15,23,42,0.06)] ring-1 ring-[rgba(15,23,42,0.06)]">' +
+          '<div class="mt-3 flex flex-wrap items-center justify-end gap-2 p-3 rounded-[22px] bg-white/90 glass ring-1 ring-[rgba(15,23,42,0.06)]">' +
             '<span class="mr-auto font-body-sm text-body-sm text-outline">ตรวจข้อมูลในแบบฟอร์มให้ครบ แล้วกดสร้างเอกสาร</span>' +
             '<button type="button" data-dc="pick" class="btn-glass">' + icon('arrow_back') + '<span>เลือกแบบเอกสาร</span></button>' +
             '<button type="button" data-dc="build" class="btn-primary !px-6">' + icon('auto_awesome') + '<span>สร้างเอกสาร</span></button></div>';
@@ -146,8 +146,8 @@
         '<div class="grid grid-cols-2 gap-3"><div class="p-3 rounded-[18px] bg-surface-container-low/70"><span class="block font-label-sm text-label-sm text-outline">ขนาดกระดาษ</span><b class="font-label-lg text-label-lg">A4 แนวตั้ง</b><span class="block font-body-sm text-body-sm text-outline">210 × 297 มม.</span></div>' +
         '<div class="p-3 rounded-[18px] bg-surface-container-low/70"><span class="block font-label-sm text-label-sm text-outline">รูปแบบหนังสือ</span><b class="font-label-lg text-label-lg">ตามระบบหลัก</b><span class="block font-body-sm text-body-sm text-outline">TH Sarabun PSK</span></div></div>' +
         '<p class="mt-3 font-body-sm text-body-sm text-outline">หนังสือราชการทุกฉบับใช้รูปแบบเดียวกับระบบหลัก — พิมพ์/PDF/Word ได้จากหน้าเอกสาร</p></section>' +
-      (p ? '<section class="card card-pad bg-gradient-to-br from-primary-fixed/50 to-white"><div class="flex flex-wrap items-center gap-3 mb-3"><span class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">' + icon('link') + '</span>' +
-          '<div class="min-w-0 flex-1"><h2 class="font-label-lg text-label-lg font-semibold">ข้อมูลโครงการที่เชื่อมกับเอกสาร</h2><p class="font-body-sm text-body-sm text-outline">เติมในแบบฟอร์มอัตโนมัติ</p></div>' +
+      (p ? '<section class="card card-pad"><div class="flex flex-wrap items-center gap-3 mb-3"><span class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">' + icon('link') + '</span>' +
+          '<div class="min-w-0 flex-1 basis-[200px]"><h2 class="font-label-lg text-label-lg font-semibold">ข้อมูลโครงการที่เชื่อมกับเอกสาร</h2><p class="font-body-sm text-body-sm text-outline">เติมในแบบฟอร์มอัตโนมัติ</p></div>' +
           '<a href="#/project/' + p.id + '" class="btn-glass !py-1.5">' + icon('open_in_new') + '<span>หน้าโครงการ</span></a><a href="#/entry/' + p.id + '" class="btn-primary !py-1.5">' + icon('edit') + '<span>แก้ไขข้อมูล</span></a></div>' +
           '<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5 p-3 rounded-[18px] bg-white/80 font-body-sm text-body-sm">' +
             [['รหัสโครงการ', p.id], ['ค่างาน', '฿ ' + SK.money(p.budget, 2)], ['ผู้รับจ้าง', p.contractor || '-'], ['ผู้ควบคุมงาน', p.supervisor || '-'], ['สัญญา', (p.contractNo || '-') + (p.end ? ' • สิ้นสุด ' + SK.dateShort(p.end) : '')], ['ปีงบประมาณ', (p.year || '-') + (p.source ? ' • ' + p.source : '')]].map(function (r) {
