@@ -59,7 +59,7 @@
     title: 'เครื่องมือระบบหลัก',
     render: function (root) {
       root.innerHTML = V.pageHead({
-        kicker: '<span class="chip-blue">' + icon('verified', 'text-[14px]') + 'ระบบหลัก v190</span>',
+        kicker: '<span class="chip-blue">' + icon('verified', 'text-[14px]') + 'ระบบหลัก v192</span>',
         title: 'เครื่องมือระบบหลัก',
         desc: 'หน้าทำงานทุกหน้าของระบบหลักของกองช่าง (รายงานช่าง ผลทดสอบ ราคากลาง TOR ค่า K ค่าตอบแทน คุมสายทาง ฯลฯ) ใช้ข้อมูลชุดเดียวกับเว็บ'
       }) + '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-gutter">' + SK.engine.TOOLS.filter(function (t) { return !t.admin || SK.cloud.isAdmin(); }).map(function (t) {

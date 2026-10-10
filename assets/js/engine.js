@@ -287,6 +287,7 @@
     // iframe วางแบบ absolute ตามตำแหน่งกล่องในหน้า: เลื่อนไปพร้อมหน้าเว็บ (ไม่ต้องตามด้วยสคริปต์)
     // โหมดฟอร์ม (autoHeight): กล่องสูงเท่าแบบฟอร์ม — เลื่อนเฉพาะหน้าเว็บ ไม่มีแถบเลื่อนซ้อนใน iframe
     function contentHeight() {
+      if (!wrap && opts.measure) { var mr = opts.measure.getBoundingClientRect(); return mr.bottom + W().scrollY + 8; }
       if (!wrap) return 0;
       var cs = W().getComputedStyle(wrap), h = 0;
       Array.prototype.forEach.call(wrap.children, function (c) { if (c.offsetParent || c.getClientRects().length) h = Math.max(h, c.offsetTop + c.offsetHeight); });
@@ -332,6 +333,29 @@
       undock();
       if (code) run(code);
       dock(holder);
+    });
+  }
+  // หน้าแรก: แดชบอร์ดของระบบหลัก (ผู้ควบคุมงาน / ธุรการกองช่าง / สายทางทางหลวงท้องถิ่น) เต็มกล่อง สูงตามเนื้อหา
+  // ปุ่มที่เปิดหน้าอื่นของระบบหลัก (สร้างโครงการ/ลงทะเบียนสายทาง ฯลฯ) ไปหน้าเดียวกันของเว็บ
+  function showDashboard(holder) {
+    return load().then(function () {
+      closeAll();
+      undock();
+      var d = W().document, main = d.querySelector('.app-shell > main') || d.querySelector('main');
+      if (!main) throw new Error('ไม่พบหน้าแดชบอร์ดของระบบหลัก');
+      var dk = dock(holder, { autoHeight: true, measure: main, minHeight: 600 });
+      var onClick = function (e) {
+        var t = e.target.closest && e.target.closest('[onclick]'); if (!t) return;
+        var m = /^\s*(open\w+)\s*\(([^)]*)\)/.exec(t.getAttribute('onclick') || ''); if (!m) return;
+        var fn = m[1], route = fn === 'openEntryGate' ? 'entry' : TOOLS.some(function (x) { return x.fn === fn; }) ? 'system/' + fn : '';
+        if (!route) return;
+        e.preventDefault(); e.stopPropagation();
+        SK.go(route);
+      };
+      d.addEventListener('click', onClick, true);
+      var base = dk.undock;
+      dk.undock = function () { d.removeEventListener('click', onClick, true); base(); };
+      return dk;
     });
   }
   // หน้าของระบบหลักยังเปิดอยู่ไหม (ผู้ใช้กดปิด × ในหน้า)
@@ -431,7 +455,7 @@
   }
 
   var api = SK.engine = {
-    DOCS: DOCS, TOOLS: TOOLS, load: load, run: run, W: W, dock: dock, undock: undock, showPage: showPage, pageOpen: pageOpen,
+    DOCS: DOCS, TOOLS: TOOLS, load: load, run: run, W: W, dock: dock, undock: undock, showPage: showPage, showDashboard: showDashboard, pageOpen: pageOpen,
     openDoc: openDoc, generate: generate, closeAll: closeAll, onOutput: null,
     doc: function (key) { return DOCS.filter(function (d) { return d.key === key; })[0] || null; },
     get loaded() { return !!(readyPromise && W() && W().allRows); }
