@@ -21841,7 +21841,13 @@
         renderSteelMaterialRows(testResultSteelMaterialsCache);
       }
       if (isConcrete) {
-        if (!testResultConcreteSamplesCache.length) testResultConcreteSamplesCache = getDefaultConcreteSampleRows();
+        // เก็บค่าที่กรอกก่อนวาดตารางใหม่ เพื่อไม่ให้วันที่และผลทดสอบย้อนกลับเป็นค่าเดิม
+        const currentRows = collectConcreteSampleRowsFromForm();
+        if (currentRows.length) {
+          testResultConcreteSamplesCache = currentRows;
+        } else if (!testResultConcreteSamplesCache.length) {
+          testResultConcreteSamplesCache = getDefaultConcreteSampleRows();
+        }
         renderConcreteSampleRows(testResultConcreteSamplesCache);
       }
       if (isRubber) {

@@ -22,10 +22,11 @@
 - `assets/js/doc-standard.js` = จัดหนังสือราชการตามมาตรฐานการพิมพ์ (ไฟล์ formstandard ที่ผู้ใช้ส่งมา): บันทึกข้อความ (ขอบ 3/2/2.5/2 ซม., TH Sarabun PSK 16pt, ครุฑ 1.5 ซม., หัว 29pt/35pt, ป้าย 20pt, ย่อหน้า 2.5 ซม.) และหนังสือภายนอก (ครุฑ 3 ซม.) — ทำใน Smart Editor หลังระบบหลักสร้าง, สำเนาในประวัติมี `data-sk-std` ไม่จัดซ้ำ
 - เมนูซ้ายมีรายการแบบเอกสารทั้งหมด (ใต้ พิมพ์เอกสารราชการ, สร้างใน app.js จาก `SK.engine.DOCS`); หน้าเอกสาร: ประวัติ (พับได้) → การตั้งค่าหน้ากระดาษ + ข้อมูลโครงการ → ฟอร์ม/เอกสาร
 - `assets/js/photos.js` (รูปโครงการ ก่อน/ระหว่าง/หลัง), `map.js` (Leaflet + ขอบเขตจากชีท/OSM), `word-export.js` (.docx จากพรีวิว)
+- หน้าแรก (`views/overview.js`) = แดชบอร์ดของระบบหลักจริง (`SK.engine.showDashboard`: ผู้ควบคุมงาน/ธุรการกองช่าง/สายทาง) วางในกล่องสูงตามเนื้อหา ปุ่ม open* ของระบบหลักไปหน้าเดียวกันของเว็บ
 - `assets/js/views/*.js` = หน้าต่าง ๆ: overview, projects, project, documents, tracking, map, system (entry/tools), users (+data), common (ส่วนประกอบร่วม); `assets/js/app.js` = เมนู/แถบบน/บัญชี
 - หน้าผู้ดูแลของระบบหลัก (รายชื่อบุคลากร / จัดการผู้ใช้งาน / ตัวจัดการสิทธิ์ / จัดการตัวเลือกทั้งหมด) = TOOLS ที่มี `admin: true` แสดงเฉพาะ `SK.cloud.isAdmin()` (หน้าผู้ใช้งาน + เครื่องมือ); engine ตั้ง `currentUser.username` เป็น `website-admin` เฉพาะผู้ดูแล และ `gas-worker.js` ผ่านการตรวจผู้ดูแลของระบบหลักเฉพาะชื่อนี้
 - `assets/gas/` = ตัวจำลอง Apps Script (worker แต่ละหน้า/iframe โหลดชีทใหม่เมื่อ worker อื่นบันทึก), `data-panel.js` ใช้เฉพาะ importFile/exportFile
-- `system.html` = ระบบหลัก v190 สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ; `assets/personnel.js` สร้างด้วยสคริปต์เดียวกัน ห้ามแก้ด้วยมือ
+- `system.html` = ระบบหลัก v192 สร้างจาก `system/src/*` ด้วย `python3 tools/build_system.py` — ห้ามแก้ `system/src/` หรือ `system.html` ด้วยมือ; `assets/personnel.js` สร้างด้วยสคริปต์เดียวกัน ห้ามแก้ด้วยมือ
 - `assets/config.js` = URL + publishable key ของ Supabase; โครงสร้าง DB ใน `supabase/schema.sql` (แก้ DB แล้วต้องอัปเดต)
 - `tools/build-dist.js` สร้าง dist/ + หน้า redirect ของลิงก์เก่า (projects.html, project.html?id=, progress.html, project-docs.html, documents.html, disbursement.html, index.html?page=openXxx)
 - ใช้ข้อมูลจริงเท่านั้น ห้ามใส่ข้อมูล/รายชื่อ/ตัวเลขสมมุติในหน้าเว็บ

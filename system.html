@@ -6688,6 +6688,7 @@
       html.map-printing body.map-printing .map-tools,
       html.map-printing body.map-printing .map-fullscreen-village-panel { display:none !important; }
       /* ซ่อนหมุดตำแหน่งโครงการก่อสร้าง แต่คงป้ายชื่อหมู่บ้านชนิด divIcon ไว้ */
+      html.map-printing body.map-printing #map .project-work-marker,
       html.map-printing body.map-printing #map img.leaflet-marker-icon,
       html.map-printing body.map-printing #map img.leaflet-marker-shadow { display:none !important; }
     }
@@ -31942,7 +31943,13 @@
         renderSteelMaterialRows(testResultSteelMaterialsCache);
       }
       if (isConcrete) {
-        if (!testResultConcreteSamplesCache.length) testResultConcreteSamplesCache = getDefaultConcreteSampleRows();
+        // เก็บค่าที่กรอกก่อนวาดตารางใหม่ เพื่อไม่ให้วันที่และผลทดสอบย้อนกลับเป็นค่าเดิม
+        const currentRows = collectConcreteSampleRowsFromForm();
+        if (currentRows.length) {
+          testResultConcreteSamplesCache = currentRows;
+        } else if (!testResultConcreteSamplesCache.length) {
+          testResultConcreteSamplesCache = getDefaultConcreteSampleRows();
+        }
         renderConcreteSampleRows(testResultConcreteSamplesCache);
       }
       if (isRubber) {
