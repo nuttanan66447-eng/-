@@ -394,6 +394,7 @@
     '[data-sk-native] .entry-actions{position:static!important;box-shadow:none!important;border-top:1px solid rgba(100,116,139,.12)!important;margin-top:12px!important}';
   // ---------- วาง iframe ทับกล่องในหน้าเว็บ ----------
   // dock(holder, { wrap: element ของระบบหลักที่จะแสดง (โหมดฟอร์ม) | ไม่ระบุ = ทั้งหน้า })
+  var OVERLAY_SEL = '.entry-backdrop.open, [id$="Backdrop"].open, .modal.open';
   function dock(holder, opts) {
     opts = opts || {};
     undock();
@@ -406,7 +407,7 @@
       st.textContent = NATIVE_CSS + (opts.tool ? TOOL_CSS : DOC_HIDE_CSS) + (opts.keepActions ? '' : NS + '.form-actions{display:none!important}');
     } else st.textContent = DOCK_PAGE_CSS;
     d.head.appendChild(st);
-    var raf = 0;
+    var raf = 0, openAtDock = wrap ? Array.prototype.slice.call(d.querySelectorAll(OVERLAY_SEL)) : [];
     // iframe วางแบบ absolute ตามตำแหน่งกล่องในหน้า: เลื่อนไปพร้อมหน้าเว็บ (ไม่ต้องตามด้วยสคริปต์)
     // โหมดฟอร์ม (autoHeight): กล่องสูงเท่าแบบฟอร์ม — เลื่อนเฉพาะหน้าเว็บ ไม่มีแถบเลื่อนซ้อนใน iframe
     function contentHeight() {
@@ -427,8 +428,9 @@
       // หน้าต่างย่อยของระบบหลักที่เปิดทับแบบฟอร์ม (เช่น "เลือกจากแผนที่" ของพิกัดโครงการ): แสดงเต็มจอเหนือหน้าเว็บ จนกว่าจะปิด
       if (wrap) {
         var d2 = W().document, ov = null;
-        Array.prototype.forEach.call(d2.querySelectorAll('.entry-backdrop.open, [id$="Backdrop"].open, .modal.open'), function (x) {
-          if (!ov && x !== wrap && !wrap.contains(x) && !x.contains(wrap)) ov = x;
+        Array.prototype.forEach.call(d2.querySelectorAll(OVERLAY_SEL), function (x) {
+          // เฉพาะหน้าต่างที่เปิดหลังวางแบบฟอร์ม (หน้าต่างของระบบหลักที่เปิดค้างไว้ก่อน เช่น หน้าเลือกชุดเอกสาร TOR ไม่นับ)
+          if (!ov && x !== wrap && !wrap.contains(x) && !x.contains(wrap) && openAtDock.indexOf(x) < 0) ov = x;
         });
         if (!ov && W().__skPick) {
           ov = d2.querySelector('.app-shell > main') || d2.querySelector('main');
