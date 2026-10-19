@@ -13,6 +13,7 @@
     el = root;
     var q = r.query, wantDoc = q.get('doc') || '', wantProject = q.get('project') || '';
     if (wantProject) st.project = wantProject;
+    st.fill = q.get('fill') || '';
     if (wantDoc && E().doc(wantDoc)) { st.doc = wantDoc; st.phase = 'form'; }
     else if (!wantDoc) { st.phase = 'pick'; st.doc = ''; }
     root.innerHTML =
@@ -66,6 +67,10 @@
       var holder = box.querySelector('#dc-holder');
       E().openDoc(d, p ? p.rowNumber : null, holder, { autoHeight: true }).then(function () {
         var w = box.querySelector('#dc-wait'); if (w) w.remove();
+        // "กรอกต่อ" จากประวัติ: เติมข้อมูลที่เคยกรอกไว้
+        var fill = st.fill && SK.docs.list().filter(function (x) { return x.id === st.fill; })[0];
+        st.fill = '';
+        if (fill && fill.form) return E().restoreForm(fill.form).then(function (n) { SK.toast(n ? 'เติมข้อมูลจากประวัติแล้ว — ตรวจแล้วกดสร้างเอกสาร' : 'ข้อมูลในแบบฟอร์มตรงกับประวัติอยู่แล้ว', 'success'); });
       }).catch(function (err) {
         holder.innerHTML = '<div class="p-6">' + V.empty('error', 'เปิดแบบฟอร์มไม่สำเร็จ', esc(err.message || err)) + '</div>';
       });
@@ -123,10 +128,14 @@
     var old = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = icon('progress_activity', 'animate-spin') + '<span>กำลังสร้างเอกสาร...</span>';
+    var form = E().captureForm();
     E().generate(d).then(function (html) {
       st.html = html;
       st.phase = 'preview';
-      st.entry = SK.docs.saveHistory(d, p, html, null);
+      st.entry = SK.docs.saveHistory(d, p, html, null).then(function (entry) {
+        if (entry && form) { entry.form = form; SK.store.save(); }
+        return entry;
+      });
       main();
       st.entry.then(function () { side(); });
       window.scrollTo({ top: 0, behavior: 'smooth' });
