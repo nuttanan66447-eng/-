@@ -701,6 +701,46 @@
       if (holder) dock(holder, Object.assign({ wrap: wrap, keepActions: doc.keepActions }, opts || {}));
     });
   }
+  // ข้อมูลที่กรอกในแบบฟอร์มของระบบหลัก: เก็บไว้กับประวัติเอกสาร แล้วเติมกลับเมื่อกด "กรอกต่อ" จากประวัติ
+  function formFields(wrap) {
+    var seen = {};
+    return Array.prototype.filter.call(wrap.querySelectorAll('input, select, textarea'), function (el) {
+      return !/^(file|button|submit|reset|image|password)$/i.test(el.type || '') && (el.id || el.name);
+    }).map(function (el) {
+      var key = el.id ? '#' + el.id : el.name;
+      if (!el.id) { seen[key] = (seen[key] || 0) + 1; key += '@' + seen[key]; }
+      return { el: el, key: key };
+    });
+  }
+  function captureForm() {
+    var wrap = docked && docked.wrap; if (!wrap) return null;
+    var out = {};
+    formFields(wrap).forEach(function (f) {
+      var el = f.el;
+      out[f.key] = /^(checkbox|radio)$/i.test(el.type) ? (el.checked ? '1' : '0') : (el.multiple ? Array.prototype.filter.call(el.options, function (o) { return o.selected; }).map(function (o) { return o.value; }) : el.value);
+    });
+    return out;
+  }
+  function restoreForm(data) {
+    var wrap = docked && docked.wrap; if (!wrap || !data) return Promise.resolve(0);
+    var w = W(), n = 0;
+    var pass = function () {
+      formFields(wrap).forEach(function (f) {
+        if (!(f.key in data)) return;
+        var el = f.el, v = data[f.key], changed = false;
+        if (/^(checkbox|radio)$/i.test(el.type)) { var c = v === '1'; if (el.checked !== c) { el.checked = c; changed = true; } }
+        else if (el.multiple && Array.isArray(v)) { Array.prototype.forEach.call(el.options, function (o) { var on = v.indexOf(o.value) >= 0; if (o.selected !== on) { o.selected = on; changed = true; } }); }
+        else if (String(el.value) !== String(v == null ? '' : v)) {
+          if (el.tagName === 'SELECT' && v && !Array.prototype.some.call(el.options, function (o) { return o.value === v; })) { var o = w.document.createElement('option'); o.value = o.textContent = v; el.appendChild(o); }
+          el.value = v == null ? '' : v; changed = true;
+        }
+        if (changed) { n++; el.dispatchEvent(new w.Event('input', { bubbles: true })); el.dispatchEvent(new w.Event('change', { bubbles: true })); }
+      });
+    };
+    // หลายรอบ: ช่องที่ขึ้นกับช่องอื่น (เช่น ตัวเลือกที่โหลดหลังเลือกโครงการ) เติมได้ในรอบถัดไป
+    pass();
+    return sleep(500).then(pass).then(function () { return sleep(500); }).then(pass).then(function () { return n; });
+  }
   function generate(doc) {
     var holderDock = docked;
     var restore = holderDock && holderDock.wrap ? holderDock : null;
@@ -740,7 +780,7 @@
   }
 
   var api = SK.engine = {
-    DOCS: DOCS, TOOLS: TOOLS, load: load, run: run, W: W, dock: dock, undock: undock, showPage: showPage, showDashboard: showDashboard, pageOpen: pageOpen,
+    DOCS: DOCS, TOOLS: TOOLS, load: load, run: run, W: W, dock: dock, undock: undock, showPage: showPage, showDashboard: showDashboard, captureForm: captureForm, restoreForm: restoreForm, pageOpen: pageOpen,
     openDoc: openDoc, generate: generate, closeAll: closeAll, onOutput: null,
     doc: function (key) { return DOCS.filter(function (d) { return d.key === key; })[0] || null; },
     get loaded() { return !!(readyPromise && W() && W().allRows); }
