@@ -143,12 +143,34 @@ function summary() {
 }
 
 var ready = idb('readonly', function (s) { return s.get(KEY); }).catch(function () { return null; }).then(function (wb) {
+  var renamed = restoreLongSheetNames(wb); // ข้อมูลที่นำเข้าก่อนแก้ไข: คืนชื่อชีทเต็มแล้วบันทึก (ส่งขึ้นคลาวด์ด้วย)
   GasEmu.setWorkbook(wb || { title: 'ข้อมูลกองช่าง (เริ่มต้น)' });
   lastSavedAt = wb ? wb.savedAt : null;
   runSetup();
   if (!wb) return saveNow();
-  if (normalizeWorkbookDates()) return saveNow();
+  if (normalizeWorkbookDates() || renamed) return saveNow();
 });
+
+// ไฟล์ .xlsx (ดาวน์โหลดจาก Google Sheets/ส่งออก) ตัดชื่อชีทเหลือ 31 ตัวอักษร เช่น "ประวัติแจ้งให้ผู้รับจ้างเข้าดำเ"
+// คืนชื่อเต็มตาม CONFIG ของระบบหลัก — ไม่งั้นระบบหลักหาประวัติไม่เจอ สถานะ/ความก้าวหน้าคำนวณผิด (เช่น ค้างที่ "กำหนดราคากลาง")
+function restoreLongSheetNames(wb) {
+  if (!wb || !Array.isArray(wb.sheets) || typeof CONFIG !== 'object') return false;
+  var changed = false;
+  var full = Object.keys(CONFIG).filter(function (k) { return /_SHEET_NAME$/.test(k) && typeof CONFIG[k] === 'string'; })
+    .map(function (k) { return CONFIG[k]; }).filter(function (n) { return n.length > 31; });
+  var filled = function (sh) { return (sh.rows || []).filter(function (r) { return (r || []).some(function (v) { return v !== '' && v != null; }); }).length; };
+  full.forEach(function (name) {
+    var cut = name.slice(0, 31);
+    var short = wb.sheets.filter(function (sh) { return sh.name === cut || (sh.name !== name && sh.name.length >= 28 && name.indexOf(sh.name) === 0); })[0];
+    if (!short) return;
+    var whole = wb.sheets.filter(function (sh) { return sh.name === name; })[0];
+    changed = true;
+    if (whole && filled(whole) >= filled(short)) { wb.sheets.splice(wb.sheets.indexOf(short), 1); return; }
+    if (whole) wb.sheets.splice(wb.sheets.indexOf(whole), 1);
+    short.name = name;
+  });
+  return changed;
+}
 
 // JSON แบบเดียวกับ google.script.run: Date กลายเป็นข้อความ, ฟังก์ชันถูกตัดทิ้ง
 function clone(v) { return v === undefined ? null : JSON.parse(JSON.stringify(v)); }
@@ -180,6 +202,7 @@ self.onmessage = function (e) {
         if (!/^(get|load|fetch|check|is|has|list|find|search)/.test(fn)) scheduleSave();
         reply.ok = true;
       } else if (msg.type === 'import') {
+        restoreLongSheetNames(msg.workbook);
         GasEmu.setWorkbook(msg.workbook);
         runSetup();
         normalizeWorkbookDates();
