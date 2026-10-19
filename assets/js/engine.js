@@ -168,6 +168,28 @@
             if (typeof orig === 'function') w[fn] = function (row) { return priceCommittee(row, orig.apply(this, arguments)); };
           });
         }
+        // เบิกค่าตอบแทน: ระบบหลักเติมกรรมการ TOR/ราคากลางจากประวัติร่าง TOR/กำหนดราคากลางเท่านั้น — ใช้รายชื่อในข้อมูลโครงการก่อน
+        var compSet = w.setCompensationHistoryCommittee;
+        if (typeof compSet === 'function' && typeof w.getSelectedCompensationProject === 'function' && typeof w.getCommitteeFieldValue === 'function') {
+          var COMP_KEYS = {
+            compTorChair: ['ประธานกรรมการ TOR'], compTorMember1: ['กรรมการ TOR 1'], compTorMember2: ['กรรมการ TOR 2'],
+            compPriceChair: ['ประธานกรรมการราคากลาง', 'ประธานกรรมการกำหนดราคากลาง'], compPriceMember1: ['กรรมการราคากลาง 1', 'กรรมการกำหนดราคากลาง 1'], compPriceMember2: ['กรรมการราคากลาง 2', 'กรรมการกำหนดราคากลาง 2']
+          };
+          w.setCompensationHistoryCommittee = function (ids, names) {
+            var row = w.getSelectedCompensationProject(), used = false;
+            var merged = (ids || []).map(function (id, i) {
+              var v = row && COMP_KEYS[id] ? String(w.getCommitteeFieldValue(row, COMP_KEYS[id]) || '').trim() : '';
+              if (v) used = true;
+              return v || (names || [])[i] || '';
+            });
+            var res = compSet.call(this, ids, merged);
+            if (used) setTimeout(function () {
+              var note = w.document.getElementById(/Price/.test(ids[0]) ? 'compPriceHistoryNote' : 'compTorHistoryNote');
+              if (note) note.textContent = 'รายชื่อจากข้อมูลโครงการ';
+            }, 0);
+            return res;
+          };
+        }
         // ร่าง TOR: ระบบหลักเติมกรรมการ TOR จากประวัติร่าง TOR เท่านั้น — ใช้รายชื่อที่กรอกในข้อมูลโครงการก่อน (ไม่มีจึงใช้ประวัติ)
         var torChange = w.onTorDraftProjectChange, torApply = w.applyProjectCommitteeMemoryToTorDraft;
         if (typeof torChange === 'function' && typeof torApply === 'function' && typeof w.getDetailFieldValue === 'function') {
@@ -445,7 +467,7 @@
 
   // แบบฟอร์มเอกสาร: หัว/ประวัติ/ปุ่มบันทึก/พรีวิวเล็กของระบบหลักไม่แสดง (เว็บมีหัวหน้า ประวัติเอกสาร ปุ่มสร้างเอกสาร และ Smart Editor ของตัวเอง)
   var DOC_HIDE_CSS = [
-    '[data-sk-native] .entry-head,[data-sk-native] .project-history-toggle,[data-sk-native] .project-history-drawer,[data-sk-native] .building-inspection-history-side,[data-sk-native] .memo-history-wrap,[data-sk-native] .central-price-history-wrap,[data-sk-native] .compensation-history-wrap,[data-sk-native] .low-bid-history-wrap,[data-sk-native] .central-price-save-row{display:none!important}',
+    '[data-sk-native] .entry-head,[data-sk-native] .project-history-toggle,[data-sk-native] .project-history-drawer,[data-sk-native] .building-inspection-history-side,[data-sk-native] .memo-history-wrap,[data-sk-native] .central-price-history-wrap,[data-sk-native] .compensation-history-wrap,[data-sk-native] .low-bid-history-wrap,[data-sk-native] .central-price-save-row,[data-sk-native] .compensation-actions-top{display:none!important}',
     '[data-sk-native] .preview-document-toolbar,[data-sk-native] .preview-paper-scroll,[data-sk-native] .test-result-preview-action,[data-sk-native] .test-result-preview-wrap,[data-sk-native] .evaluation-preview-shell,[data-sk-native] .low-bid-preview-wrap,[data-sk-native] .central-price-preview{display:none!important}'
   ].join('');
   // หน้าเครื่องมือของระบบหลัก (กรอกข้อมูลโครงการ/ราคากลาง/คุมสายทาง ฯลฯ): สูงตามเนื้อหา ไม่มีแถบเลื่อนซ้อน แถบปุ่มอยู่ท้ายฟอร์ม (ไม่ลอยบังช่องกรอก)
