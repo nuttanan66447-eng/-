@@ -112,6 +112,22 @@
           return { document: doc, focus: function () {}, print: function () {}, close: function () {}, addEventListener: function () {}, closed: false, location: { href: '' } };
         };
         w.print = function () { var html = snapshotArea(); if (html) output(html); };
+        // คุมสายทาง "เลือกจากแผนที่": ระบบหลักปิดแบบฟอร์มแล้วพาไปแผนที่ของแดชบอร์ด — ในเว็บแสดงแผนที่นั้นเต็มจอ แล้วกลับแบบฟอร์มเมื่อเลือกจุดแล้ว
+        var pickStart = w.activateLocalRoadMapPicker, pickDone = w.reopenLocalRoadEntryAfterMapSelection;
+        if (typeof pickStart === 'function' && typeof pickDone === 'function') {
+          w.activateLocalRoadMapPicker = function () {
+            if (docked && docked.wrap) w.__skPick = true;
+            var res = pickStart.apply(this, arguments);
+            setTimeout(function () { var m = w.document.getElementById('localRoadMap'); if (m) m.scrollIntoView({ block: 'center' }); }, 350);
+            return res;
+          };
+          w.reopenLocalRoadEntryAfterMapSelection = function () { w.__skPick = false; return pickDone.apply(this, arguments); };
+          w.__skCancelPick = function () {
+            w.__skPick = false;
+            var b = w.document.getElementById('localRoadEntryBackdrop'); if (b) b.classList.add('open');
+            try { w.restoreLocalRoadEntryDraft(); w.applyLocalRoadDraftToForm(); } catch (e) {}
+          };
+        }
         w.alert = function (m) {
           m = String(m || '');
           if (generating) { messages.push(m); return; }
@@ -318,6 +334,7 @@
   var NATIVE_CSS = [
     'html,body{overflow:hidden!important}',
     'body>:not([data-sk-native]){visibility:hidden!important}',
+    'html body [data-sk-overlay][data-sk-overlay]{visibility:visible!important;position:fixed!important;inset:0!important;z-index:2147483600!important;overflow-y:auto!important;background:#f8f9ff!important;margin:0!important;max-width:none!important;width:auto!important}',
     '[data-sk-native] *{box-sizing:border-box!important}',
     // พรีวิวเล็กของระบบหลักในฟอร์ม: ใช้ Smart Editor ของเว็บแทน (กด "สร้างเอกสาร")
     // หัวหน้าต่าง/ประวัติ/ปุ่มบันทึกของระบบหลักในฟอร์มเอกสาร: เว็บมีหัวหน้า ประวัติเอกสาร และปุ่ม "สร้างเอกสาร" ของตัวเอง
@@ -379,6 +396,29 @@
         holder.__skAuto = true;
         var ch = contentHeight();
         if (ch && Math.abs(holder.offsetHeight - ch) > 2) holder.style.height = Math.max(opts.minHeight || 360, ch) + 'px';
+      }
+      // หน้าต่างย่อยของระบบหลักที่เปิดทับแบบฟอร์ม (เช่น "เลือกจากแผนที่" ของพิกัดโครงการ): แสดงเต็มจอเหนือหน้าเว็บ จนกว่าจะปิด
+      if (wrap) {
+        var d2 = W().document, ov = null;
+        Array.prototype.forEach.call(d2.querySelectorAll('.entry-backdrop.open, [id$="Backdrop"].open, .modal.open'), function (x) {
+          if (!ov && x !== wrap && !wrap.contains(x) && !x.contains(wrap)) ov = x;
+        });
+        if (!ov && W().__skPick) {
+          ov = d2.querySelector('.app-shell > main') || d2.querySelector('main');
+          if (ov && !d2.getElementById('sk-pick-cancel')) {
+            var cb = d2.createElement('button'); cb.id = 'sk-pick-cancel'; cb.type = 'button'; cb.textContent = '← กลับไปกรอกข้อมูลสายทาง';
+            cb.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:2147483647;visibility:visible;padding:10px 18px;border:0;border-radius:999px;background:#006194;color:#fff;font:600 14px Sarabun,sans-serif;box-shadow:0 8px 20px -6px rgba(0,97,148,.5);cursor:pointer';
+            cb.onclick = function () { W().__skCancelPick(); };
+            d2.body.appendChild(cb);
+          }
+        }
+        if (!W().__skPick) { var cbx = d2.getElementById('sk-pick-cancel'); if (cbx) cbx.remove(); }
+        Array.prototype.forEach.call(d2.querySelectorAll('[data-sk-overlay]'), function (x) { if (x !== ov) x.removeAttribute('data-sk-overlay'); });
+        if (ov) {
+          if (!ov.hasAttribute('data-sk-overlay')) { ov.setAttribute('data-sk-overlay', '1'); setTimeout(function () { try { W().dispatchEvent(new W().Event('resize')); } catch (e) {} }, 200); }
+          frame.style.cssText = 'position:fixed;left:0;top:0;width:100vw;height:100vh;border:0;z-index:2147483000;opacity:1;background:transparent';
+          return;
+        }
       }
       var r = holder.getBoundingClientRect();
       if (!r.width) { frame.style.cssText = OFFSCREEN; return; }
@@ -494,7 +534,7 @@
   }
   // หน้าของระบบหลักยังเปิดอยู่ไหม (ผู้ใช้กดปิด × ในหน้า)
   function pageOpen() {
-    try { return !!run("document.querySelector('[id$=\"Backdrop\"].open, [id$=\"backdrop\"].open, .entry-backdrop.open, .memo-form-wrap.open')"); } catch (e) { return false; }
+    try { return !!(W().__skPick || run("document.querySelector('[id$=\"Backdrop\"].open, [id$=\"backdrop\"].open, .entry-backdrop.open, .memo-form-wrap.open')")); } catch (e) { return false; }
   }
 
   // ---------- เอกสาร ----------
