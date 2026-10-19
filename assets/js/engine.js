@@ -112,6 +112,33 @@
           return { document: doc, focus: function () {}, print: function () {}, close: function () {}, addEventListener: function () {}, closed: false, location: { href: '' } };
         };
         w.print = function () { var html = snapshotArea(); if (html) output(html); };
+        // ร่าง TOR: ระบบหลักเติมกรรมการ TOR จากประวัติร่าง TOR เท่านั้น — ใช้รายชื่อที่กรอกในข้อมูลโครงการก่อน (ไม่มีจึงใช้ประวัติ)
+        var torChange = w.onTorDraftProjectChange, torApply = w.applyProjectCommitteeMemoryToTorDraft;
+        if (typeof torChange === 'function' && typeof torApply === 'function' && typeof w.getDetailFieldValue === 'function') {
+          var torFromProject = function () {
+            try { if (w.eval('typeof kReportDocumentMode !== "undefined" && kReportDocumentMode')) return null; } catch (e) {}
+            var row = typeof w.getSelectedTorDraftProject === 'function' ? w.getSelectedTorDraftProject() : null;
+            if (!row) return null;
+            var g = function (h) { return String(w.getDetailFieldValue(row, h) || '').trim(); };
+            var t = { chair: g(['ประธานกรรมการ TOR']), member1: g(['กรรมการ TOR 1']), member2: g(['กรรมการ TOR 2', 'กรรมการและเลขานุการ TOR']) };
+            return t.chair || t.member1 || t.member2 ? t : null;
+          };
+          w.applyProjectCommitteeMemoryToTorDraft = function (memory, force) {
+            var pj = torFromProject();
+            if (pj) {
+              var tor = Object.assign({}, memory && memory.tor);
+              ['chair', 'member1', 'member2'].forEach(function (k) { if (pj[k]) tor[k] = pj[k]; });
+              memory = Object.assign({}, memory, { tor: tor });
+            }
+            return torApply.call(this, memory, force);
+          };
+          w.onTorDraftProjectChange = function () {
+            var res = torChange.apply(this, arguments);
+            var pj = torFromProject();
+            if (pj) w.applyProjectCommitteeMemoryToTorDraft({ tor: pj }, true);
+            return res;
+          };
+        }
         // คุมสายทาง "เลือกจากแผนที่": ระบบหลักปิดแบบฟอร์มแล้วพาไปแผนที่ของแดชบอร์ด — ในเว็บแสดงแผนที่นั้นเต็มจอ แล้วกลับแบบฟอร์มเมื่อเลือกจุดแล้ว
         var pickStart = w.activateLocalRoadMapPicker, pickDone = w.reopenLocalRoadEntryAfterMapSelection;
         if (typeof pickStart === 'function' && typeof pickDone === 'function') {
