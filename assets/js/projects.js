@@ -85,9 +85,11 @@
   function load() {
     if (!window.SKGas) return Promise.resolve(state.list);
     loading = Promise.resolve(SK.cloud && SK.cloud.ready).then(function () { return SKGas.ready; }).then(function () {
-      return Promise.all([SKGas.call('getDashboardDataFast'), SKGas.summary()]);
+      return Promise.all([SKGas.call('getDashboardDataFast'), SKGas.summary(), SKGas.call('getPersonnelConfig').catch(function () { return null; })]);
     }).then(function (r) {
-      var data = r[0], sum = r[1] || {};
+      var data = r[0], sum = r[1] || {}, pc = r[2];
+      // รายชื่อบุคลากรล่าสุดจากชีท "รายชื่อบุคลากร" (ผู้ดูแลแก้ได้) — ใช้หาตำแหน่งของผู้ที่ไม่ได้บันทึกตำแหน่งไว้ในโครงการ
+      state.personnel = pc && pc.ok ? [].concat(pc.supervisors || [], pc.committees || [], pc.executives || []) : [];
       state.list = data && data.ok ? mapRows(data) : [];
       state.info = { count: state.list.length, savedAt: sum.savedAt, title: sum.title, center: (data && data.defaultCenter) || CENTER, error: data && !data.ok ? data.message : '' };
       state.loaded = true;
@@ -143,8 +145,17 @@
     return out;
   }
 
+  // ตำแหน่งจากชื่อ: รายชื่อบุคลากรในชีทก่อน แล้วจึงรายชื่อตั้งต้นของระบบหลัก
+  function positionOf(name) {
+    var key = String(name || '').replace(/\s+/g, '');
+    if (!key) return '';
+    var find = function (list) { return (list || []).filter(function (x) { return x && x.position && String(x.name || '').replace(/\s+/g, '') === key; })[0]; };
+    var hit = find(state.personnel) || find([].concat(PEOPLE.supervisors || [], PEOPLE.committee || [], PEOPLE.executives || []));
+    return hit ? hit.position : '';
+  }
+
   SK.projects = {
-    load: load, byId: byId, years: years, villages: villages, people: people, statusChip: statusChip,
+    load: load, positionOf: positionOf, byId: byId, years: years, villages: villages, people: people, statusChip: statusChip,
     get list() { return state.list; },
     get info() { return state.info; },
     get loaded() { return state.loaded; },

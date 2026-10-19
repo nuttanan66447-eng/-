@@ -128,11 +128,7 @@
         }).join('') + '</dl></section>';
     }).join('') + '</div>';
   }
-  function positionOf(name) {
-    var P = window.SK_PERSONNEL || {}, all = (P.supervisors || []).concat(P.committee || [], P.executives || []);
-    var hit = all.filter(function (x) { return x.name === name; })[0];
-    return hit ? hit.position : '';
-  }
+  function positionOf(name) { return SK.projects.positionOf(name); }
   function people(p) {
     var g = SK.projects.people(p);
     var block = function (ic, title, list, note) {
