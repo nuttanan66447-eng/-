@@ -112,6 +112,39 @@
           return { document: doc, focus: function () {}, print: function () {}, close: function () {}, addEventListener: function () {}, closed: false, location: { href: '' } };
         };
         w.print = function () { var html = snapshotArea(); if (html) output(html); };
+        // ความเห็น/คนลงนามท้ายรายงาน: ปุ่ม ▲ ▼ จัดลำดับ แทนการลาก (ใช้ตัวจัดลำดับเดิมของระบบหลัก dropSignerCard)
+        if (typeof w.dropSignerCard === 'function' && typeof w.startSignerDrag === 'function') {
+          var moveSigner = function (group, from, to) {
+            var down = to > from;
+            w.startSignerDrag({}, group, from);
+            w.dropSignerCard({ preventDefault: function () {}, currentTarget: { getBoundingClientRect: function () { return { top: 0, height: 2 }; } }, clientY: down ? 2 : 0 }, group, to);
+            if (typeof w.endSignerDrag === 'function') w.endSignerDrag();
+          };
+          var decorateSigners = function () {
+            Array.prototype.forEach.call(w.document.querySelectorAll('.completion-signer-card:not([data-sk-order])'), function (card) {
+              var m = /dropSignerCard\(event,\s*'(\w+)',\s*(\d+)\)/.exec(card.getAttribute('ondrop') || '');
+              if (!m) return;
+              card.setAttribute('data-sk-order', '1');
+              var group = m[1], idx = Number(m[2]);
+              var all = Array.prototype.filter.call(card.parentNode.children, function (c) { return /dropSignerCard\(event,\s*'/.test(c.getAttribute('ondrop') || '') && c.getAttribute('ondrop').indexOf("'" + group + "'") > 0; });
+              var wrapT = card.querySelector('.completion-signer-title-wrap') || card.firstElementChild;
+              if (!wrapT) return;
+              var box = w.document.createElement('span');
+              box.className = 'sk-order-btns';
+              [['▲', -1, 'เลื่อนขึ้น'], ['▼', 1, 'เลื่อนลง']].forEach(function (b) {
+                var btn = w.document.createElement('button');
+                btn.type = 'button'; btn.textContent = b[0]; btn.title = b[2]; btn.setAttribute('aria-label', b[2]);
+                var to = idx + b[1];
+                if (to < 0 || to >= all.length) btn.disabled = true;
+                btn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); moveSigner(group, idx, to); });
+                box.appendChild(btn);
+              });
+              wrapT.insertBefore(box, wrapT.firstChild);
+            });
+          };
+          new w.MutationObserver(function () { decorateSigners(); }).observe(w.document.body, { childList: true, subtree: true });
+          decorateSigners();
+        }
         // ร่าง TOR: ระบบหลักเติมกรรมการ TOR จากประวัติร่าง TOR เท่านั้น — ใช้รายชื่อที่กรอกในข้อมูลโครงการก่อน (ไม่มีจึงใช้ประวัติ)
         var torChange = w.onTorDraftProjectChange, torApply = w.applyProjectCommitteeMemoryToTorDraft;
         if (typeof torChange === 'function' && typeof torApply === 'function' && typeof w.getDetailFieldValue === 'function') {
@@ -247,7 +280,11 @@
       rule('.personnel-tab.active', 'background:#006194!important;background-image:none!important;color:#fff!important;border-color:#006194!important'),
       rule('.memo-history-count,.compensation-history-count', 'background:#006194!important;color:#fff!important'),
       rule('.weekly-work-quick-select', 'background:#eff4ff!important;color:#004b73!important;border-color:#bfc7d2!important'),
-      rule('.completion-signer-drag-handle', 'background:#eff4ff!important;color:#006194!important;border-color:transparent!important'),
+      rule('.completion-signer-drag-handle', 'display:none!important'),
+      'html body .sk-order-btns{display:inline-flex;gap:4px;margin-right:8px;vertical-align:middle}',
+      'html body .sk-order-btns button{width:30px;height:30px;padding:0;border:1px solid #bfc7d2;border-radius:999px;background:#fff;color:#006194;font-size:12px;line-height:30px;cursor:pointer}',
+      'html body .sk-order-btns button:hover:not(:disabled){background:#dce9ff;border-color:#006194}',
+      'html body .sk-order-btns button:disabled{opacity:.35;cursor:default}',
       rule('.primary', 'background:#006194!important;background-image:none!important;border-color:#006194!important;color:#fff!important'),
       rule('.danger', 'background:#ffdad6!important;border-color:#ffdad6!important;color:#93000a!important'),
       // สีสันของแบบฟอร์ม (ตามโทนของเว็บ): หัวหมวดไล่สีฟ้า • แถบสีซ้ายและป้ายตามชนิดช่อง
