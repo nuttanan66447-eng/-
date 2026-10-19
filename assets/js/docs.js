@@ -101,6 +101,26 @@
     Array.prototype.forEach.call(d.querySelectorAll('.sk-gap'), function (x) { x.remove(); });
     Array.prototype.forEach.call(d.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
   }
+  // แผ่นที่ระบบหลักแบ่งไว้เอง (เช่น รายงานราคากลาง แผ่น 1 → แผ่น 2): เนื้อหาที่เลยขอบล่างหลังจัดมาตรฐาน 16pt
+  // ย้ายไปต้นแผ่นถัดไปแบบ Word แทนการขึ้นหน้าใหม่ที่มีแค่บรรทัดเดียว
+  function flowToNextSheet(d, page, pageH, pb) {
+    var next = page.nextElementSibling, win = d.defaultView;
+    if (!next || !/(^|\s)[\w-]*page(\s|$)/.test(String(next.className || '')) || next.getBoundingClientRect().width < 700) return;
+    var flow = function () {
+      return Array.prototype.filter.call(page.children, function (c) {
+        if (/(^|\s)sk-/.test(String(c.className || ''))) return false;
+        var cs = win.getComputedStyle(c);
+        return cs.position !== 'absolute' && cs.position !== 'fixed' && cs.display !== 'none';
+      });
+    };
+    var limit = pageH - pb, guard = 0;
+    for (var f = flow(); f.length > 1 && guard < 200; f = flow(), guard++) {
+      var last = f[f.length - 1];
+      if (last.getBoundingClientRect().bottom - page.getBoundingClientRect().top <= limit + 1) break;
+      next.insertBefore(last, next.firstChild);
+    }
+    if (guard) { var fc = next.firstElementChild; if (fc) fc.classList.add('sk-flowed'); } // ตอนพิมพ์เว้นบนเล็กน้อย กันสระบนตกค้างท้ายแผ่นก่อน
+  }
   function paginate(d, page, pageH, pt, pb) {
     var win = d.defaultView;
     var flow = Array.prototype.filter.call(page.children, function (c) {
@@ -136,7 +156,7 @@
         '.sk-guide{position:absolute;pointer-events:none;border:1px dashed rgba(0,97,148,.35);border-radius:2px;z-index:5}' +
         '.sk-break{position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(186,26,26,.55);pointer-events:none;z-index:6}' +
         '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}}' +
-        '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}.sk-pagestart{break-before:page!important;page-break-before:always!important;margin-top:0!important;padding-top:2.5mm!important}.sk-foot{position:static!important;inset:auto!important;margin-top:7mm!important;padding-top:3mm!important;transform:none!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
+        '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}.sk-flowed{padding-top:2.5mm!important}.sk-pagestart{break-before:page!important;page-break-before:always!important;margin-top:0!important;padding-top:2.5mm!important}.sk-foot{position:static!important;inset:auto!important;margin-top:7mm!important;padding-top:3mm!important;transform:none!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
       d.head.appendChild(st);
     }
     var win = d.defaultView;
@@ -158,6 +178,7 @@
           var ccs = win.getComputedStyle(c);
           if (ccs.position === 'absolute' && ccs.bottom !== 'auto' && !/(^|\s)sk-/.test(c.className) && !blank(c.textContent)) c.classList.add('sk-foot');
         });
+        flowToNextSheet(d, page, pageH, pb);
         paginate(d, page, pageH, pt, pb);
         var count = Math.max(1, Math.ceil((page.offsetHeight - 8) / pageH));
         page.style.setProperty('min-height', (count * pageH) + 'px', 'important'); // แผ่นเต็มหน้าสุดท้าย (ท้ายหนังสืออยู่ล่างสุดของหน้าสุดท้าย)

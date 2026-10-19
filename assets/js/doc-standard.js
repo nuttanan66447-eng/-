@@ -33,7 +33,11 @@
     });
     titles.forEach(function (title, n) {
       // หน้ากระดาษ = กรอบที่กว้างเกือบเท่า A4
+      // แผ่นที่ระบบหลักตั้งชื่อคลาสเป็น ...-page (เช่น cp-page, memo-page) ก่อน — ไม่ใช่กล่องหัวเรื่องที่กว้างเต็มหน้า
       var page = title.parentElement;
+      for (var a = page; a && a !== doc.body; a = a.parentElement) {
+        if (/(^|\s)[\w-]*page(\s|$)/.test(String(a.className || '')) && a.getBoundingClientRect().width >= 700) { page = a; break; }
+      }
       while (page && page !== doc.body && page.getBoundingClientRect().width < 700) page = page.parentElement;
       if (!page || page === doc.body || pages.indexOf(page) >= 0) return;
       pages.push(page);
