@@ -145,6 +145,29 @@
           new w.MutationObserver(function () { decorateSigners(); }).observe(w.document.body, { childList: true, subtree: true });
           decorateSigners();
         }
+        // กำหนดราคากลาง / แจ้งราคาต่ำกว่าราคากลาง: ระบบหลักอ่านคอลัมน์ "ประธานกรรมการกำหนดราคากลาง" ซึ่งไม่มีในชีท
+        // (หน้ากรอกข้อมูลโครงการบันทึกเป็น "ประธานกรรมการราคากลาง / กรรมการราคากลาง 1 / 2") จึงไปใช้กรรมการตรวจรับแทน
+        // — ใช้รายชื่อกรรมการราคากลางของโครงการ และตำแหน่งจากรายชื่อบุคลากร
+        if (typeof w.getCommitteeFieldValue === 'function') {
+          var PRICE_KEYS = [['ประธานกรรมการราคากลาง', 'ประธานกรรมการกำหนดราคากลาง'], ['กรรมการราคากลาง 1', 'กรรมการกำหนดราคากลาง 1'], ['กรรมการราคากลาง 2', 'กรรมการกำหนดราคากลาง 2']];
+          var priceCommittee = function (row, base) {
+            var people = [];
+            ['getCommitteeOptions', 'getSupervisorOptions', 'getExecutiveOptions'].forEach(function (f) { if (typeof w[f] === 'function') people = people.concat(w[f]() || []); });
+            var norm = function (t) { return String(t || '').replace(/\s+/g, '').toLowerCase(); };
+            return [0, 1, 2].map(function (i) {
+              var cur = (base && base[i]) || { name: '', position: '' };
+              var name = String(w.getCommitteeFieldValue(row, PRICE_KEYS[i]) || '').trim();
+              if (!name) return cur;
+              var pos = String(w.getCommitteeFieldValue(row, ['ตำแหน่ง' + PRICE_KEYS[i][1]]) || '').trim();
+              if (!pos) { var o = people.filter(function (x) { return x && norm(x.name) === norm(name); })[0]; pos = (o && o.position) || ''; }
+              return { name: name, position: pos };
+            });
+          };
+          ['getCentralPriceCommitteeDefaults', 'getLowBidCentralPriceCommitteeDefaults'].forEach(function (fn) {
+            var orig = w[fn];
+            if (typeof orig === 'function') w[fn] = function (row) { return priceCommittee(row, orig.apply(this, arguments)); };
+          });
+        }
         // ร่าง TOR: ระบบหลักเติมกรรมการ TOR จากประวัติร่าง TOR เท่านั้น — ใช้รายชื่อที่กรอกในข้อมูลโครงการก่อน (ไม่มีจึงใช้ประวัติ)
         var torChange = w.onTorDraftProjectChange, torApply = w.applyProjectCommitteeMemoryToTorDraft;
         if (typeof torChange === 'function' && typeof torApply === 'function' && typeof w.getDetailFieldValue === 'function') {
