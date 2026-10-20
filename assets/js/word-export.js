@@ -543,17 +543,29 @@
   // หน้ากระดาษในเอกสาร = กล่องที่กว้างประมาณ A4 ชั้นในสุด
   function pagesOf(doc) {
     var all = Array.prototype.filter.call(doc.body.querySelectorAll('section, div, article'), function (el) {
+      if (el.closest('.sk-sheet')) return false; // ส่วนต่อท้ายที่ไหลต่อกัน (ด้านล่าง)
       var r = el.getBoundingClientRect();
       return r.width > 690 && r.width < 1200 && r.height > 150;
     });
+    var sheets = Array.prototype.slice.call(doc.querySelectorAll('.sk-sheet-first'));
     // กล่องที่มีสัดส่วนกระดาษ A4 (ตั้งหรือนอน) คือหน้ากระดาษ — กล่องย่อยข้างในไม่นับเป็นหน้าใหม่
     var paper = all.filter(function (el) {
       var r = el.getBoundingClientRect(), q = Math.max(r.width, r.height) / Math.min(r.width, r.height);
       return Math.abs(q - 1.414) < 0.12;
     });
-    if (paper.length) return paper.filter(function (el) { return !paper.some(function (o) { return o !== el && o.contains(el); }); });
-    return all.filter(function (el) { return !all.some(function (o) { return o !== el && el.contains(o); }); });
+    var pages = paper.length ? paper.filter(function (el) { return !paper.some(function (o) { return o !== el && o.contains(el); }); })
+      : all.filter(function (el) { return !all.some(function (o) { return o !== el && el.contains(o); }); });
+    if (!sheets.length) return pages;
+    if (!paper.length) pages = [];
+    return pages.concat(sheets).sort(function (a, b) { return a.compareDocumentPosition(b) & 4 ? -1 : 1; });
   }
+  // ชุดส่วนต่อท้าย (sk-sheet-first ... sk-sheet-last) = หน้าเดียวที่ Word แบ่งหน้าเอง
+  function sheetParts(first) {
+    var parts = [first];
+    for (var n = first; !n.classList.contains('sk-sheet-last') && (n = n.nextElementSibling) && n.classList.contains('sk-sheet');) parts.push(n);
+    return parts;
+  }
+  var SHEET_MARGIN = { top: 794, right: 1134, bottom: 794, left: 1134 }; // 1.4 / 2 / 1.4 / 2 ซม. เท่า @page ของระบบหลัก
 
   // ระยะขอบของหน้า = ระยะจากขอบกระดาษถึงเนื้อหาจริง (padding หรือตำแหน่งกล่องลูก) ไม่เกินค่าที่เหมาะสม
   function contentMargins(page, r, pad) {
@@ -593,13 +605,14 @@
       var landscape = r.width > r.height * 1.1 && r.width > 1000;
       var std = page.classList.contains('sk-std');
       var pad = function (k) { return parseFloat(cs[k]) || 0; };
-      var m = std ? STD_MARGIN : contentMargins(page, r, pad);
+      var sheet = page.classList.contains('sk-sheet-first');
+      var m = std ? STD_MARGIN : sheet ? SHEET_MARGIN : contentMargins(page, r, pad);
       var W = landscape ? 16838 : 11906, H = landscape ? 11906 : 16838;
       var sect = '<w:sectPr><w:pgSz w:w="' + W + '" w:h="' + H + '"' + (landscape ? ' w:orient="landscape"' : '') + '/>' +
         '<w:pgMar w:top="' + m.top + '" w:right="' + m.right + '" w:bottom="' + m.bottom + '" w:left="' + m.left + '" w:header="709" w:footer="709" w:gutter="0"/><w:cols w:space="708"/><w:docGrid w:linePitch="360"/></w:sectPr>';
       var ref = { left: r.left + m.left / TW, right: r.right - m.right / TW, top: r.top + m.top / TW };
       // หน้าที่ไม่ได้จัดตามมาตรฐาน: ระยะขอบ = ตำแหน่งเนื้อหาจริงในพรีวิว (ไม่ดันเนื้อหาลงจนล้นหน้า)
-      var items = b.flow(page, ref, []);
+      var items = sheet ? sheetParts(page).reduce(function (acc, part) { return acc.concat(b.flow(part, ref, [])); }, []) : b.flow(page, ref, []);
       body += b.itemsXml(items, ref.top, i < pages.length - 1 ? sect : null);
       if (i === pages.length - 1) body += sect;
     });
