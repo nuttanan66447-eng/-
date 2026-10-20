@@ -79,15 +79,19 @@
     Array.prototype.forEach.call(root.querySelectorAll('.sk-guide,.sk-break,.sk-gap,#sk-paper-css'), function (x) { x.remove(); });
     var body = root.querySelector('body'); if (body) body.removeAttribute('contenteditable');
     Array.prototype.forEach.call(root.querySelectorAll('.sk-paper,.sk-pagestart'), function (x) { x.classList.remove('sk-paper'); x.classList.remove('sk-pagestart'); });
-    Array.prototype.forEach.call(root.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
+    Array.prototype.forEach.call(root.querySelectorAll('.sk-std,.sk-std-ext,.sk-sheet'), function (x) { x.style.removeProperty('min-height'); });
+    Array.prototype.forEach.call(root.querySelectorAll('.sk-sheet'), function (x) { x.classList.remove('sk-sheet', 'sk-sheet-first', 'sk-sheet-last'); });
     Array.prototype.forEach.call(root.querySelectorAll('script'), function (x) { x.remove(); });
     return '<!DOCTYPE html>' + root.outerHTML;
   }
 
   // ---------- มุมมองหน้ากระดาษ: กระดาษแต่ละแผ่น เส้นขอบเขตการพิมพ์ (ระยะขอบ) และตัวแบ่งหน้า ----------
   var MM = 96 / 25.4;
+  // ส่วนต่อท้ายที่ระบบหลักให้ไหลต่อกันตอนพิมพ์ (รายงานการประชุม/ขอบเขตของงาน TOR หลังบันทึกข้อความ, @page ขอบ 14/20 มม.)
+  var SHEET_SEL = '.tor-combined-document>.tor-page', SHEET_PT = 14 * MM;
   function paperPages(d) {
     var boxes = Array.prototype.filter.call(d.body.querySelectorAll('section, div, article'), function (el) {
+      if (el.closest(SHEET_SEL)) return false; // แสดงเป็นแผ่นต่อเนื่องใน sheetGroups
       var r = el.getBoundingClientRect();
       return r.width > 690 && r.width < 1200 && r.height > 400;
     });
@@ -99,7 +103,17 @@
   // ช่องว่างแบ่งหน้า/ความสูงเต็มแผ่นของตัวแก้ไข: ใช้บนจอเท่านั้น (พิมพ์/Word แบ่งหน้าเอง)
   function unpaginate(d) {
     Array.prototype.forEach.call(d.querySelectorAll('.sk-gap'), function (x) { x.remove(); });
-    Array.prototype.forEach.call(d.querySelectorAll('.sk-std,.sk-std-ext'), function (x) { x.style.removeProperty('min-height'); });
+    Array.prototype.forEach.call(d.querySelectorAll('.sk-std,.sk-std-ext,.sk-sheet'), function (x) { x.style.removeProperty('min-height'); });
+  }
+  // แบ่งส่วนต่อท้ายเป็นชุดที่พิมพ์ต่อกัน: ชุดใหม่เริ่มที่ส่วนที่ระบบหลักสั่งขึ้นหน้าใหม่ (break-before / ตัวแบ่งหน้าคั่น)
+  function sheetGroups(d) {
+    var win = d.defaultView, groups = [], cur = null;
+    Array.prototype.forEach.call(d.querySelectorAll(SHEET_SEL), function (s) {
+      var prev = s.previousElementSibling, last = cur && cur[cur.length - 1];
+      if (!cur || prev !== last || win.getComputedStyle(s).breakBefore === 'page' || win.getComputedStyle(last).breakAfter === 'page') groups.push(cur = []);
+      cur.push(s);
+    });
+    return groups;
   }
   // แผ่นที่ระบบหลักแบ่งไว้เอง (เช่น รายงานราคากลาง แผ่น 1 → แผ่น 2): เนื้อหาที่เลยขอบล่างหลังจัดมาตรฐาน 16pt
   // ย้ายไปต้นแผ่นถัดไปแบบ Word แทนการขึ้นหน้าใหม่ที่มีแค่บรรทัดเดียว
@@ -121,12 +135,34 @@
     }
     if (guard) { var fc = next.firstElementChild; if (fc) fc.classList.add('sk-flowed'); } // ตอนพิมพ์เว้นบนเล็กน้อย กันสระบนตกค้างท้ายแผ่นก่อน
   }
-  function paginate(d, page, pageH, pt, pb) {
-    var win = d.defaultView;
-    var flow = Array.prototype.filter.call(page.children, function (c) {
-      if (/(^|\s)sk-(guide|break|gap)(\s|$)/.test(c.className)) return false;
-      var cs = win.getComputedStyle(c);
-      return cs.position !== 'absolute' && cs.position !== 'fixed' && cs.display !== 'none';
+  // กล่องที่กว้างเกินขอบขวาของแผ่น (เช่น แถวลายเซ็นกรรมการ 3 ช่องที่ระบบหลักกำหนดกว้างตายตัว) ทำให้เครื่องพิมพ์ย่อทั้งหน้า:
+  // แถวช่องเท่ากันแบ่งความกว้างแผ่นเท่า ๆ กัน (เส้นจุดลงชื่อตัดพอดีช่อง) ข้อความที่ห้ามตัดบรรทัดให้ตัดบรรทัดได้
+  function fitSheet(win, sheet) {
+    var right = function () { return sheet.getBoundingClientRect().right - (parseFloat(win.getComputedStyle(sheet).paddingRight) || 0) + 1; };
+    Array.prototype.forEach.call(sheet.querySelectorAll('*'), function (el) {
+      if (el.closest('.sk-guide,.sk-break,table,svg')) return;
+      var cs = win.getComputedStyle(el);
+      if (el.getBoundingClientRect().right <= right() && !(cs.display === 'grid' && el.scrollWidth > el.clientWidth + 1)) return;
+      if (cs.display === 'grid') {
+        var cols = cs.gridTemplateColumns.split(' ').map(parseFloat);
+        if (cols.length > 1 && Math.max.apply(null, cols) - Math.min.apply(null, cols) < 2) {
+          el.style.setProperty('grid-template-columns', 'repeat(' + cols.length + ',minmax(0,1fr))', 'important');
+          Array.prototype.forEach.call(el.children, function (c) { c.style.setProperty('min-width', '0', 'important'); });
+        }
+      } else if (cs.whiteSpace === 'nowrap' && !el.children.length) {
+        if (/\.{6,}/.test(el.textContent)) el.style.setProperty('overflow', 'hidden', 'important');
+        else el.style.setProperty('white-space', 'normal', 'important');
+      }
+    });
+  }
+  function paginate(d, page, pageH, pt, pb, parts) {
+    var win = d.defaultView, flow = [];
+    (parts || [page]).forEach(function (part) {
+      flow = flow.concat(Array.prototype.filter.call(part.children, function (c) {
+        if (/(^|\s)sk-(guide|break|gap)(\s|$)/.test(c.className)) return false;
+        var cs = win.getComputedStyle(c);
+        return cs.position !== 'absolute' && cs.position !== 'fixed' && cs.display !== 'none';
+      }));
     });
     flow.forEach(function (c) {
       for (var pass = 0; pass < 3; pass++) {
@@ -140,7 +176,7 @@
           gap = d.createElement('div'); gap.className = 'sk-gap';
           gap.setAttribute('contenteditable', 'false'); gap.setAttribute('aria-hidden', 'true');
           gap.style.cssText = 'height:0;margin:0;padding:0;border:0';
-          page.insertBefore(gap, c);
+          c.parentNode.insertBefore(gap, c);
         }
         gap.style.height = ((parseFloat(gap.style.height) || 0) + need) + 'px';
         c.classList.add('sk-pagestart'); // ตอนพิมพ์ขึ้นหน้าใหม่ตรงนี้เหมือนบนจอ (เว้นบนเล็กน้อยให้สระบนไม่ตกค้างท้ายหน้าก่อน)
@@ -155,11 +191,13 @@
       st.textContent = '@media screen{html,body{background:#e9eef7!important}.sk-paper{background:#fff!important;box-shadow:0 1px 3px rgba(15,23,42,.14),0 10px 30px rgba(15,23,42,.10)!important;margin:0 auto 22px!important}' +
         '.sk-guide{position:absolute;pointer-events:none;border:1px dashed rgba(0,97,148,.35);border-radius:2px;z-index:5}' +
         '.sk-break{position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(186,26,26,.55);pointer-events:none;z-index:6}' +
-        '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}}' +
+        '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}' +
+        '.sk-sheet.sk-sheet.sk-sheet:not(#_sk1):not(#_sk2){width:210mm!important;max-width:210mm!important;min-width:0!important;height:auto!important;max-height:none!important;min-height:0;padding:0 20mm!important;margin:0 auto!important;background:#fff!important;box-shadow:none!important;border:0!important;overflow:visible!important;box-sizing:border-box!important}' +
+        '.sk-sheet.sk-sheet.sk-sheet-first:not(#_sk1):not(#_sk2){padding-top:14mm!important;position:relative!important}.sk-sheet.sk-sheet.sk-sheet-last:not(#_sk1):not(#_sk2){padding-bottom:14mm!important;margin-bottom:22px!important}}' +
         '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}.sk-flowed{padding-top:2.5mm!important}.sk-pagestart{break-before:page!important;page-break-before:always!important;margin-top:0!important;padding-top:2.5mm!important}.sk-foot{position:static!important;inset:auto!important;margin-top:7mm!important;padding-top:3mm!important;transform:none!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
       d.head.appendChild(st);
     }
-    var win = d.defaultView;
+    var win = d.defaultView, pno = 0; // เลขหน้าต่อเนื่องทั้งเอกสาร
     paperPages(d).forEach(function (page) {
       page.classList.add('sk-paper');
       page.setAttribute('data-sk-page', '');
@@ -188,7 +226,25 @@
         mk('sk-guide', 'top:' + pt + 'px;left:' + pl + 'px;right:' + pr + 'px;height:' + Math.max(0, Math.min(page.offsetHeight, pageH) - pt - pb) + 'px');
       }
       // เนื้อหายาวเกิน 1 แผ่น: แสดงตำแหน่งขึ้นหน้าใหม่
-      for (var n = 1; n * pageH < page.offsetHeight - 8; n++) mk('sk-break', 'top:' + Math.round(n * pageH) + 'px', '<span>หน้า ' + (n + 1) + '</span>');
+      for (var n = 1; n * pageH < page.offsetHeight - 8; n++) mk('sk-break', 'top:' + Math.round(n * pageH) + 'px', '<span>หน้า ' + (pno + n + 1) + '</span>');
+      pno += n;
+    });
+    // ส่วนต่อท้าย: แผ่น A4 ระยะขอบเท่าตอนพิมพ์ แบ่งหน้าแบบเดียวกับเครื่องพิมพ์ (ย่อหน้าที่เลยขอบล่างขึ้นหน้าใหม่)
+    sheetGroups(d).forEach(function (secs) {
+      var first = secs[0], last = secs[secs.length - 1], pageH = 297 * MM, pt = SHEET_PT;
+      secs.forEach(function (s) { s.classList.add('sk-sheet'); s.classList.remove('sk-sheet-first', 'sk-sheet-last'); s.style.removeProperty('min-height'); });
+      first.classList.add('sk-sheet-first'); last.classList.add('sk-sheet-last');
+      secs.forEach(function (s) { fitSheet(win, s); });
+      paginate(d, first, pageH, pt, pt, secs);
+      var top = first.getBoundingClientRect().top, h = last.getBoundingClientRect().bottom - top;
+      var count = Math.max(1, Math.ceil((h - 8) / pageH));
+      last.style.setProperty('min-height', (count * pageH - (last.getBoundingClientRect().top - top)) + 'px', 'important');
+      var mk = function (cls, css, html) { var x = d.createElement('div'); x.className = cls; x.setAttribute('contenteditable', 'false'); x.setAttribute('aria-hidden', 'true'); x.style.cssText = css; if (html) x.innerHTML = html; first.appendChild(x); return x; };
+      for (var g = 0; g < count; g++) {
+        mk('sk-guide', 'top:' + (g * pageH + pt) + 'px;left:' + (20 * MM) + 'px;right:' + (20 * MM) + 'px;height:' + (pageH - 2 * pt) + 'px');
+        if (g) mk('sk-break', 'top:' + Math.round(g * pageH) + 'px', '<span>หน้า ' + (pno + g + 1) + '</span>');
+      }
+      pno += count;
     });
   }
   // แผ่นที่สูงตายตัว (เช่น รายงานผลแนวนอน) แต่เนื้อหายาวเกินแผ่น: ย่อตัวอักษรในแผ่นนั้นจนพอดี ลายเซ็นไม่ตกขอบ/ไม่ล้นไปหน้าใหม่ใน Word
