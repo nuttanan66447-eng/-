@@ -87,8 +87,10 @@
 
   // ---------- มุมมองหน้ากระดาษ: กระดาษแต่ละแผ่น เส้นขอบเขตการพิมพ์ (ระยะขอบ) และตัวแบ่งหน้า ----------
   var MM = 96 / 25.4;
-  // ส่วนต่อท้ายที่ระบบหลักให้ไหลต่อกันตอนพิมพ์ (รายงานการประชุม/ขอบเขตของงาน TOR หลังบันทึกข้อความ, @page ขอบ 14/20 มม.)
-  var SHEET_SEL = '.tor-combined-document>.tor-page', SHEET_PT = 14 * MM;
+  // ส่วนที่ระบบหลักให้ไหลต่อกันตอนพิมพ์ (ไม่ใช่แผ่น A4 ตายตัว) และระยะขอบบน/ล่างของ @page ที่ใช้ (มม.; ซ้าย/ขวา 20 มม.):
+  // รายงานการประชุม/ขอบเขตของงาน TOR, หน้าต่อของรายงานราคากลาง (cpFlowPage), รายงานการประชุมกรรมการราคากลาง (cpMeetingPage)
+  var SHEETS = [['.tor-combined-document>.tor-page', 14], ['.cp-flow-doc>.cp-report-continuation-page', 7], ['.cp-meeting-legacy-doc>.cp-meeting-flow-page', 14]];
+  var SHEET_SEL = SHEETS.map(function (x) { return x[0]; }).join(',');
   function paperPages(d) {
     var boxes = Array.prototype.filter.call(d.body.querySelectorAll('section, div, article'), function (el) {
       if (el.closest(SHEET_SEL)) return false; // แสดงเป็นแผ่นต่อเนื่องใน sheetGroups
@@ -110,6 +112,7 @@
     var win = d.defaultView, groups = [], cur = null;
     Array.prototype.forEach.call(d.querySelectorAll(SHEET_SEL), function (s) {
       var prev = s.previousElementSibling, last = cur && cur[cur.length - 1];
+      s.setAttribute('data-sk-mt', SHEETS.filter(function (x) { return s.matches(x[0]); })[0][1]);
       if (!cur || prev !== last || win.getComputedStyle(s).breakBefore === 'page' || win.getComputedStyle(last).breakAfter === 'page') groups.push(cur = []);
       cur.push(s);
     });
@@ -193,7 +196,7 @@
         '.sk-break{position:absolute;left:0;right:0;height:0;border-top:2px dashed rgba(186,26,26,.55);pointer-events:none;z-index:6}' +
         '.sk-break span{position:absolute;right:6px;top:-11px;background:#ba1a1a;color:#fff;font:600 11px Sarabun,sans-serif;padding:1px 8px;border-radius:999px}' +
         '.sk-sheet.sk-sheet.sk-sheet:not(#_sk1):not(#_sk2){width:210mm!important;max-width:210mm!important;min-width:0!important;height:auto!important;max-height:none!important;min-height:0;padding:0 20mm!important;margin:0 auto!important;background:#fff!important;box-shadow:none!important;border:0!important;overflow:visible!important;box-sizing:border-box!important}' +
-        '.sk-sheet.sk-sheet.sk-sheet-first:not(#_sk1):not(#_sk2){padding-top:14mm!important;position:relative!important}.sk-sheet.sk-sheet.sk-sheet-last:not(#_sk1):not(#_sk2){padding-bottom:14mm!important;margin-bottom:22px!important}}' +
+        '.sk-sheet.sk-sheet.sk-sheet-first:not(#_sk1):not(#_sk2){padding-top:var(--sk-mt,14mm)!important;position:relative!important}.sk-sheet.sk-sheet.sk-sheet-last:not(#_sk1):not(#_sk2){padding-bottom:var(--sk-mt,14mm)!important;margin-bottom:22px!important}}' +
         '@media print{.sk-guide,.sk-break,.sk-gap{display:none!important}.sk-flowed{padding-top:2.5mm!important}.sk-pagestart{break-before:page!important;page-break-before:always!important;margin-top:0!important;padding-top:2.5mm!important}.sk-foot{position:static!important;inset:auto!important;margin-top:7mm!important;padding-top:3mm!important;transform:none!important;break-inside:avoid!important;page-break-inside:avoid!important}}';
       d.head.appendChild(st);
     }
@@ -231,8 +234,8 @@
     });
     // ส่วนต่อท้าย: แผ่น A4 ระยะขอบเท่าตอนพิมพ์ แบ่งหน้าแบบเดียวกับเครื่องพิมพ์ (ย่อหน้าที่เลยขอบล่างขึ้นหน้าใหม่)
     sheetGroups(d).forEach(function (secs) {
-      var first = secs[0], last = secs[secs.length - 1], pageH = 297 * MM, pt = SHEET_PT;
-      secs.forEach(function (s) { s.classList.add('sk-sheet'); s.classList.remove('sk-sheet-first', 'sk-sheet-last'); s.style.removeProperty('min-height'); });
+      var first = secs[0], last = secs[secs.length - 1], pageH = 297 * MM, mt = Number(first.getAttribute('data-sk-mt')) || 14, pt = mt * MM;
+      secs.forEach(function (s) { s.style.setProperty('--sk-mt', mt + 'mm'); s.classList.add('sk-sheet'); s.classList.remove('sk-sheet-first', 'sk-sheet-last'); s.style.removeProperty('min-height'); });
       first.classList.add('sk-sheet-first'); last.classList.add('sk-sheet-last');
       secs.forEach(function (s) { fitSheet(win, s); });
       paginate(d, first, pageH, pt, pt, secs);
