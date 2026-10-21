@@ -755,9 +755,19 @@
       return { el: el, key: key };
     });
   }
+  // รายการคนลงนาม/ความเห็นท้ายรายงาน (การ์ดที่ระบบหลักสร้างจาก xxxSignersState ไม่ใช่ช่องกรอกที่มี id)
+  function signerLists(wrap) {
+    return Array.prototype.map.call(wrap.querySelectorAll('[id$="SignerList"]'), function (el) {
+      var pre = el.id.replace(/SignerList$/, '');
+      return { pre: pre, state: pre + 'SignersState', render: 'render' + pre.charAt(0).toUpperCase() + pre.slice(1) + 'SignerEditor' };
+    }).filter(function (x) { try { return W().eval('typeof ' + x.state + ' !== "undefined" && typeof ' + x.render + ' === "function"'); } catch (e) { return false; } });
+  }
   function captureForm() {
     var wrap = docked && docked.wrap; if (!wrap) return null;
     var out = {};
+    signerLists(wrap).forEach(function (x) {
+      try { var v = W().eval('JSON.stringify(' + x.state + ')'); if (v && v !== 'null') (out.__signers = out.__signers || {})[x.pre] = v; } catch (e) {}
+    });
     formFields(wrap).forEach(function (f) {
       var el = f.el;
       out[f.key] = /^(checkbox|radio)$/i.test(el.type) ? (el.checked ? '1' : '0') : (el.multiple ? Array.prototype.filter.call(el.options, function (o) { return o.selected; }).map(function (o) { return o.value; }) : el.value);
@@ -781,8 +791,16 @@
       });
     };
     // หลายรอบ: ช่องที่ขึ้นกับช่องอื่น (เช่น ตัวเลือกที่โหลดหลังเลือกโครงการ) เติมได้ในรอบถัดไป
+    // คนลงนามท้ายรายงาน: ใส่หลังสุด (เลือกโครงการแล้วระบบหลักตั้งค่าเริ่มต้นใหม่)
+    var signers = function () {
+      var saved = data.__signers || {};
+      signerLists(wrap).forEach(function (x) {
+        if (!saved[x.pre]) return;
+        try { w.eval(x.state + '=' + saved[x.pre] + ';' + x.render + '();'); n++; } catch (e) { console.warn('คืนค่าคนลงนามไม่สำเร็จ', x.pre, e); }
+      });
+    };
     pass();
-    return sleep(500).then(pass).then(function () { return sleep(500); }).then(pass).then(function () { return n; });
+    return sleep(500).then(pass).then(function () { return sleep(500); }).then(pass).then(function () { return sleep(300); }).then(signers).then(function () { return n; });
   }
   function generate(doc) {
     var holderDock = docked;
