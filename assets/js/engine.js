@@ -19,7 +19,7 @@
     { key: 'testResult', group: 'ส่งมอบและตรวจรับ', title: 'ผลทดสอบวัสดุ', desc: 'ดิน เหล็ก คอนกรีต AC Job-mix ขออนุมัติวัสดุ', icon: 'science', open: 'openTestResultPage()', root: 'testResultForm', area: 'testResultPrintArea', gen: 'createTestResultRecord()', print: 'printTestResultDocument()' },
     { key: 'torSpecific', group: 'จัดซื้อจัดจ้าง', title: 'ร่าง TOR ว159 แบบเจาะจง', desc: 'งบไม่เกินห้าแสนบาท: เชิญประชุม + รายงานการประชุม + ร่างขอบเขตงาน', icon: 'gavel', open: "openTorDraftHome();openTorDraftForm('specific')", root: 'torDraftForm', area: 'torDraftPrintArea', gen: 'submit', print: 'printTorDraftDocument()' },
     { key: 'torEbidding', group: 'จัดซื้อจัดจ้าง', title: 'ร่าง TOR e-bidding', desc: 'งบเกินห้าแสนบาท: เชิญประชุม + รายงานการประชุม + ร่างขอบเขตงาน', icon: 'gavel', open: "openTorDraftHome();openTorDraftForm('ebidding')", root: 'torDraftForm', area: 'torDraftPrintArea', gen: 'submit', print: 'printTorDraftDocument()' },
-    { key: 'centralPrice', group: 'จัดซื้อจัดจ้าง', title: 'กำหนดราคากลาง (ชุด 4 ตอน)', desc: 'บันทึก คำสั่ง รายงานการประชุม และรายงานผล', icon: 'calculate', open: 'openCentralPricePage()', root: 'centralPriceForm', area: 'centralPricePrintArea', gen: "createAndPrintCentralPriceDocument('combined')", print: 'printCentralPriceDocument()' },
+    { key: 'centralPrice', group: 'จัดซื้อจัดจ้าง', title: 'กำหนดราคากลาง (ชุด 4 ตอน)', desc: 'บันทึก คำสั่ง รายงานการประชุม และรายงานผล', icon: 'calculate', open: 'openCentralPricePage()', root: 'centralPriceForm', area: 'centralPricePrintArea', gen: "createCentralPriceRecord();createAndPrintCentralPriceDocument('combined')", print: 'printCentralPriceDocument()' },
     { key: 'lowBid', group: 'จัดซื้อจัดจ้าง', title: 'แจ้งราคาต่ำกว่าราคากลาง ๑๕%', desc: 'ชุดเอกสารชี้แจงราคาต่ำกว่าราคากลาง', icon: 'percent', open: 'openLowBidNoticePage()', root: 'lowBidForm', area: 'lowBidPrintArea', gen: 'previewLowBidNotice()', print: 'printLowBidNotice()' },
     { key: 'kValue', group: 'ค่า K และค่าตอบแทน', title: 'คำนวณค่า K', desc: 'Escalation Factor จากดัชนีราคา', icon: 'functions', open: 'openKReportHome();openKValueFromReportHome()', root: 'kValueForm', gen: 'submit', print: 'printMemoDocument()' },
     { key: 'kInvite', group: 'ค่า K และค่าตอบแทน', title: 'บันทึกเชิญประชุมค่า K', desc: 'เชิญคณะกรรมการพิจารณาค่า K', icon: 'groups', open: "openKReportHome();openKMeetingDocument('invite')", root: 'torDraftForm', area: 'torDraftPrintArea', gen: 'submit', print: 'printTorDraftDocument()' },
@@ -187,6 +187,49 @@
               var note = w.document.getElementById(/Price/.test(ids[0]) ? 'compPriceHistoryNote' : 'compTorHistoryNote');
               if (note) note.textContent = 'รายชื่อจากข้อมูลโครงการ';
             }, 0);
+            return res;
+          };
+        }
+        // เบิกค่าตอบแทน: วันที่/เวลาประชุม TOR ระบบหลักดึงเฉพาะประวัติ "บันทึกเชิญประชุม TOR" — เว็บสร้าง TOR แบบเจาะจง/e-bidding
+        // (เชิญประชุม + รายงานการประชุมในชุดเดียว) จึงใช้วันที่ประชุมจากประวัติร่าง TOR ชุดล่าสุดของโครงการแทนเมื่อไม่มีบันทึกเชิญประชุม
+        var closeFrom;
+        var torMeet = w.loadTorInviteMeetingForCompensation;
+        if (typeof torMeet === 'function') {
+          w.loadTorInviteMeetingForCompensation = function (projectId) {
+            var res = torMeet.apply(this, arguments), pid = String(projectId || '').trim();
+            if (pid && w.google && w.google.script && w.google.script.run) w.google.script.run.withSuccessHandler(function (r) {
+              var dateEl = w.document.getElementById('compTorMeetingDate'), timeEl = w.document.getElementById('compTorMeetingTime');
+              var sel = w.document.getElementById('compProjectSelect') || w.document.getElementById('compensationProjectSelect');
+              if (!dateEl || dateEl.value || dateEl.dataset.compManual || (sel && sel.value && String(sel.value) !== pid)) return;
+              var hist = (r && Array.isArray(r.histories) ? r.histories : []).filter(function (h) { return !(typeof w.isKReportHistoryItem === 'function' && w.isKReportHistoryItem(h)); });
+              var pick = hist.map(function (h) { return { h: h, d: w.parseJsonObject(h['ข้อมูลร่าง TOR JSON']) || {} }; })
+                .filter(function (x) { return String(x.d.docDate || x.h['วันที่ทำเอกสาร/วันที่ประชุม'] || '').trim(); })[0];
+              if (!pick) return;
+              var md = pick.d.docDate || pick.h['วันที่ทำเอกสาร/วันที่ประชุม'];
+              dateEl.value = w.normalizeDateForInput(md) || w.formatThaiDateInputValue(md) || md;
+              dateEl.dispatchEvent(new w.Event('input', { bubbles: true }));
+              if (timeEl && pick.d.meetingTime) timeEl.value = pick.d.meetingTime;
+              closeFrom('compTorCloseTime', pick.d.closeTime);
+            }).getTorDraftHistories(pid);
+            return res;
+          };
+        }
+        // เวลาปิดประชุม TOR/ราคากลาง: ระบบหลักไม่ดึงจากประวัติ — ใช้เวลาปิดประชุมที่กรอกในร่าง TOR/กำหนดราคากลางของโครงการ
+        closeFrom = function (id, v) {
+          var el = w.document.getElementById(id);
+          if (el && !String(el.value || '').trim() && v) { el.value = v; el.dispatchEvent(new w.Event('input', { bubbles: true })); }
+        };
+        var priceMeet = w.loadCentralPriceMeetingForCompensation;
+        if (typeof priceMeet === 'function') {
+          w.loadCentralPriceMeetingForCompensation = function (projectId) {
+            var res = priceMeet.apply(this, arguments), pid = String(projectId || '').trim();
+            if (pid && w.google && w.google.script && w.google.script.run) w.google.script.run.withSuccessHandler(function (r) {
+              var sel = w.document.getElementById('compProjectSelect');
+              if (sel && sel.value && String(sel.value) !== pid) return;
+              var d = (r && Array.isArray(r.histories) ? r.histories : []).map(function (h) { return w.parseJsonObject(h['ข้อมูลราคากลาง JSON']) || {}; })
+                .filter(function (x) { return x.closeTime; })[0];
+              if (d) closeFrom('compPriceCloseTime', d.closeTime);
+            }).getCentralPriceHistories(pid);
             return res;
           };
         }
