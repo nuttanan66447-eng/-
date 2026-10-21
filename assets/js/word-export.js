@@ -565,7 +565,7 @@
     for (var n = first; !n.classList.contains('sk-sheet-last') && (n = n.nextElementSibling) && n.classList.contains('sk-sheet');) parts.push(n);
     return parts;
   }
-  var SHEET_MARGIN = { top: 794, right: 1134, bottom: 794, left: 1134 }; // 1.4 / 2 / 1.4 / 2 ซม. เท่า @page ของระบบหลัก
+  var SHEET_MARGIN = { top: 794, right: 1134, bottom: 794, left: 1134 }; // ซ้าย/ขวา 2 ซม. เท่า @page ของระบบหลัก (บน/ล่างจาก data-sk-mt)
 
   // ระยะขอบของหน้า = ระยะจากขอบกระดาษถึงเนื้อหาจริง (padding หรือตำแหน่งกล่องลูก) ไม่เกินค่าที่เหมาะสม
   function contentMargins(page, r, pad) {
@@ -606,7 +606,8 @@
       var std = page.classList.contains('sk-std');
       var pad = function (k) { return parseFloat(cs[k]) || 0; };
       var sheet = page.classList.contains('sk-sheet-first');
-      var m = std ? STD_MARGIN : sheet ? SHEET_MARGIN : contentMargins(page, r, pad);
+      var mt = sheet && Math.round((Number(page.getAttribute('data-sk-mt')) || 14) * 56.7);
+      var m = std ? STD_MARGIN : sheet ? { top: mt, right: SHEET_MARGIN.right, bottom: mt, left: SHEET_MARGIN.left } : contentMargins(page, r, pad);
       var W = landscape ? 16838 : 11906, H = landscape ? 11906 : 16838;
       var sect = '<w:sectPr><w:pgSz w:w="' + W + '" w:h="' + H + '"' + (landscape ? ' w:orient="landscape"' : '') + '/>' +
         '<w:pgMar w:top="' + m.top + '" w:right="' + m.right + '" w:bottom="' + m.bottom + '" w:left="' + m.left + '" w:header="709" w:footer="709" w:gutter="0"/><w:cols w:space="708"/><w:docGrid w:linePitch="360"/></w:sectPr>';
